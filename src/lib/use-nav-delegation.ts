@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 
 const ICON_NAMES = new Set([
   "home", "explore", "school", "psychology", "leaderboard", "settings", "help",
-  "menu", "search", "language", "notifications", "dashboard", "groups",
+  "menu", "search", "language", "notifications", "dashboard", "groups", "group", "public",
   "person", "person_search", "person_add", "library_books", "bookmark",
   "bookmark_border", "post_add", "add_circle", "forum", "grid_view",
   "more_vert", "more_horiz", "close", "send", "arrow_forward", "arrow_back",
@@ -95,7 +95,8 @@ export function useNavDelegation() {
         { match: "Help Center", action: "page", page: "landing" },
         { match: "Resources", action: "page", page: "landing" },
         { match: "Categories", action: "page", page: "community" },
-        { match: "Members", action: "page", page: "community" },
+        { match: "Members", action: "page", page: "members" },
+        { match: "Members Connect", action: "page", page: "members" },
         { match: "Bookmarks", action: "page", page: "community" },
         { match: "Feed", action: "page", page: "community" },
         { match: "Study Partners", action: "page", page: "post" },

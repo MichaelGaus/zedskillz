@@ -15,6 +15,7 @@ import { MyCoursesBody } from "@/components/pages/my-courses-body";
 import { LeaderboardBody } from "@/components/pages/leaderboard-body";
 import { CommunityBody } from "@/components/pages/community-body";
 import { PostBody } from "@/components/pages/post-body";
+import { MembersBody } from "@/components/pages/members-body";
 
 export default function Home() {
   const { activePage, theme } = useAppStore();
@@ -46,6 +47,8 @@ export default function Home() {
         return <LeaderboardBody />;
       case "community":
         return <CommunityBody />;
+      case "members":
+        return <MembersBody />;
       case "post":
       case "scholarconnect":
         return <PostBody />;
