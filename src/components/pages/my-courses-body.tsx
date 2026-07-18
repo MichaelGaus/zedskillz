@@ -86,8 +86,8 @@ export function MyCoursesBody() {
       <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-container to-transparent z-10 opacity-90"></div>
       <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfc7Qu5Jkav-WzAutuR2GJNYE3KqzSBzApcEjMdmU9LFiobfGvS-_4r74pj6fi4JuK933m_F8bN30LSVW3Z-t8KS7uxgW5Pe1DnecPCfFDpY4dP4ttSmOuNUxj2oFLWGwDk01E2AuvVZp25NeImuYH42hmtjucRhlLJDpmPo0AnxDKQcMQ8zUVP4Kwb52Rh0tyE_93k-9fMdrBRavNNkEkA2f-posJi9eY18XsRJC72uLUK9YnVfMXKQ"  alt="" />
       </div>
-      <div className="relative z-20 max-w-xl text-white">
-      <h2 className="font-display-lg text-display-lg mb-sm">Welcome back, Scholar!</h2>
+      <div className="relative z-20 max-w-2xl text-white">
+      <h2 className="font-display-lg text-display-lg mb-sm whitespace-nowrap">Welcome back, Scholar!</h2>
       <p className="font-body-md text-body-md opacity-90 mb-lg">You've completed 75% of your weekly goal. Keep going to unlock the "AI Pioneer" badge today.</p>
       <button className="bg-surface text-primary font-bold px-lg py-sm rounded-full active:scale-95 transition-transform">
                               Continue Learning
