@@ -1,7 +1,13 @@
+"use client";
+
 // AUTO-GENERATED from zedskillz_signup_page_ui.txt — DO NOT EDIT MANUALLY
 // Conversion: HTML body → JSX (class=→className=, void tags self-closed, style attrs converted)
 
+import { useAppStore } from "@/lib/store";
+
 export function SignupBody() {
+  const { setActivePage } = useAppStore();
+
   return (
     <>
       
@@ -110,7 +116,10 @@ export function SignupBody() {
       <div className="mt-xl text-center">
       <p className="font-body-md text-body-md text-on-surface-variant">
                                   Already have an account? 
-                                  <a className="text-primary font-bold hover:underline" href="#">Sign In</a>
+                                  <a className="text-primary font-bold hover:underline" href="#" onClick={(event) => {
+                                    event.preventDefault();
+                                    setActivePage("auth");
+                                  }}>Sign In</a>
       </p>
       </div>
       </div>

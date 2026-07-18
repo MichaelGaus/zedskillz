@@ -1,7 +1,13 @@
+"use client";
+
 // AUTO-GENERATED from Zedskillz_landing_page_ui.txt — DO NOT EDIT MANUALLY
 // Conversion: HTML body → JSX (class=→className=, void tags self-closed, style attrs converted)
 
+import { useAppStore } from "@/lib/store";
+
 export function LandingBody() {
+  const { setActivePage } = useAppStore();
+
   return (
     <>
       
@@ -135,7 +141,30 @@ export function LandingBody() {
       </div>
       </section>
       
-      
+      <section className="bg-surface-container-low py-24 px-container-margin md:px-xl">
+      <div className="max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr] gap-xl items-center">
+      <div className="space-y-lg">
+      <p className="font-label-caps text-label-caps text-tertiary">Member Access</p>
+      <h3 className="font-display-lg text-display-lg text-primary max-w-2xl">Ready to continue learning?</h3>
+      <p className="text-body-md text-on-surface-variant max-w-xl">Sign in to pick up where you left off, or create a free account to unlock ZedSkillz AI tutoring, course progress tracking, and leaderboards.</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+      <button onClick={() => setActivePage("auth")} className="w-full px-xl py-md bg-primary text-white rounded-2xl font-semibold hover:bg-primary-container transition-all">Sign In</button>
+      <button onClick={() => setActivePage("signup")} className="w-full px-xl py-md border border-outline-variant bg-surface text-on-surface rounded-2xl font-semibold hover:bg-surface-container transition-all">Sign Up</button>
+      </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+      <div className="bg-white rounded-3xl p-lg shadow-sm border border-outline-variant/30">
+      <h4 className="text-headline-sm font-headline-sm text-primary mb-3">Back to your dashboard</h4>
+      <p className="text-body-sm text-on-surface-variant">Access your enrolled courses, AI notes, and progress reports instantly when you sign in.</p>
+      </div>
+      <div className="bg-white rounded-3xl p-lg shadow-sm border border-outline-variant/30">
+      <h4 className="text-headline-sm font-headline-sm text-primary mb-3">New to Zedskillz?</h4>
+      <p className="text-body-sm text-on-surface-variant">Create your account in minutes and start learning with local curriculum support, mentorship, and community features.</p>
+      </div>
+      </div>
+      </div>
+      </section>
       
       <section className="bg-surface-container-low py-32 px-container-margin md:px-xl">
       <div className="max-w-7xl mx-auto">
