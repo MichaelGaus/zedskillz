@@ -3,17 +3,6 @@
 import { useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 
-/**
- * useNavDelegation — intercepts clicks on <a> and <button> elements
- * across the page and routes to the appropriate page based on text content.
- *
- * The auto-generated body components use Material Symbols spans which contain
- * the icon name as text content (e.g. <span>home</span>), so textContent
- * returns "homeHome" for a Home link with a home icon. We strip these icon
- * name prefixes before matching.
- */
-
-// Common Material Symbol icon names that appear as text content
 const ICON_NAMES = new Set([
   "home", "explore", "school", "psychology", "leaderboard", "settings", "help",
   "menu", "search", "language", "notifications", "dashboard", "groups",
@@ -34,40 +23,34 @@ const ICON_NAMES = new Set([
   "upload", "file_upload", "attach_file", "delete", "edit", "create",
   "check", "check_circle", "check_circle_outline", "cancel", "error",
   "warning", "info", "help_outline", "report", "report_problem",
-  "success", "danger", "primary", "secondary", "tertiary",
   "payments", "credit_card", "account_balance", "wallet", "savings",
   "shopping_cart", "shopping_bag", "store", "sell", "paid", "receipt",
   "inventory", "warehouse", "local_shipping", "delivery_dining",
-  "restaurant", "fastfood", "local_cafe", "local_bar", "local_drink",
-  "local_pizza", "local_dining", "room_service", "takeout_dining",
-  "lunch_dining", "dinner_dining", "breakfast_dining",
   "subject", "quiz", "assignment", "assignment_turned_in", "assignment_late",
   "assignment_return", "assignment_returned", "grade", "grading",
-  "school", "science", "history_edu", "biotech", "calculation",
+  "science", "history_edu", "biotech", "calculation",
   "functions", "integration_instructions", "data_object", "data_array",
-  "stat_0", "stat_1", "stat_2", "stat_3", "stat_minus_1", "stat_minus_2",
-  "stat_minus_3", "bar_chart", "pie_chart", "show_chart", "monitoring",
-  "insights", "analytics", "trending_flat", "trending_up", "trending_down",
-  "spark", "new_releases", "auto_graph", "auto_mode", "auto_awesome",
-  "magic_button", "auto_fix_high", "auto_fix_off", "auto_fix_normal",
+  "bar_chart", "pie_chart", "show_chart", "monitoring",
+  "insights", "trending_flat", "spark", "new_releases", "auto_graph",
+  "auto_mode", "magic_button", "auto_fix_high", "auto_fix_off",
   "tips_and_updates", "lightbulb", "lightbulb_outline", "lightbulb_circle",
-  "emoji_objects", "emoji_events", "emoji_nature", "emoji_transportation",
-  "emoji_symbols", "emoji_flags", "emoji_food_beverage", "emoji_activities",
-  "emoji_people", "emoji_animals_nature", "emoji_travel_places",
-  "emoji_objects", "emoji_smileys_emotion",
+  "emoji_objects", "emoji_events",
 ]);
 
 function stripIconNames(text: string): string {
-  // Remove icon name prefixes/suffixes — look for known icon names
   let cleaned = text;
-  for (const icon of ICON_NAMES) {
-    // Remove icon name if it appears at the start
-    if (cleaned.startsWith(icon)) {
-      cleaned = cleaned.slice(icon.length);
-    }
-    // Remove icon name if it appears at the end
-    if (cleaned.endsWith(icon)) {
-      cleaned = cleaned.slice(0, -icon.length);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const icon of ICON_NAMES) {
+      if (cleaned.startsWith(icon)) {
+        cleaned = cleaned.slice(icon.length);
+        changed = true;
+      }
+      if (cleaned.endsWith(icon)) {
+        cleaned = cleaned.slice(0, -icon.length);
+        changed = true;
+      }
     }
   }
   return cleaned.trim();
@@ -79,11 +62,9 @@ export function useNavDelegation() {
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      // Find closest clickable: a, button, or div with cursor-pointer
-      const clickable = target.closest("a, button, [class*='cursor-pointer'], [role='button']");
+      const clickable = target.closest("a, button, [class*='cursor-pointer'], [role='button']") as HTMLElement | null;
       if (!clickable) return;
 
-      // Skip if it's a real link with non-# href
       if (clickable.tagName === "A") {
         const href = clickable.getAttribute("href");
         if (href && href !== "#" && !href.startsWith("#")) return;
@@ -92,98 +73,112 @@ export function useNavDelegation() {
       const rawText = clickable.textContent?.trim() || "";
       const text = stripIconNames(rawText);
 
-      // Text-based routing map (exact match preferred, then starts-with)
-      const routes: { match: string; page: string; isAI?: boolean }[] = [
-        { match: "Home", page: "landing" },
-        { match: "Explore Courses", page: "courses" },
-        { match: "Explore", page: "courses" },
-        { match: "Ranks", page: "leaderboard" },
-        { match: "National Ranks", page: "leaderboard" },
-        { match: "Leaderboard", page: "leaderboard" },
-        { match: "Admin Dashboard", page: "admin-dashboard" },
-        { match: "Admin", page: "admin-dashboard" },
-        { match: "Community Forums", page: "community" },
-        { match: "Community", page: "community" },
-        { match: "My Courses", page: "my-courses" },
-        { match: "My Learning Dashboard", page: "my-courses" },
-        { match: "Try AI Tutor", page: "ai-tutor" },
-        { match: "Ask AI Now", page: "ai-tutor" },
-        { match: "Ask AI Tutor", page: "ai-tutor", isAI: true },
-        { match: "Ask a Question", page: "ai-tutor", isAI: true },
-        { match: "AI Tutor", page: "ai-tutor" },
-        { match: "START JOURNEY", page: "signup" },
-        { match: "Get Started for Free", page: "signup" },
-        { match: "Create an Account", page: "signup" },
-        { match: "Create Account", page: "my-courses" },
-        { match: "Sign Up", page: "signup" },
-        { match: "Sign In", page: "auth" },
-        { match: "Welcome Back", page: "auth" },
-        { match: "Continue Learning", page: "my-courses" },
-        { match: "Resume Lesson", page: "my-courses" },
-        { match: "View all 200+ courses", page: "courses" },
-        { match: "View all", page: "courses" },
-        { match: "View All", page: "courses" },
-        { match: "View Details", page: "course-detail" },
-        { match: "Start Course", page: "course-detail" },
-        { match: "Enroll Now", page: "course-detail" },
-        { match: "Talk to an Advisor", page: "ai-tutor" },
-        { match: "New Post", page: "post" },
-        { match: "Create New Post", page: "post" },
-        { match: "Start a Topic", page: "post" },
-        { match: "ScholarConnect", page: "post" },
-        { match: "Dashboard", page: "my-courses" },
-        { match: "Settings", page: "landing" },
-        { match: "Help", page: "landing" },
-        { match: "Help Center", page: "landing" },
-        { match: "Resources", page: "landing" },
-        { match: "Categories", page: "community" },
-        { match: "Members", page: "community" },
-        { match: "Bookmarks", page: "community" },
-        { match: "Feed", page: "community" },
-        { match: "Study Partners", page: "post" },
-        { match: "Profile", page: "my-courses" },
-        { match: "Continue with Google", page: "my-courses" },
-        { match: "Google", page: "my-courses" },
-        { match: "View All Activity", page: "admin-dashboard" },
-        { match: "Start AI Sprint", page: "ai-tutor" },
-        { match: "Invite a Friend", page: "community" },
-        { match: "View All Discussions", page: "community" },
-        { match: "Explain Memory Stacks in Detail", page: "ai-tutor" },
-        { match: "Post Reply", page: "post" },
-        { match: "View All Credentials", page: "my-courses" },
-        { match: "View Full Leaderboard", page: "leaderboard" },
-        { match: "Sort & Filter", page: "courses" },
-        { match: "Course Syllabus", page: "course-detail" },
-        // Forum categories -> post view
-        { match: "General Discussion", page: "post" },
-        { match: "Programming Help", page: "post" },
-        { match: "Career Advice", page: "post" },
-        { match: "Study Groups", page: "post" },
-        // Course cards in catalog
-        { match: "Full-Stack Web Development", page: "course-detail" },
-        { match: "Data Analysis", page: "course-detail" },
-        { match: "UI/UX Product Design", page: "course-detail" },
-        { match: "Cyber Defense", page: "course-detail" },
-        { match: "Flutter", page: "course-detail" },
+      // Route table — action is either "page" (navigate) or "ai" (open overlay)
+      const routes: { match: string; action: "page" | "ai"; page?: string }[] = [
+        // Nav links
+        { match: "Home", action: "page", page: "landing" },
+        { match: "Explore Courses", action: "page", page: "courses" },
+        { match: "Explore", action: "page", page: "courses" },
+        { match: "Ranks", action: "page", page: "leaderboard" },
+        { match: "National Ranks", action: "page", page: "leaderboard" },
+        { match: "Leaderboard", action: "page", page: "leaderboard" },
+        { match: "Admin Dashboard", action: "page", page: "admin-dashboard" },
+        { match: "Admin", action: "page", page: "admin-dashboard" },
+        { match: "Community Forums", action: "page", page: "community" },
+        { match: "Community", action: "page", page: "community" },
+        { match: "My Courses", action: "page", page: "my-courses" },
+        { match: "My Learning Dashboard", action: "page", page: "my-courses" },
+        { match: "Dashboard", action: "page", page: "my-courses" },
+        { match: "Profile", action: "page", page: "my-courses" },
+        { match: "Settings", action: "page", page: "landing" },
+        { match: "Help", action: "page", page: "landing" },
+        { match: "Help Center", action: "page", page: "landing" },
+        { match: "Resources", action: "page", page: "landing" },
+        { match: "Categories", action: "page", page: "community" },
+        { match: "Members", action: "page", page: "community" },
+        { match: "Bookmarks", action: "page", page: "community" },
+        { match: "Feed", action: "page", page: "community" },
+        { match: "Study Partners", action: "page", page: "post" },
+        { match: "Support", action: "page", page: "community" },
+        { match: "Courses", action: "page", page: "courses" },
+
+        // Auth
+        { match: "START JOURNEY", action: "page", page: "signup" },
+        { match: "Get Started for Free", action: "page", page: "signup" },
+        { match: "Create an Account", action: "page", page: "signup" },
+        { match: "Create Account", action: "page", page: "my-courses" },
+        { match: "Sign Up", action: "page", page: "signup" },
+        { match: "Sign In", action: "page", page: "auth" },
+        { match: "Welcome Back", action: "page", page: "auth" },
+        { match: "Continue with Google", action: "page", page: "my-courses" },
+        { match: "Google", action: "page", page: "my-courses" },
+
+        // Course actions
+        { match: "Continue Learning", action: "page", page: "my-courses" },
+        { match: "Resume Lesson", action: "page", page: "my-courses" },
+        { match: "View all 200+ courses", action: "page", page: "courses" },
+        { match: "View all", action: "page", page: "courses" },
+        { match: "View All", action: "page", page: "courses" },
+        { match: "View All Activity", action: "page", page: "admin-dashboard" },
+        { match: "View All Discussions", action: "page", page: "community" },
+        { match: "View All Credentials", action: "page", page: "my-courses" },
+        { match: "View Full Leaderboard", action: "page", page: "leaderboard" },
+        { match: "View Details", action: "page", page: "course-detail" },
+        { match: "Start Course", action: "page", page: "course-detail" },
+        { match: "Enroll Now", action: "page", page: "course-detail" },
+        { match: "Course Syllabus", action: "page", page: "course-detail" },
+        { match: "Sort & Filter", action: "page", page: "courses" },
+
+        // Forum categories → post view
+        { match: "General Discussion", action: "page", page: "post" },
+        { match: "Programming Help", action: "page", page: "post" },
+        { match: "Career Advice", action: "page", page: "post" },
+        { match: "Study Groups", action: "page", page: "post" },
+
+        // Course cards
+        { match: "Full-Stack Web Development", action: "page", page: "course-detail" },
+        { match: "Data Analysis", action: "page", page: "course-detail" },
+        { match: "UI/UX Product Design", action: "page", page: "course-detail" },
+        { match: "Cyber Defense", action: "page", page: "course-detail" },
+        { match: "Flutter", action: "page", page: "course-detail" },
+
+        // Posts
+        { match: "New Post", action: "page", page: "post" },
+        { match: "Create New Post", action: "page", page: "post" },
+        { match: "Start a Topic", action: "page", page: "post" },
+        { match: "ScholarConnect", action: "page", page: "post" },
+        { match: "Post Reply", action: "page", page: "post" },
+        { match: "Invite a Friend", action: "page", page: "community" },
+
+        // AI-related → open overlay (not navigate)
+        { match: "Try AI Tutor", action: "ai" },
+        { match: "Ask AI Now", action: "ai" },
+        { match: "Ask AI Tutor", action: "ai" },
+        { match: "Ask a Question", action: "ai" },
+        { match: "AI Tutor", action: "ai" },
+        { match: "Talk to an Advisor", action: "ai" },
+        { match: "Start AI Sprint", action: "ai" },
+        { match: "Explain Memory Stacks in Detail", action: "ai" },
       ];
 
       for (const route of routes) {
-        // Exact match
+        let matched = false;
         if (text === route.match) {
-          e.preventDefault();
-          if (route.isAI) setAiOverlayOpen(true);
-          else setActivePage(route.page);
-          return;
-        }
-        // Match at word boundary (next char is space, uppercase letter, or end)
-        if (text.startsWith(route.match)) {
+          matched = true;
+        } else if (text.startsWith(route.match)) {
           const nextChar = text[route.match.length];
-          if (nextChar === undefined || nextChar === ' ' || nextChar === nextChar.toUpperCase()) {
-            e.preventDefault();
-            if (route.isAI) setAiOverlayOpen(true);
-            else setActivePage(route.page);
-            return;
+          if (nextChar === undefined || nextChar === " " || nextChar === nextChar.toUpperCase()) {
+            matched = true;
           }
+        }
+        if (matched) {
+          e.preventDefault();
+          if (route.action === "ai") {
+            setAiOverlayOpen(true);
+          } else if (route.page) {
+            setActivePage(route.page);
+          }
+          return;
         }
       }
     };
