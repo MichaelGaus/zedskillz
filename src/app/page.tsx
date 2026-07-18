@@ -4,11 +4,12 @@ import { useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import { useNavDelegation } from "@/lib/use-nav-delegation";
 import { AIOverlay } from "@/components/shared/ai-overlay";
+import { GlobalUserMenu } from "@/components/shared/global-user-menu";
 
 // Page body components (auto-generated from design HTML)
 import { LandingBody } from "@/components/pages/landing-body";
-import { SigninBody } from "@/components/pages/signin-body";
-import { SignupBody } from "@/components/pages/signup-body";
+import { SigninPage } from "@/components/pages/signin-page";
+import { SignupPage } from "@/components/pages/signup-page";
 import { AdminBody } from "@/components/pages/admin-body";
 import { CoursesBody } from "@/components/pages/courses-body";
 import { MyCoursesBody } from "@/components/pages/my-courses-body";
@@ -33,9 +34,9 @@ export default function Home() {
       case "landing":
         return <LandingBody />;
       case "auth":
-        return <SigninBody />;
+        return <SigninPage />;
       case "signup":
-        return <SignupBody />;
+        return <SignupPage />;
       case "admin-dashboard":
         return <AdminBody />;
       case "courses":
@@ -61,6 +62,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-background">
       {renderPage()}
       <AIOverlay />
+      <GlobalUserMenu />
     </div>
   );
 }

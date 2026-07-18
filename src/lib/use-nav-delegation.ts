@@ -57,7 +57,7 @@ function stripIconNames(text: string): string {
 }
 
 export function useNavDelegation() {
-  const { setActivePage, setAiOverlayOpen } = useAppStore();
+  const { setActivePage, setAiOverlayOpen, isAuthenticated } = useAppStore();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -72,6 +72,10 @@ export function useNavDelegation() {
 
       const rawText = clickable.textContent?.trim() || "";
       const text = stripIconNames(rawText);
+
+      // Pages that require authentication — if not signed in, route to sign-in
+      const authRequiredPages = ["my-courses", "admin-dashboard", "members", "post", "scholarconnect"];
+      const isAuthRequired = (page: string) => authRequiredPages.includes(page);
 
       // Route table — action is either "page" (navigate) or "ai" (open overlay)
       const routes: { match: string; action: "page" | "ai"; page?: string }[] = [
@@ -175,9 +179,19 @@ export function useNavDelegation() {
         if (matched) {
           e.preventDefault();
           if (route.action === "ai") {
-            setAiOverlayOpen(true);
+            // AI overlay requires auth
+            if (!isAuthenticated) {
+              setActivePage("auth");
+            } else {
+              setAiOverlayOpen(true);
+            }
           } else if (route.page) {
-            setActivePage(route.page);
+            // Auth-gated pages: if not signed in, go to sign-in instead
+            if (isAuthRequired(route.page) && !isAuthenticated) {
+              setActivePage("auth");
+            } else {
+              setActivePage(route.page);
+            }
           }
           return;
         }
@@ -185,5 +199,5 @@ export function useNavDelegation() {
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
-  }, [setActivePage, setAiOverlayOpen]);
+  }, [setActivePage, setAiOverlayOpen, isAuthenticated]);
 }

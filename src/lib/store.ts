@@ -8,6 +8,12 @@ interface AppState {
   activePage: string;
   setActivePage: (page: string) => void;
 
+  // Authentication
+  isAuthenticated: boolean;
+  user: { name: string; email: string; avatar: string } | null;
+  signIn: (email: string, name?: string) => void;
+  signOut: () => void;
+
   // UI State
   theme: "light" | "dark";
   toggleTheme: () => void;
@@ -15,6 +21,10 @@ interface AppState {
   // AI Overlay (global FAB toggles this)
   aiOverlayOpen: boolean;
   setAiOverlayOpen: (open: boolean) => void;
+
+  // User menu dropdown (topbar avatar)
+  userMenuOpen: boolean;
+  setUserMenuOpen: (open: boolean) => void;
 
   // Selected entities
   selectedCourseId: string | null;
@@ -36,6 +46,33 @@ export const useAppStore = create<AppState>((set, get) => ({
   activePage: "landing",
   setActivePage: (page) => set({ activePage: page }),
 
+  // Auth — start unauthenticated so user sees landing + can sign in
+  isAuthenticated: false,
+  user: null,
+  signIn: (email, name) => {
+    // Derive a display name from the email if not provided
+    const derivedName = name || email.split("@")[0].split(/[._-]/).map(
+      (s) => s.charAt(0).toUpperCase() + s.slice(1)
+    ).join(" ");
+    set({
+      isAuthenticated: true,
+      user: {
+        name: derivedName,
+        email,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
+      },
+      activePage: "my-courses",
+    });
+  },
+  signOut: () => {
+    set({
+      isAuthenticated: false,
+      user: null,
+      activePage: "landing",
+      userMenuOpen: false,
+    });
+  },
+
   theme: "light",
   toggleTheme: () => {
     const next = get().theme === "light" ? "dark" : "light";
@@ -47,6 +84,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   aiOverlayOpen: false,
   setAiOverlayOpen: (open) => set({ aiOverlayOpen: open }),
+
+  userMenuOpen: false,
+  setUserMenuOpen: (open) => set({ userMenuOpen: open }),
 
   selectedCourseId: null,
   setSelectedCourseId: (id) => set({ selectedCourseId: id }),
