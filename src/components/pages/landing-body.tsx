@@ -317,9 +317,9 @@ export function LandingBody() {
       
       <footer className="w-full py-xl bg-surface-container-highest border-t border-outline-variant">
       <div className="max-w-7xl mx-auto px-container-margin md:px-xl flex flex-col md:flex-row justify-between items-center gap-md">
-      <div className="flex flex-col items-center md:items-start gap-xs">
+      <div className="flex flex-col items-center md:items-start gap-xs shrink-0">
       <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAt_FFDZ4c-Q-JUYwLwY1cKQBKoSmjAfVar_wkJZhgsmjbNRWI9NfL7Jvg3Ksx1_jojIvCpsYy9TFNCQ0WNHE0uFsHmM2zc-E_sUm2V8tOS0U0vduBoj7Ci8RZZBaY-xP3aLLNruAvg_GzrIU1F9F0esGE93gQSmj5BGEXMaRX2on6cbUCWZCVQhD0IyuzH4z0wKDp6BrBglJIYYUTjIkg7UUTzSP1S0HV-WYu4o0Jd-3HuicT2cvSpfgBDo88i3lTPQOE" alt="Zedskillz Hub" className="w-auto object-contain h-10" />
-      <p className="text-on-surface-variant text-body-sm max-w-xs text-center md:text-left">© 2024 Zedskillz Hub Zambia. Empowering through AI.</p>
+      <p className="text-on-surface-variant text-body-sm whitespace-nowrap text-center md:text-left">© 2024 Zedskillz Hub Zambia. Empowering through AI.</p>
       </div>
       <div className="flex flex-wrap justify-center gap-md">
       <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Privacy Policy</a>
