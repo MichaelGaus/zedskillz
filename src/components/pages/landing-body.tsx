@@ -40,9 +40,10 @@ export function LandingBody() {
       <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/3 left-1/2 w-40 h-40 bg-tertiary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="max-w-7xl mx-auto px-container-margin md:px-xl relative z-10">
+      <div className="max-w-7xl mx-auto px-container-margin md:px-xl relative z-10 flex flex-col lg:flex-row items-center gap-xl">
 
-      <div className="space-y-lg max-w-3xl">
+      {/* Left: Hero content */}
+      <div className="flex-1 space-y-lg w-full max-w-2xl">
       <div className="inline-flex items-center gap-sm px-md py-xs bg-tertiary-fixed text-on-tertiary-fixed rounded-full">
       <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: '"FILL" 1' }}>auto_awesome</span>
       <span className="font-label-caps text-label-caps">AI-POWERED EDUCATION IN ZAMBIA</span>
@@ -50,7 +51,7 @@ export function LandingBody() {
       <h2 className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary max-w-2xl leading-tight">
                               Master New Skills with Your Personal <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAM_jtTUS0Gy13cX16GAc7kS-naEyfHUvJv_qZSvzy6A2CIDpJ-1VSChazPEIYdbTXU6nIiKQsx8mVL2q4DcL_FXEl533w9aB9ktWW_QjTNI_cK-j1EuQpEIAx7XipusKpEnkQMaBDfmMSKQ2m0KUYU6RmYXw0JoYQZH-QqWGS57NJrCFIuizuV-m3-YvH4OrM0Ezc8oq11RpYNwEi7evUT1uux2JnHRS8CXT46vQPZTF_Ru36WaZtbKoMBn0tSd6Jkz5Y" alt="Zambian AI Tutor" className="inline-block h-10 w-auto align-middle" />
       </h2>
-      <p className="text-body-md text-on-surface-variant max-w-2xl leading-relaxed">
+      <p className="text-body-md text-on-surface-variant max-w-xl leading-relaxed">
                               Access world-class education tailored to local Zambian contexts. Learn in your preferred language, track your progress on national leaderboards, and get instant help from our AI mentor.
                           </p>
       <div className="flex flex-col sm:flex-row gap-md pt-md">
@@ -71,6 +72,66 @@ export function LandingBody() {
       </div>
       </div>
 
+      {/* Right: AI Tutor chat mockup card */}
+      <div className="flex-1 relative w-full max-w-2xl">
+      <div className="glass-surface p-lg rounded-3xl ai-glow shadow-2xl relative overflow-hidden border-outline-variant/30">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-xl">
+      <div className="flex items-center gap-md">
+      <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white">
+      <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>smart_toy</span>
+      </div>
+      <div>
+      <p className="font-bold text-primary">ZedSkillz AI Assistant</p>
+      <p className="text-xs text-on-surface-variant">Online • Ready to help in Bemba, Nyanja & English</p>
+      </div>
+      </div>
+      <span className="material-symbols-outlined text-outline">more_vert</span>
+      </div>
+
+      {/* Chat Bubbles */}
+      <div className="space-y-lg">
+      {/* AI message 1 */}
+      <div className="flex gap-md">
+      <div className="w-8 h-8 rounded-full bg-secondary-container shrink-0"></div>
+      <div className="bg-surface-container-low p-md rounded-2xl rounded-tl-none border border-outline-variant/20 max-w-[80%]">
+      <p className="text-body-sm">Muli bwanji! How can I help you with your Grade 12 Math revision today?</p>
+      </div>
+      </div>
+      {/* User message */}
+      <div className="flex gap-md flex-row-reverse">
+      <div className="w-8 h-8 rounded-full bg-primary-container shrink-0"></div>
+      <div className="bg-primary text-white p-md rounded-2xl rounded-tr-none max-w-[80%]">
+      <p className="text-body-sm">I'm struggling with quadratic equations. Can you explain them simply?</p>
+      </div>
+      </div>
+      {/* AI message 2 (thinking + response) */}
+      <div className="flex gap-md">
+      <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shrink-0">
+      <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span>
+      </div>
+      <div className="bg-surface-container-low p-md rounded-2xl rounded-tl-none border-l-4 border-primary ai-glow max-w-[80%]">
+      <p className="text-body-sm italic text-primary font-semibold mb-2">AI is thinking...</p>
+      <p className="text-body-sm">Of course! Think of a quadratic equation like a bridge arch. In Zambia, we see these in architecture all the time. Let's look at the formula ax² + bx + c = 0...</p>
+      </div>
+      </div>
+      </div>
+
+      {/* Input area */}
+      <div className="mt-xl flex gap-md">
+      <div className="flex-1 bg-surface rounded-full border border-outline-variant px-md py-sm flex items-center text-on-surface-variant">
+                                      Type your question...
+                                  </div>
+      <button className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-md">
+      <span className="material-symbols-outlined">send</span>
+      </button>
+      </div>
+      </div>
+
+      {/* Decorative blurred circles around card */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+      </div>
       </div>
       </section>
       
