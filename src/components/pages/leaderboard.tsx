@@ -1,293 +1,277 @@
 "use client";
 
-import { leaderboard, achievements, allBadges, users } from "@/lib/mock-data";
-import {
-  Trophy,
-  Flame,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Crown,
-  Zap,
-  Award,
-  type LucideIcon,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { PageHeader } from "@/components/shared/page-header";
+import { useState } from "react";
+import { useAppStore } from "@/lib/store";
+import { leaderboard, currentUser } from "@/lib/mock-data";
+import { Icon } from "@/components/shared/icon";
+import { AppShell } from "@/components/shared/app-shell";
 import { cn } from "@/lib/utils";
 
-const badgeRarityColors = {
-  common: "from-emerald-500 to-teal-500",
-  rare: "from-sky-500 to-blue-500",
-  epic: "from-violet-500 to-purple-500",
-  legendary: "from-amber-500 to-orange-500",
-};
+export function Leaderboard() {
+  const { setActivePage } = useAppStore();
+  const [scope, setScope] = useState<"Global" | "Zambia">("Zambia");
 
-const badgeRarityBg = {
-  common: "bg-emerald-500/10",
-  rare: "bg-sky-500/10",
-  epic: "bg-violet-500/10",
-  legendary: "bg-amber-500/10",
-};
-
-const badgeIcons: Record<string, LucideIcon> = {
-  zap: Zap,
-  flame: Flame,
-  award: Award,
-  crown: Crown,
-  footprints: TrendingUp,
-  users: Trophy,
-  heart: Award,
-  trophy: Trophy,
-  moon: Star,
-  sunrise: Star,
-  languages: Award,
-  "graduation-cap": Award,
-};
-
-export function LeaderboardPage() {
   const top3 = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
-  const myRank = leaderboard.findIndex((e) => e.userId === "u-student-1") + 1;
+  const podiumOrder = [top3[1], top3[0], top3[2]]; // 2nd, 1st, 3rd
 
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto">
-      <PageHeader
-        title="Leaderboard & Achievements"
-        description={`You're ranked #${myRank} out of 124,503 learners`}
-        icon={Trophy}
-      />
+    <AppShell
+      activeNav="leaderboard"
+      sidebarActivePage="leaderboard"
+      navLinks={[
+        { label: "Home", page: "landing" },
+        { label: "Explore", page: "courses" },
+        { label: "Ranks", page: "leaderboard" },
+        { label: "Admin", page: "admin-dashboard" },
+        { label: "Community", page: "community" },
+      ]}
+      bottomNavItems={[
+        { label: "Home", icon: "home", page: "landing" },
+        { label: "Explore", icon: "explore", page: "courses" },
+        { label: "Ranks", icon: "leaderboard", page: "leaderboard", elevated: true },
+        { label: "Admin", icon: "dashboard", page: "admin-dashboard" },
+      ]}
+      bottomNavActivePage="leaderboard"
+      showSearch={false}
+    >
+      <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
+        {/* ===== Podium Section ===== */}
+        <div className="text-center mb-10">
+          <h1 className="font-display text-display-lg-mobile md:text-display-lg text-primary mb-2">
+            National Ranks
+          </h1>
+          <p className="text-body-md text-on-surface-variant">
+            Top scholars across Zambia this week
+          </p>
 
-      <Tabs defaultValue="leaderboard">
-        <TabsList className="mb-6">
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
-          <TabsTrigger value="badges">Badges</TabsTrigger>
-        </TabsList>
-
-        {/* LEADERBOARD */}
-        <TabsContent value="leaderboard">
-          {/* Top 3 Podium */}
-          <div className="grid sm:grid-cols-3 gap-4 mb-6">
-            {[1, 0, 2].map((idx) => {
-              const entry = top3[idx];
-              const isFirst = idx === 0;
+          {/* 3-column podium */}
+          <div className="flex justify-center items-end gap-4 md:gap-8 mt-10">
+            {podiumOrder.map((entry) => {
+              const isFirst = entry.rank === 1;
               return (
-                <Card
+                <div
                   key={entry.userId}
                   className={cn(
-                    "text-center overflow-hidden",
-                    isFirst && "sm:-mt-4 border-amber-500/50"
+                    "flex flex-col items-center",
+                    isFirst && "animate-float"
                   )}
                 >
-                  <CardContent className="p-6">
-                    <div className={cn(
-                      "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3",
-                      idx === 0 && "bg-amber-500/20",
-                      idx === 1 && "bg-slate-300/30",
-                      idx === 2 && "bg-orange-700/20"
-                    )}>
-                      <Trophy className={cn(
-                        "w-8 h-8",
-                        idx === 0 && "text-amber-500",
-                        idx === 1 && "text-slate-400",
-                        idx === 2 && "text-orange-700"
-                      )} />
+                  {/* Crown icon for 1st */}
+                  {isFirst && (
+                    <div className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center mb-2 shadow-lg">
+                      <Icon name="workspace_premium" filled size={24} />
                     </div>
-                    <Avatar className={cn("w-16 h-16 mx-auto mb-2 ring-4", isFirst ? "ring-amber-500/30" : "ring-transparent")}>
-                      <AvatarImage src={entry.avatar} />
-                      <AvatarFallback>{entry.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="font-semibold">{entry.name}</div>
-                    <div className="text-xs text-muted-foreground mb-2">Level {entry.level}</div>
-                    <div className="text-2xl font-bold text-primary">{entry.xp.toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground">XP</div>
-                    <div className="flex items-center justify-center gap-3 mt-3 text-xs">
-                      <span className="flex items-center gap-1">
-                        <Flame className="w-3 h-3 text-orange-500" />
-                        {entry.streak}d
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Award className="w-3 h-3 text-primary" />
-                        {entry.coursesCompleted} courses
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
+                  )}
+
+                  {/* Avatar */}
+                  <div
+                    className={cn(
+                      "rounded-full border-4",
+                      isFirst
+                        ? "w-32 h-32 md:w-40 md:h-40 border-primary-container scale-110"
+                        : entry.rank === 2
+                        ? "w-24 h-24 md:w-32 md:h-32 border-surface-variant"
+                        : "w-24 h-24 md:w-32 md:h-32 border-secondary-container"
+                    )}
+                  >
+                    <img
+                      src={entry.avatar}
+                      alt={entry.name}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  </div>
+
+                  {/* Rank pill */}
+                  <div
+                    className={cn(
+                      "mt-3 px-3 py-1 rounded-full text-xs font-bold",
+                      isFirst
+                        ? "bg-primary text-on-primary"
+                        : entry.rank === 2
+                        ? "bg-surface-variant text-on-surface"
+                        : "bg-secondary-container text-on-secondary-container"
+                    )}
+                  >
+                    {entry.rank === 1 ? "1st" : entry.rank === 2 ? "2nd" : "3rd"}
+                  </div>
+
+                  {/* Name */}
+                  <div
+                    className={cn(
+                      "mt-2 font-title font-semibold text-on-surface",
+                      isFirst && "font-headline text-headline text-primary"
+                    )}
+                  >
+                    {entry.name}
+                  </div>
+
+                  {/* XP */}
+                  <div className="font-bold text-primary-container text-sm mt-1">
+                    {entry.xp.toLocaleString()} XP
+                  </div>
+                </div>
               );
             })}
           </div>
+        </div>
 
-          {/* Rest of leaderboard */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">All Rankings</CardTitle>
-            </CardHeader>
-            <CardContent>
+        {/* ===== Two-column grid ===== */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Top 100 Table — col-span-2 */}
+          <div className="lg:col-span-2 bg-surface-container-lowest rounded-2xl overflow-hidden border border-outline-variant/30">
+            {/* Header bar */}
+            <div className="bg-surface-container px-5 py-4 flex items-center justify-between">
+              <h3 className="font-headline text-headline text-on-surface">
+                Top 100 Scholars
+              </h3>
+              {/* Scope toggle */}
+              <div className="flex gap-1">
+                {(["Global", "Zambia"] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setScope(s)}
+                    className={cn(
+                      "px-3 py-1 text-xs font-medium rounded-full transition-colors",
+                      scope === s
+                        ? "bg-primary text-on-primary"
+                        : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Table */}
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-outline-variant text-xs text-on-surface-variant">
+                  <th className="font-label-caps uppercase tracking-wider text-left px-5 py-3">Rank</th>
+                  <th className="font-label-caps uppercase tracking-wider text-left px-5 py-3">Learner</th>
+                  <th className="font-label-caps uppercase tracking-wider text-center px-5 py-3">Streak</th>
+                  <th className="font-label-caps uppercase tracking-wider text-right px-5 py-3">XP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rest.map((entry) => (
+                  <tr
+                    key={entry.userId}
+                    className={cn(
+                      "border-b border-outline-variant/30 last:border-0 hover:bg-surface-container cursor-pointer transition-colors",
+                      entry.isMe && "bg-primary-container/5 border-l-4 border-primary"
+                    )}
+                  >
+                    <td className="px-5 py-3 font-bold text-primary">#{entry.rank}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <img src={entry.avatar} alt="" className="w-8 h-8 rounded-full" />
+                        <span className="font-medium">
+                          {entry.name}
+                          {entry.isMe && (
+                            <span className="ml-1 text-[10px] text-primary">(You)</span>
+                          )}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <span className="inline-flex items-center gap-1 text-xs">
+                        <Icon
+                          name="local_fire_department"
+                          filled
+                          size={16}
+                          className="text-tertiary-container"
+                        />
+                        {entry.streak}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right font-semibold">
+                      {entry.xp.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Right column — 3 stacked cards */}
+          <div className="space-y-4">
+            {/* Personal Stats */}
+            <div className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30">
+              <h3 className="font-title text-sm font-semibold mb-3">Your Stats</h3>
               <div className="space-y-2">
-                {rest.map((entry, idx) => {
-                  const rank = idx + 4;
-                  const isMe = entry.userId === "u-student-1";
-                  return (
-                    <div
-                      key={entry.userId}
-                      className={cn(
-                        "flex items-center gap-3 p-3 rounded-lg border",
-                        isMe && "bg-primary/5 border-primary"
-                      )}
-                    >
-                      <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm shrink-0",
-                        isMe ? "bg-primary text-primary-foreground" : "bg-muted"
-                      )}>
-                        {rank}
-                      </div>
-                      <Avatar className="w-9 h-9">
-                        <AvatarImage src={entry.avatar} />
-                        <AvatarFallback>{entry.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium text-sm">{entry.name}</span>
-                          {isMe && <Badge variant="secondary" className="text-[10px]">You</Badge>}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Level {entry.level} · {entry.streak}-day streak
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {entry.trend === "up" && <TrendingUp className="w-3 h-3 text-emerald-500" />}
-                        {entry.trend === "down" && <TrendingDown className="w-3 h-3 text-rose-500" />}
-                        {entry.trend === "same" && <Minus className="w-3 h-3 text-muted-foreground" />}
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-sm">{entry.xp.toLocaleString()}</div>
-                        <div className="text-[10px] text-muted-foreground">XP</div>
+                {[
+                  { icon: "military_tech", label: "Current Rank", value: `#${currentUser.rank}`, color: "text-primary" },
+                  { icon: "bolt", label: "Total XP", value: currentUser.xp.toLocaleString(), color: "text-amber-500" },
+                  { icon: "event_available", label: "Learning Days", value: String(currentUser.learningDays), color: "text-emerald-500" },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="flex items-center gap-3 bg-surface-container-low rounded-lg p-3"
+                  >
+                    <Icon name={s.icon} filled size={20} className={s.color} />
+                    <div className="flex-1">
+                      <div className="text-xs text-on-surface-variant">{s.label}</div>
+                      <div className="font-display text-lg font-bold text-primary">
+                        {s.value}
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
 
-        {/* ACHIEVEMENTS */}
-        <TabsContent value="achievements">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {achievements.map((ach) => {
-              const Icon = badgeIcons[ach.icon] || Trophy;
-              const pct = (ach.progress / ach.target) * 100;
-              return (
-                <Card key={ach.id}>
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-11 h-11 rounded-xl gradient-emerald flex items-center justify-center shrink-0">
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm">{ach.title}</div>
-                        <div className="text-xs text-muted-foreground">{ach.description}</div>
-                      </div>
-                    </div>
-                    <div className="mb-2">
-                      <div className="flex items-center justify-between text-xs mb-1.5">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">{ach.progress}/{ach.target}</span>
-                      </div>
-                      <Progress value={pct} className="h-1.5" />
-                    </div>
-                    <div className="flex items-center gap-2 pt-2 border-t">
-                      <Badge variant="secondary" className="text-[10px]">
-                        <Zap className="w-3 h-3 mr-0.5" />
-                        +{ach.reward.xp} XP
-                      </Badge>
-                      <Badge variant="secondary" className="text-[10px]">
-                        +{ach.reward.coins} coins
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {/* AI Booster */}
+            <div className="relative bg-primary-container text-on-primary-container rounded-2xl p-5 overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-on-primary-container/20 blur-3xl rounded-full" />
+              <div className="relative">
+                <div className="font-label-caps text-[10px] uppercase tracking-widest opacity-80 mb-2">
+                  AI Booster
+                </div>
+                <h3 className="font-headline text-headline mb-2">
+                  Gain +500 XP with Smart Sprints
+                </h3>
+                <p className="text-sm opacity-90 mb-4 leading-relaxed">
+                  Our AI detected a gap in your &apos;Advanced Physics&apos; module.
+                  Complete a quick quiz to surge up 3 ranks!
+                </p>
+                <button
+                  onClick={() => setActivePage("ai-tutor")}
+                  className="px-4 py-2 bg-surface text-primary rounded-full text-sm font-semibold hover:bg-surface-container-lowest transition-colors"
+                >
+                  Start AI Sprint
+                </button>
+              </div>
+            </div>
+
+            {/* Scholar Spotlight */}
+            <div className="bg-secondary-container rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-on-secondary-container flex items-center justify-center">
+                  <Icon name="trending_up" size={18} className="text-secondary-container" />
+                </div>
+                <h3 className="font-title text-sm font-semibold text-on-secondary-container">
+                  Scholar Spotlight
+                </h3>
+              </div>
+              <div className="bg-white/50 rounded-xl p-4 flex items-center gap-3">
+                <img
+                  src={top3[0].avatar}
+                  alt={top3[0].name}
+                  className="w-12 h-12 rounded-full border-2 border-primary"
+                />
+                <div>
+                  <div className="font-title text-sm font-semibold">{top3[0].name}</div>
+                  <div className="text-xs text-on-surface-variant">
+                    Moved up 5 ranks today! 🔥
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </TabsContent>
-
-        {/* BADGES */}
-        <TabsContent value="badges">
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle className="text-base">Your Earned Badges</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {users[0].badges.map((b) => {
-                  const Icon = badgeIcons[b.icon] || Trophy;
-                  return (
-                    <div key={b.id} className="text-center p-3 rounded-lg border bg-muted/30">
-                      <div className={cn(
-                        "w-14 h-14 rounded-full bg-gradient-to-br mx-auto flex items-center justify-center mb-2",
-                        badgeRarityColors[b.rarity]
-                      )}>
-                        <Icon className="w-7 h-7 text-white" />
-                      </div>
-                      <div className="font-medium text-sm">{b.name}</div>
-                      <div className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
-                        {b.description}
-                      </div>
-                      <Badge className={cn("mt-2 text-[10px] capitalize", badgeRarityBg[b.rarity])}>
-                        {b.rarity}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">All Available Badges</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {allBadges.map((b) => {
-                  const Icon = badgeIcons[b.icon] || Trophy;
-                  const earned = users[0].badges.some((eb) => eb.id === b.id.replace("ab", "b"));
-                  return (
-                    <div
-                      key={b.id}
-                      className={cn(
-                        "text-center p-3 rounded-lg border",
-                        earned ? "bg-muted/30" : "opacity-40 grayscale"
-                      )}
-                    >
-                      <div className={cn(
-                        "w-14 h-14 rounded-full bg-gradient-to-br mx-auto flex items-center justify-center mb-2",
-                        badgeRarityColors[b.rarity]
-                      )}>
-                        <Icon className="w-7 h-7 text-white" />
-                      </div>
-                      <div className="font-medium text-sm">{b.name}</div>
-                      <div className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
-                        {b.description}
-                      </div>
-                      <Badge className={cn("mt-2 text-[10px] capitalize", badgeRarityBg[b.rarity])}>
-                        {b.rarity}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+        </div>
+      </div>
+    </AppShell>
   );
 }

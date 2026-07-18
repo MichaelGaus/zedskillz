@@ -1,36 +1,55 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  display: "swap",
+});
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const hankenGrotesk = Hanken_Grotesk({
+  variable: "--font-hanken-grotesk",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Zedskillz — AI-Powered Learning Platform for Africa",
+  title: "Zedskillz Hub | AI-Powered Learning for Zambia",
   description:
-    "Learn skills that matter. Teach what you know. Powered by AI tutors that speak your language. Built for African learners, schools, and organizations.",
+    "Access world-class education tailored to local Zambian contexts. Learn in your preferred language, track your progress on national leaderboards, and get instant help from our AI mentor.",
   keywords: [
     "Zedskillz",
-    "online learning",
-    "AI tutor",
-    "Africa",
     "Zambia",
-    "courses",
-    "LMS",
+    "AI tutor",
+    "online learning",
+    "Bemba",
+    "Nyanja",
+    "Tonga",
+    "ECZ",
+    "Lusaka",
+    "Copperbelt",
   ],
-  authors: [{ name: "Zedskillz Team" }],
+  authors: [{ name: "Zedskillz Hub Zambia" }],
   icons: {
     icon: "/logo.svg",
   },
   openGraph: {
-    title: "Zedskillz — AI-Powered Learning Platform for Africa",
+    title: "Zedskillz Hub | AI-Powered Learning for Zambia",
     description:
-      "Learn skills that matter. Teach what you know. Powered by AI tutors.",
-    siteName: "Zedskillz",
+      "Master new skills with your personal Zambian AI tutor. Learn in Bemba, Nyanja & English.",
+    siteName: "Zedskillz Hub",
     type: "website",
   },
 };
@@ -43,7 +62,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans antialiased bg-background text-foreground`}
+        className={`${plusJakarta.variable} ${inter.variable} ${hankenGrotesk.variable} font-sans antialiased bg-background text-on-surface`}
       >
         {children}
         <Toaster />
