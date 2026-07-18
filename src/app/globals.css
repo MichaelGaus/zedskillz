@@ -4,42 +4,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================================
+   ZEDSKILLZ HUB — Material Design 3 Design System
+   Brand: Burgundy/oxblood #480008
+   Fonts: Plus Jakarta Sans (display), Inter (body), Hanken Grotesk (labels)
+   ============================================================================ */
+
 @theme inline {
+  /* === Color tokens === */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-plus-jakarta);
-  --font-label: var(--font-hanken-grotesk);
-
-  /* M3 color tokens */
-  --color-primary: var(--primary);
-  --color-on-primary: var(--on-primary);
-  --color-primary-container: var(--primary-container);
-  --color-on-primary-container: var(--on-primary-container);
-  --color-primary-fixed: var(--primary-fixed);
-  --color-on-primary-fixed: var(--on-primary-fixed);
-  --color-primary-fixed-dim: var(--primary-fixed-dim);
-  --color-on-primary-fixed-variant: var(--on-primary-fixed-variant);
-
-  --color-secondary: var(--secondary);
-  --color-on-secondary: var(--on-secondary);
-  --color-secondary-container: var(--secondary-container);
-  --color-on-secondary-container: var(--on-secondary-container);
-
-  --color-tertiary: var(--tertiary);
-  --color-on-tertiary: var(--on-tertiary);
-  --color-tertiary-container: var(--tertiary-container);
-  --color-on-tertiary-container: var(--on-tertiary-container);
-  --color-tertiary-fixed: var(--tertiary-fixed);
-  --color-on-tertiary-fixed: var(--on-tertiary-fixed);
-  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
-
-  --color-error: var(--error);
-  --color-on-error: var(--on-error);
-  --color-error-container: var(--error-container);
-  --color-on-error-container: var(--on-error-container);
-
-  --color-background: var(--background);
   --color-on-background: var(--on-background);
   --color-surface: var(--surface);
   --color-on-surface: var(--on-surface);
@@ -53,23 +27,46 @@
   --color-surface-container-high: var(--surface-container-high);
   --color-surface-container-highest: var(--surface-container-highest);
 
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-primary-fixed: var(--primary-fixed);
+  --color-on-primary-fixed: var(--on-primary-fixed);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
+  --color-on-primary-fixed-variant: var(--on-primary-fixed-variant);
+
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-secondary-fixed: var(--secondary-fixed);
+  --color-secondary-fixed-dim: var(--secondary-fixed-dim);
+  --color-on-secondary-fixed: var(--on-secondary-fixed);
+  --color-on-secondary-fixed-variant: var(--on-secondary-fixed-variant);
+
+  --color-tertiary: var(--tertiary);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+  --color-tertiary-fixed: var(--tertiary-fixed);
+  --color-on-tertiary-fixed: var(--on-tertiary-fixed);
+  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
+  --color-on-tertiary-fixed-variant: var(--on-tertiary-fixed-variant);
+
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+
   --color-outline: var(--outline);
   --color-outline-variant: var(--outline-variant);
-
   --color-inverse-surface: var(--inverse-surface);
   --color-inverse-on-surface: var(--inverse-on-surface);
   --color-inverse-primary: var(--inverse-primary);
+  --color-surface-tint: var(--surface-tint);
 
-  /* Sidebar aliases (for shadcn components) */
-  --color-sidebar: var(--surface-container-low);
-  --color-sidebar-foreground: var(--on-surface);
-  --color-sidebar-primary: var(--primary);
-  --color-sidebar-primary-foreground: var(--on-primary);
-  --color-sidebar-accent: var(--secondary-container);
-  --color-sidebar-accent-foreground: var(--on-secondary-container);
-  --color-sidebar-border: var(--outline-variant);
-  --color-sidebar-ring: var(--primary);
-
+  /* shadcn/ui aliases */
   --color-muted: var(--surface-container);
   --color-muted-foreground: var(--on-surface-variant);
   --color-accent: var(--secondary-container);
@@ -81,29 +78,92 @@
   --color-border: var(--outline-variant);
   --color-input: var(--surface-container-high);
   --color-ring: var(--primary);
-
+  --color-sidebar: var(--surface-container-low);
+  --color-sidebar-foreground: var(--on-surface);
+  --color-sidebar-primary: var(--primary);
+  --color-sidebar-primary-foreground: var(--on-primary);
+  --color-sidebar-accent: var(--secondary-container);
+  --color-sidebar-accent-foreground: var(--on-secondary-container);
+  --color-sidebar-border: var(--outline-variant);
+  --color-sidebar-ring: var(--primary);
   --color-chart-1: var(--primary);
   --color-chart-2: var(--tertiary);
   --color-chart-3: var(--primary-fixed-dim);
   --color-chart-4: var(--on-tertiary-container);
   --color-chart-5: var(--secondary);
 
+  /* === Font families (matches design's font-* aliases) === */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display-lg: var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-display-lg-mobile: var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-headline-md: var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-title-sm: var(--font-inter), system-ui, sans-serif;
+  --font-body-md: var(--font-inter), system-ui, sans-serif;
+  --font-body-sm: var(--font-inter), system-ui, sans-serif;
+  --font-label-caps: var(--font-hanken-grotesk), system-ui, sans-serif;
+
+  /* === Font sizes (matches design's text-* aliases) === */
+  --text-display-lg: 32px;
+  --text-display-lg--line-height: 40px;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 700;
+
+  --text-display-lg-mobile: 28px;
+  --text-display-lg-mobile--line-height: 36px;
+  --text-display-lg-mobile--letter-spacing: -0.02em;
+  --text-display-lg-mobile--font-weight: 700;
+
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--font-weight: 600;
+
+  --text-title-sm: 18px;
+  --text-title-sm--line-height: 24px;
+  --text-title-sm--font-weight: 600;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--font-weight: 400;
+
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
+  --text-body-sm--font-weight: 400;
+
+  --text-label-caps: 12px;
+  --text-label-caps--line-height: 16px;
+  --text-label-caps--letter-spacing: 0.05em;
+  --text-label-caps--font-weight: 700;
+
+  /* === Spacing (matches design's spacing tokens) === */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-container-margin: 16px;
+  --spacing-touch-target: 48px;
+  --spacing-base: 4px;
+
+  /* === Border radius === */
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
+  --radius-full: 9999px;
 }
 
+/* ============================================================================
+   LIGHT MODE (default) — Material Design 3 light scheme
+   ============================================================================ */
 :root {
-  /* ===== Zedskillz Brand — M3 Burgundy/Oxblood Palette ===== */
   --primary: #480008;
   --on-primary: #ffffff;
   --primary-container: #6b0d16;
   --on-primary-container: #ffdad8;
   --primary-fixed: #ffdad8;
-  --on-primary-fixed: #3e0007;
+  --on-primary-fixed: #410006;
   --primary-fixed-dim: #ffb3b0;
   --on-primary-fixed-variant: #852226;
 
@@ -111,6 +171,10 @@
   --on-secondary: #ffffff;
   --secondary-container: #e5dedf;
   --on-secondary-container: #1f1b1c;
+  --secondary-fixed: #e8e1e2;
+  --secondary-fixed-dim: #ccc5c6;
+  --on-secondary-fixed: #1e1b1c;
+  --on-secondary-fixed-variant: #4a4647;
 
   --tertiary: #480006;
   --on-tertiary: #ffffff;
@@ -119,6 +183,7 @@
   --tertiary-fixed: #ffdad7;
   --on-tertiary-fixed: #410005;
   --tertiary-fixed-dim: #ffb3ae;
+  --on-tertiary-fixed-variant: #920417;
 
   --error: #ba1a1a;
   --on-error: #ffffff;
@@ -129,7 +194,7 @@
   --on-background: #1a1c1c;
   --surface: #f9f9f9;
   --on-surface: #1a1c1c;
-  --surface-variant: #f5dddd;
+  --surface-variant: #e2e2e2;
   --on-surface-variant: #574241;
   --surface-dim: #dadada;
   --surface-bright: #f9f9f9;
@@ -138,6 +203,7 @@
   --surface-container: #eeeeee;
   --surface-container-high: #e8e8e8;
   --surface-container-highest: #e2e2e2;
+  --surface-tint: #a5393b;
 
   --outline: #8a7170;
   --outline-variant: #ddc0be;
@@ -145,16 +211,20 @@
   --inverse-surface: #2f3131;
   --inverse-on-surface: #f1f1f1;
   --inverse-primary: #ffb3b0;
+
+  --foreground: #1a1c1c;
 }
 
+/* ============================================================================
+   DARK MODE
+   ============================================================================ */
 .dark {
-  /* ===== Dark mode — same brand, inverted surfaces ===== */
   --primary: #ffb3b0;
   --on-primary: #680012;
   --primary-container: #852226;
   --on-primary-container: #ffdad8;
   --primary-fixed: #ffdad8;
-  --on-primary-fixed: #3e0007;
+  --on-primary-fixed: #410006;
   --primary-fixed-dim: #ffb3b0;
   --on-primary-fixed-variant: #852226;
 
@@ -162,6 +232,10 @@
   --on-secondary: #2b2929;
   --secondary-container: #4a4546;
   --on-secondary-container: #e5dedf;
+  --secondary-fixed: #e8e1e2;
+  --secondary-fixed-dim: #ccc5c6;
+  --on-secondary-fixed: #1e1b1c;
+  --on-secondary-fixed-variant: #4a4647;
 
   --tertiary: #ffb3ae;
   --on-tertiary: #680014;
@@ -170,6 +244,7 @@
   --tertiary-fixed: #ffdad7;
   --on-tertiary-fixed: #410005;
   --tertiary-fixed-dim: #ffb3ae;
+  --on-tertiary-fixed-variant: #920417;
 
   --error: #ffb4ab;
   --on-error: #690005;
@@ -189,6 +264,7 @@
   --surface-container: #211e1e;
   --surface-container-high: #2b2829;
   --surface-container-highest: #363333;
+  --surface-tint: #a5393b;
 
   --outline: #a08c8b;
   --outline-variant: #574241;
@@ -196,8 +272,13 @@
   --inverse-surface: #e5e2e2;
   --inverse-on-surface: #2f3131;
   --inverse-primary: #852226;
+
+  --foreground: #e5e2e2;
 }
 
+/* ============================================================================
+   BASE STYLES
+   ============================================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -223,22 +304,27 @@
     background: var(--outline);
   }
 
-  /* Text selection */
   ::selection {
     background-color: var(--primary-fixed);
     color: var(--on-primary-fixed);
   }
 
   /* Material Symbols defaults */
+  .material-symbols-outlined,
   .material-symbols-rounded {
     font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
     vertical-align: middle;
+    line-height: 1;
   }
+  .material-symbols-outlined.filled,
   .material-symbols-rounded.filled {
     font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
   }
 }
 
+/* ============================================================================
+   COMPONENT UTILITIES (match design's custom classes)
+   ============================================================================ */
 @layer components {
   /* AI glow — red shadow on AI surfaces */
   .ai-glow {
@@ -313,5 +399,10 @@
   }
   .animate-ping-slow {
     animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* pb-safe for iOS safe area */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 }

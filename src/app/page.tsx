@@ -2,19 +2,23 @@
 
 import { useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import { LandingPage } from "@/components/pages/landing";
-import { AuthPage } from "@/components/pages/auth";
-import { SignupPage } from "@/components/pages/signup";
-import { AdminDashboard } from "@/components/pages/admin-dashboard";
-import { CourseExplorer } from "@/components/pages/courses-catalog";
-import { MyCourses } from "@/components/pages/my-courses";
-import { Leaderboard } from "@/components/pages/leaderboard";
-import { CommunityPage } from "@/components/pages/community";
-import { IndividualPostView } from "@/components/pages/individual-post";
+import { useNavDelegation } from "@/lib/use-nav-delegation";
 import { AIOverlay } from "@/components/shared/ai-overlay";
+
+// Page body components (auto-generated from design HTML)
+import { LandingBody } from "@/components/pages/landing-body";
+import { SigninBody } from "@/components/pages/signin-body";
+import { SignupBody } from "@/components/pages/signup-body";
+import { AdminBody } from "@/components/pages/admin-body";
+import { CoursesBody } from "@/components/pages/courses-body";
+import { MyCoursesBody } from "@/components/pages/my-courses-body";
+import { LeaderboardBody } from "@/components/pages/leaderboard-body";
+import { CommunityBody } from "@/components/pages/community-body";
+import { PostBody } from "@/components/pages/post-body";
 
 export default function Home() {
   const { activePage, theme } = useAppStore();
+  useNavDelegation();
 
   // Apply theme class
   useEffect(() => {
@@ -26,33 +30,34 @@ export default function Home() {
   const renderPage = () => {
     switch (activePage) {
       case "landing":
-        return <LandingPage />;
+        return <LandingBody />;
       case "auth":
-        return <AuthPage />;
+        return <SigninBody />;
       case "signup":
-        return <SignupPage />;
+        return <SignupBody />;
       case "admin-dashboard":
-        return <AdminDashboard />;
+        return <AdminBody />;
       case "courses":
-        return <CourseExplorer />;
+      case "course-detail":
+        return <CoursesBody />;
       case "my-courses":
-        return <MyCourses />;
+        return <MyCoursesBody />;
       case "leaderboard":
-        return <Leaderboard />;
+        return <LeaderboardBody />;
       case "community":
-        return <CommunityPage />;
+        return <CommunityBody />;
       case "post":
       case "scholarconnect":
-        return <IndividualPostView />;
+        return <PostBody />;
       default:
-        return <LandingPage />;
+        return <LandingBody />;
     }
   };
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-background">
       {renderPage()}
       <AIOverlay />
-    </>
+    </div>
   );
 }
