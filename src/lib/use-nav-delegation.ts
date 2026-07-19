@@ -74,7 +74,7 @@ export function useNavDelegation() {
       const text = stripIconNames(rawText);
 
       // Pages that require authentication — if not signed in, route to sign-in
-      const authRequiredPages = ["my-courses", "admin-dashboard", "members", "post", "scholarconnect"];
+      const authRequiredPages = ["my-courses", "admin-dashboard", "members", "post", "scholarconnect", "profile"];
       const isAuthRequired = (page: string) => authRequiredPages.includes(page);
 
       // Route table — action is either "page" (navigate) or "ai" (open overlay)
@@ -93,7 +93,7 @@ export function useNavDelegation() {
         { match: "My Courses", action: "page", page: "my-courses" },
         { match: "My Learning Dashboard", action: "page", page: "my-courses" },
         { match: "Dashboard", action: "page", page: "my-courses" },
-        { match: "Profile", action: "page", page: "my-courses" },
+        { match: "Profile", action: "page", page: "profile" },
         { match: "Settings", action: "page", page: "landing" },
         { match: "Help", action: "page", page: "landing" },
         { match: "Help Center", action: "page", page: "landing" },

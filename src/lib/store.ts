@@ -3,6 +3,24 @@
 import { create } from "zustand";
 import { currentUser } from "./mock-data";
 
+export interface UserProfile {
+  name: string;
+  email: string;
+  avatar: string;
+  bio: string;
+  dateOfBirth: string;
+  location: string;
+  province: string;
+  phone: string;
+  gender: string;
+  education: string;
+  school: string;
+  interests: string[];
+  skills: string[];
+  languages: string[];
+  socialLinks: { platform: string; url: string }[];
+}
+
 interface AppState {
   // Navigation
   activePage: string;
@@ -10,9 +28,10 @@ interface AppState {
 
   // Authentication
   isAuthenticated: boolean;
-  user: { name: string; email: string; avatar: string } | null;
+  user: UserProfile | null;
   signIn: (email: string, name?: string) => void;
   signOut: () => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
 
   // UI State
   theme: "light" | "dark";
@@ -42,6 +61,21 @@ interface AppState {
   currentUser: typeof currentUser;
 }
 
+const DEFAULT_PROFILE: Omit<UserProfile, "name" | "email" | "avatar"> = {
+  bio: "",
+  dateOfBirth: "",
+  location: "",
+  province: "",
+  phone: "",
+  gender: "",
+  education: "",
+  school: "",
+  interests: [],
+  skills: [],
+  languages: ["English"],
+  socialLinks: [],
+};
+
 export const useAppStore = create<AppState>((set, get) => ({
   activePage: "landing",
   setActivePage: (page) => set({ activePage: page }),
@@ -57,6 +91,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       isAuthenticated: true,
       user: {
+        ...DEFAULT_PROFILE,
         name: derivedName,
         email,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
@@ -71,6 +106,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       activePage: "landing",
       userMenuOpen: false,
     });
+  },
+  updateProfile: (updates) => {
+    const current = get().user;
+    if (!current) return;
+    set({ user: { ...current, ...updates } });
   },
 
   theme: "light",

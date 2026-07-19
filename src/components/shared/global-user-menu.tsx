@@ -131,7 +131,7 @@ export function GlobalUserMenu() {
         <button
           onClick={() => {
             setUserMenuOpen(false);
-            setActivePage("my-courses");
+            setActivePage("profile");
           }}
           className="w-full flex items-center gap-md px-md py-sm text-body-sm text-on-surface hover:bg-surface-container transition-colors text-left"
         >
