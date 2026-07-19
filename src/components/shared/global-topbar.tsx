@@ -85,11 +85,14 @@ export function GlobalTopbar() {
           <span class="material-symbols-outlined" style="font-size:18px;">school</span>
           <span>My Courses</span>
         </button>
-        <div data-avatar-container style="width:40px;height:40px;border-radius:9999px;overflow:hidden;border:2px solid var(--outline-variant);cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--primary-container);">
-          ${isAuthenticated && user
-            ? `<img src="${user.avatar}" alt="${user.name}" style="width:100%;height:100%;object-fit:cover;" />`
-            : `<span class="material-symbols-outlined" style="color:var(--on-primary-container);">person</span>`}
-        </div>
+        ${isAuthenticated && user
+          ? `<div data-avatar-container style="width:40px;height:40px;border-radius:9999px;overflow:hidden;border:2px solid var(--outline-variant);cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--primary-container);">
+              <img src="${user.avatar}" alt="${user.name}" style="width:100%;height:100%;object-fit:cover;" />
+            </div>`
+          : `<button data-login-button style="display:flex;align-items:center;gap:6px;padding:8px 20px;background:var(--primary);color:var(--on-primary);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:14px;transition:opacity 0.2s;">
+              <span class="material-symbols-outlined" style="font-size:18px;">login</span>
+              <span>Login</span>
+            </button>`}
       </div>
     `;
 
@@ -104,6 +107,7 @@ export function GlobalTopbar() {
       const themeBtn = target.closest("[data-theme-toggle]");
       const avatar = target.closest("[data-avatar-container]");
       const authBtn = target.closest("[data-auth-button]");
+      const loginBtn = target.closest("[data-login-button]");
 
       if (navLink) {
         e.preventDefault();
@@ -122,14 +126,16 @@ export function GlobalTopbar() {
           window.dispatchEvent(new CustomEvent("global-user-menu-open", {
             detail: { top: rect.bottom + 8, right: window.innerWidth - rect.right }
           }));
-        } else {
-          setActivePage("auth");
         }
       } else if (authBtn) {
         e.preventDefault();
         e.stopPropagation();
         const page = authBtn.getAttribute("data-page");
         if (page) setActivePage(page);
+      } else if (loginBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        setActivePage("auth");
       }
     };
 
