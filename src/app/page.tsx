@@ -5,8 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { useNavDelegation } from "@/lib/use-nav-delegation";
 import { AIOverlay } from "@/components/shared/ai-overlay";
 import { GlobalUserMenu } from "@/components/shared/global-user-menu";
-import { GlobalThemeToggle } from "@/components/shared/global-theme-toggle";
-import { GlobalAuthVisibility } from "@/components/shared/global-auth-visibility";
+import { GlobalTopbar } from "@/components/shared/global-topbar";
 
 // Page body components (auto-generated from design HTML)
 import { LandingBody } from "@/components/pages/landing-body";
@@ -63,13 +62,15 @@ export default function Home() {
     }
   };
 
+  // Don't show the global topbar on auth pages (they have their own full-screen layout)
+  const showGlobalTopbar = activePage !== "auth" && activePage !== "signup";
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {showGlobalTopbar && <GlobalTopbar />}
       {renderPage()}
       <AIOverlay />
       <GlobalUserMenu />
-      <GlobalThemeToggle />
-      <GlobalAuthVisibility />
     </div>
   );
 }

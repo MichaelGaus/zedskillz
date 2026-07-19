@@ -70,6 +70,22 @@ export function GlobalUserMenu() {
     return () => document.removeEventListener("click", handler, true);
   }, [isAuthenticated, userMenuOpen, setUserMenuOpen, setActivePage]);
 
+  // Listen for custom avatar-click events from GlobalTopbar
+  // (since the original headers are hidden, the click handler above won't fire)
+  useEffect(() => {
+    const handleTopbarAvatarClick = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { top: number; right: number };
+      if (!isAuthenticated) {
+        setActivePage("auth");
+        return;
+      }
+      setMenuPos(detail);
+      setUserMenuOpen(!userMenuOpen);
+    };
+    window.addEventListener("global-user-menu-open", handleTopbarAvatarClick);
+    return () => window.removeEventListener("global-user-menu-open", handleTopbarAvatarClick);
+  }, [isAuthenticated, userMenuOpen, setUserMenuOpen, setActivePage]);
+
   // Close menu when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
