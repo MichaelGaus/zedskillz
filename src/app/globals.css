@@ -135,7 +135,9 @@
   --text-label-caps--letter-spacing: 0.05em;
   --text-label-caps--font-weight: 700;
 
-  /* === Spacing (matches design's spacing tokens) === */
+  /* === Spacing (matches design's spacing tokens) ===
+     These add to Tailwind's default spacing scale so utilities like
+     px-md, gap-lg, py-xl, h-touch-target work. */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
@@ -144,6 +146,23 @@
   --spacing-container-margin: 16px;
   --spacing-touch-target: 48px;
   --spacing-base: 4px;
+
+  /* === Container max-widths (restore Tailwind defaults)
+     In Tailwind v4, max-w-* uses the --container-* namespace by default,
+     but when --spacing-* is defined, max-w-* falls back to --spacing-*
+     which breaks max-w-lg (24px instead of 32rem). Explicitly defining
+     --container-* ensures max-w-* uses the correct values. === */
+  --container-xs: 20rem;
+  --container-sm: 24rem;
+  --container-md: 28rem;
+  --container-lg: 32rem;
+  --container-xl: 36rem;
+  --container-2xl: 42rem;
+  --container-3xl: 48rem;
+  --container-4xl: 56rem;
+  --container-5xl: 64rem;
+  --container-6xl: 72rem;
+  --container-7xl: 80rem;
 
   /* === Border radius === */
   --radius-sm: 0.25rem;
@@ -329,6 +348,26 @@
   .material-symbols-rounded.filled {
     font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
   }
+}
+
+/* ============================================================================
+   MAX-WIDTH UTILITIES (override Tailwind's spacing-based computation)
+   In Tailwind v4, max-w-* uses the --spacing-* scale which conflicts with
+   our custom spacing tokens (max-w-lg was computing to 24px instead of 32rem).
+   These rules in @layer utilities override Tailwind's generated utilities.
+   ============================================================================ */
+@layer utilities {
+  .max-w-xs { max-width: 20rem; }
+  .max-w-sm { max-width: 24rem; }
+  .max-w-md { max-width: 28rem; }
+  .max-w-lg { max-width: 32rem; }
+  .max-w-xl { max-width: 36rem; }
+  .max-w-2xl { max-width: 42rem; }
+  .max-w-3xl { max-width: 48rem; }
+  .max-w-4xl { max-width: 56rem; }
+  .max-w-5xl { max-width: 64rem; }
+  .max-w-6xl { max-width: 72rem; }
+  .max-w-7xl { max-width: 80rem; }
 }
 
 /* ============================================================================
