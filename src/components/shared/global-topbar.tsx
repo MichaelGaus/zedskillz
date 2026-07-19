@@ -97,7 +97,38 @@ export function GlobalTopbar() {
     `;
 
     document.body.insertBefore(topbar, document.body.firstChild);
-    document.body.style.paddingTop = "64px";
+
+    // Instead of body padding (which breaks min-h-screen / h-screen layouts),
+    // we push the page content down by inserting a spacer div and adjusting
+    // sticky sidebars to start below the topbar.
+    
+    // Fix sticky elements that should start below the topbar
+    const stickyElements = document.querySelectorAll('[class*="sticky"][class*="top-0"], [style*="sticky"][style*="top: 0"]');
+    stickyElements.forEach((el) => {
+      if (el === topbar) return;
+      const htmlEl = el as HTMLElement;
+      const computed = window.getComputedStyle(htmlEl);
+      if (computed.position === "sticky" && (computed.top === "0px" || htmlEl.style.top === "0" || htmlEl.style.top === "")) {
+        htmlEl.style.top = "64px";
+      }
+    });
+
+    // Fix h-screen elements (sidebars) to account for the topbar height
+    const hScreenElements = document.querySelectorAll('[class*="h-screen"]');
+    hScreenElements.forEach((el) => {
+      (el as HTMLElement).style.height = "calc(100vh - 64px)";
+    });
+
+    // Add margin-top to the main page wrapper (the div with min-h-screen)
+    // instead of body padding, to avoid breaking min-h-screen calculations
+    const pageWrapper = document.querySelector(".min-h-screen") as HTMLElement | null;
+    if (pageWrapper) {
+      pageWrapper.style.marginTop = "64px";
+    } else {
+      // Fallback: add padding to body
+      document.body.style.paddingTop = "64px";
+    }
+
     topbarRef.current = topbar;
 
     // Wire up click handlers (using event delegation on the topbar)
@@ -149,7 +180,18 @@ export function GlobalTopbar() {
       document.querySelectorAll("header").forEach((h) => {
         (h as HTMLElement).style.display = "";
       });
+      // Restore page wrapper margin
+      const pageWrapper = document.querySelector(".min-h-screen") as HTMLElement | null;
+      if (pageWrapper) pageWrapper.style.marginTop = "";
       document.body.style.paddingTop = "";
+      // Restore sticky elements
+      document.querySelectorAll('[style*="top: 64px"]').forEach((el) => {
+        (el as HTMLElement).style.top = "";
+      });
+      // Restore h-screen elements
+      document.querySelectorAll('[style*="calc(100vh - 64px)"]').forEach((el) => {
+        (el as HTMLElement).style.height = "";
+      });
     };
   }, [activePage, isAuthenticated, user, theme, setActivePage, toggleTheme]);
 
