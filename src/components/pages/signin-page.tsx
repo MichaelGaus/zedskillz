@@ -6,20 +6,20 @@ import { useState, useEffect } from "react";
 
 /**
  * SigninPage — wraps the auto-generated SigninBody with form submission handling.
- * Intercepts the form submit, reads email/password, calls store.signIn(),
- * and shows a loading state.
+ *
+ * Attaches BOTH a submit event listener on the form AND a click listener on the
+ * submit button, because in some browsers the native form.submit() triggered by
+ * clicking a submit button doesn't fire the React onSubmit handler reliably.
  */
 export function SigninPage() {
   const { signIn } = useAppStore();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Find the form and wire up submission
     const form = document.getElementById("signin-form") as HTMLFormElement | null;
     if (!form) return;
 
-    const handleSubmit = (e: Event) => {
-      e.preventDefault();
+    const performSignIn = () => {
       const emailInput = document.getElementById("email") as HTMLInputElement | null;
       const passwordInput = document.getElementById("password") as HTMLInputElement | null;
       const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
@@ -27,7 +27,12 @@ export function SigninPage() {
       const email = emailInput?.value?.trim() || "";
       const password = passwordInput?.value?.trim() || "";
 
-      if (!email || !password) return;
+      if (!email || !password) {
+        // Highlight empty fields
+        if (!email) emailInput?.focus();
+        else if (!password) passwordInput?.focus();
+        return;
+      }
 
       // Show loading state
       setLoading(true);
@@ -42,8 +47,30 @@ export function SigninPage() {
       }, 800);
     };
 
+    const handleSubmit = (e: Event) => {
+      e.preventDefault();
+      performSignIn();
+    };
+
+    // Also handle click on the submit button directly (more reliable than form submit)
+    const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    const handleButtonClick = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      performSignIn();
+    };
+
     form.addEventListener("submit", handleSubmit);
-    return () => form.removeEventListener("submit", handleSubmit);
+    if (submitButton) {
+      submitButton.addEventListener("click", handleButtonClick);
+    }
+
+    return () => {
+      form.removeEventListener("submit", handleSubmit);
+      if (submitButton) {
+        submitButton.removeEventListener("click", handleButtonClick);
+      }
+    };
   }, [signIn]);
 
   // Re-attach listener when loading state changes (button text update)
