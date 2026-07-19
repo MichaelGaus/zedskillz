@@ -6,6 +6,7 @@ import { useNavDelegation } from "@/lib/use-nav-delegation";
 import { AIOverlay } from "@/components/shared/ai-overlay";
 import { GlobalUserMenu } from "@/components/shared/global-user-menu";
 import { GlobalThemeToggle } from "@/components/shared/global-theme-toggle";
+import { GlobalAuthVisibility } from "@/components/shared/global-auth-visibility";
 
 // Page body components (auto-generated from design HTML)
 import { LandingBody } from "@/components/pages/landing-body";
@@ -68,6 +69,7 @@ export default function Home() {
       <AIOverlay />
       <GlobalUserMenu />
       <GlobalThemeToggle />
+      <GlobalAuthVisibility />
     </div>
   );
 }
