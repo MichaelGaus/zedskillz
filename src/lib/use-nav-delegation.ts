@@ -57,7 +57,7 @@ function stripIconNames(text: string): string {
 }
 
 export function useNavDelegation() {
-  const { setActivePage, setAiOverlayOpen, isAuthenticated } = useAppStore();
+  const { setActivePage, setAiOverlayOpen, isAuthenticated, user } = useAppStore();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -73,9 +73,16 @@ export function useNavDelegation() {
       const rawText = clickable.textContent?.trim() || "";
       const text = stripIconNames(rawText);
 
+      // Admin role check
+      const isAdmin = isAuthenticated && user?.role === "admin";
+
       // Pages that require authentication — if not signed in, route to sign-in
       const authRequiredPages = ["my-courses", "admin-dashboard", "members", "post", "scholarconnect", "profile", "settings"];
       const isAuthRequired = (page: string) => authRequiredPages.includes(page);
+
+      // Pages restricted for admin users — admins can only access Home + Admin
+      const adminRestrictedPages = ["courses", "leaderboard", "community", "members", "post", "my-courses", "profile", "settings"];
+      const isRestrictedForAdmin = (page: string) => isAdmin && adminRestrictedPages.includes(page);
 
       // Route table — action is either "page" (navigate) or "ai" (open overlay)
       const routes: { match: string; action: "page" | "ai"; page?: string }[] = [
@@ -189,6 +196,9 @@ export function useNavDelegation() {
             // Auth-gated pages: if not signed in, go to sign-in instead
             if (isAuthRequired(route.page) && !isAuthenticated) {
               setActivePage("auth");
+            } else if (isRestrictedForAdmin(route.page)) {
+              // Admin users can only access Home + Admin — redirect restricted pages to admin-dashboard
+              setActivePage("admin-dashboard");
             } else {
               setActivePage(route.page);
             }
@@ -199,5 +209,5 @@ export function useNavDelegation() {
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
-  }, [setActivePage, setAiOverlayOpen, isAuthenticated]);
+  }, [setActivePage, setAiOverlayOpen, isAuthenticated, user]);
 }

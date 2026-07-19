@@ -7,6 +7,7 @@ export interface UserProfile {
   name: string;
   email: string;
   avatar: string;
+  role: "student" | "admin" | "instructor";
   bio: string;
   dateOfBirth: string;
   location: string;
@@ -62,6 +63,7 @@ interface AppState {
 }
 
 const DEFAULT_PROFILE: Omit<UserProfile, "name" | "email" | "avatar"> = {
+  role: "student",
   bio: "",
   dateOfBirth: "",
   location: "",
@@ -88,15 +90,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     const derivedName = name || email.split("@")[0].split(/[._-]/).map(
       (s) => s.charAt(0).toUpperCase() + s.slice(1)
     ).join(" ");
+
+    // Detect admin role from email
+    const isAdmin = email.toLowerCase().includes("admin") || email.toLowerCase().includes("grace.tembo");
+
     set({
       isAuthenticated: true,
       user: {
         ...DEFAULT_PROFILE,
         name: derivedName,
         email,
+        role: isAdmin ? "admin" : "student",
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
       },
-      activePage: "my-courses",
+      activePage: isAdmin ? "admin-dashboard" : "my-courses",
     });
   },
   signOut: () => {

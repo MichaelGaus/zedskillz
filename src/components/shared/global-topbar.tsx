@@ -42,13 +42,20 @@ export function GlobalTopbar() {
     });
 
     // Build the topbar HTML
-    const navLinks = [
-      { label: "Home", page: "landing" },
-      { label: "Explore", page: "courses" },
-      { label: "Ranks", page: "leaderboard" },
-      { label: "Admin", page: "admin-dashboard" },
-      { label: "Community", page: "community" },
-    ];
+    // Admin users only see Home + Admin; other users see all links
+    const isAdmin = isAuthenticated && user?.role === "admin";
+    const navLinks = isAdmin
+      ? [
+          { label: "Home", page: "landing" },
+          { label: "Admin", page: "admin-dashboard" },
+        ]
+      : [
+          { label: "Home", page: "landing" },
+          { label: "Explore", page: "courses" },
+          { label: "Ranks", page: "leaderboard" },
+          { label: "Admin", page: "admin-dashboard" },
+          { label: "Community", page: "community" },
+        ];
 
     const topbar = document.createElement("div");
     topbar.setAttribute("data-global-topbar", "true");
@@ -81,7 +88,7 @@ export function GlobalTopbar() {
         <button style="width:40px;height:40px;border-radius:9999px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);" title="Language">
           <span class="material-symbols-outlined">language</span>
         </button>
-        <button data-auth-button data-page="${isAuthenticated ? "my-courses" : "auth"}" style="display:${isAuthenticated ? "flex" : "none"};align-items:center;gap:8px;padding:8px 16px;background:var(--secondary-container);color:var(--on-secondary-container);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:14px;">
+        <button data-auth-button data-page="${isAuthenticated ? "my-courses" : "auth"}" style="display:${isAuthenticated && !isAdmin ? "flex" : "none"};align-items:center;gap:8px;padding:8px 16px;background:var(--secondary-container);color:var(--on-secondary-container);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:14px;">
           <span class="material-symbols-outlined" style="font-size:18px;">school</span>
           <span>My Courses</span>
         </button>
