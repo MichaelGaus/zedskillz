@@ -19,6 +19,7 @@ import { CommunityBody } from "@/components/pages/community-body";
 import { PostBody } from "@/components/pages/post-body";
 import { MembersBody } from "@/components/pages/members-body";
 import { ProfilePage } from "@/components/pages/profile-page";
+import { SettingsPage } from "@/components/pages/settings-page";
 
 export default function Home() {
   const { activePage, theme } = useAppStore();
@@ -54,6 +55,8 @@ export default function Home() {
         return <MembersBody />;
       case "profile":
         return <ProfilePage />;
+      case "settings":
+        return <SettingsPage />;
       case "post":
       case "scholarconnect":
         return <PostBody />;
