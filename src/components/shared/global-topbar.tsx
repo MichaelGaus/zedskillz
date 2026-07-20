@@ -67,36 +67,51 @@ export function GlobalTopbar() {
     topbar.style.padding = "0 16px";
 
     topbar.innerHTML = `
-      <div style="display:flex;align-items:center;gap:24px;">
-        <div data-nav-link data-page="landing" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <div style="width:36px;height:36px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;">
+      <style>
+        @media (min-width: 768px) {
+          [data-menu-toggle] { display: none !important; }
+          [data-desktop-nav] { display: flex !important; }
+          [data-mobile-only] { display: none !important; }
+        }
+        @media (max-width: 767px) {
+          [data-desktop-only] { display: none !important; }
+        }
+      </style>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <!-- Hamburger menu (mobile only) -->
+        <button data-menu-toggle style="display:flex;width:40px;height:40px;border-radius:8px;border:none;background:transparent;cursor:pointer;align-items:center;justify-content:center;color:var(--on-surface);flex-shrink:0;" title="Menu">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+        <div data-nav-link data-page="landing" style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <span class="material-symbols-outlined" style="color:var(--on-primary);font-variation-settings:'FILL' 1;font-size:22px;">school</span>
           </div>
-          <span style="font-weight:700;font-size:18px;color:var(--primary);display:none;" class="sm:inline">Zedskillz Hub</span>
+          <span data-desktop-only style="font-weight:700;font-size:18px;color:var(--primary);white-space:nowrap;">Zedskillz Hub</span>
         </div>
-        <div style="display:none;align-items:center;gap:24px;" class="md:flex">
+        <!-- Desktop nav links -->
+        <div data-desktop-nav style="display:none;align-items:center;gap:24px;margin-left:16px;">
           ${navLinks.map(({ label, page }) => {
             const isActive = activePage === page;
-            return `<a href="#" data-nav-link data-page="${page}" style="font-size:14px;font-weight:${isActive ? "700" : "500"};color:${isActive ? "var(--primary)" : "var(--on-surface-variant)"};text-decoration:none;">${label}</a>`;
+            return `<a href="#" data-nav-link data-page="${page}" style="font-size:14px;font-weight:${isActive ? "700" : "500"};color:${isActive ? "var(--primary)" : "var(--on-surface-variant)"};text-decoration:none;white-space:nowrap;">${label}</a>`;
           }).join("")}
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button data-theme-toggle style="width:40px;height:40px;border-radius:9999px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);" title="${theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}">
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button data-theme-toggle style="width:40px;height:40px;border-radius:9999px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);flex-shrink:0;" title="${theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}">
           <span class="material-symbols-outlined">${theme === "dark" ? "light_mode" : "dark_mode"}</span>
         </button>
-        <button style="width:40px;height:40px;border-radius:9999px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);" title="Language">
+        <button data-desktop-only style="width:40px;height:40px;border-radius:9999px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);flex-shrink:0;" title="Language">
           <span class="material-symbols-outlined">language</span>
         </button>
-        <button data-auth-button data-page="${isAuthenticated ? "my-courses" : "auth"}" style="display:${isAuthenticated && !isAdmin ? "flex" : "none"};align-items:center;gap:8px;padding:8px 16px;background:var(--secondary-container);color:var(--on-secondary-container);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:14px;">
+        <button data-auth-button data-page="${isAuthenticated ? "my-courses" : "auth"}" style="display:${isAuthenticated && !isAdmin ? "flex" : "none"};align-items:center;gap:6px;padding:8px 12px;background:var(--secondary-container);color:var(--on-secondary-container);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:13px;flex-shrink:0;white-space:nowrap;">
           <span class="material-symbols-outlined" style="font-size:18px;">school</span>
-          <span>My Courses</span>
+          <span data-desktop-only>My Courses</span>
         </button>
         ${isAuthenticated && user
-          ? `<div data-avatar-container style="width:40px;height:40px;border-radius:9999px;overflow:hidden;border:2px solid var(--outline-variant);cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--primary-container);">
+          ? `<div data-avatar-container style="width:40px;height:40px;border-radius:9999px;overflow:hidden;border:2px solid var(--outline-variant);cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--primary-container);flex-shrink:0;">
               <img src="${user.avatar}" alt="${user.name}" style="width:100%;height:100%;object-fit:cover;" />
             </div>`
-          : `<button data-login-button style="display:flex;align-items:center;gap:6px;padding:8px 20px;background:var(--primary);color:var(--on-primary);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:14px;transition:opacity 0.2s;">
+          : `<button data-login-button style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--primary);color:var(--on-primary);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:13px;flex-shrink:0;white-space:nowrap;">
               <span class="material-symbols-outlined" style="font-size:18px;">login</span>
               <span>Login</span>
             </button>`}
@@ -104,6 +119,43 @@ export function GlobalTopbar() {
     `;
 
     document.body.insertBefore(topbar, document.body.firstChild);
+
+    // Create mobile menu drawer (hidden by default)
+    const mobileDrawer = document.createElement("div");
+    mobileDrawer.setAttribute("data-mobile-drawer", "true");
+    mobileDrawer.style.cssText = "position:fixed;top:64px;left:0;right:0;bottom:0;z-index:39;background:rgba(0,0,0,0.3);display:none;backdrop-filter:blur(4px);";
+    mobileDrawer.innerHTML = `
+      <div style="position:absolute;top:0;left:0;width:280px;max-width:80vw;height:100%;background:var(--surface-container-lowest);border-right:1px solid var(--outline-variant);padding:16px;overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,0.1);transform:translateX(-100%);transition:transform 0.3s ease;" data-drawer-content>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--outline-variant);">
+          <span style="font-weight:700;font-size:18px;color:var(--primary);">Navigation</span>
+          <button data-close-drawer style="width:36px;height:36px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          ${navLinks.map(({ label, page }) => {
+            const isActive = activePage === page;
+            return `<a href="#" data-nav-link data-page="${page}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:${isActive ? "600" : "500"};color:${isActive ? "var(--primary)" : "var(--on-surface)"};background:${isActive ? "var(--secondary-container)" : "transparent"};text-decoration:none;transition:background 0.2s;">
+              <span class="material-symbols-outlined" style="font-size:22px;">${page === "landing" ? "home" : page === "courses" ? "explore" : page === "leaderboard" ? "leaderboard" : page === "admin-dashboard" ? "dashboard" : "groups"}</span>
+              ${label}
+            </a>`;
+          }).join("")}
+          ${isAuthenticated && !isAdmin ? `<a href="#" data-nav-link data-page="my-courses" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
+            <span class="material-symbols-outlined" style="font-size:22px;">school</span>
+            My Courses
+          </a>` : ""}
+          ${isAuthenticated ? `<a href="#" data-nav-link data-page="profile" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
+            <span class="material-symbols-outlined" style="font-size:22px;">person</span>
+            My Profile
+          </a>
+          <a href="#" data-nav-link data-page="settings" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
+            <span class="material-symbols-outlined" style="font-size:22px;">settings</span>
+            Settings
+          </a>` : ""}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(mobileDrawer);
 
     // Instead of body padding (which breaks min-h-screen / h-screen layouts),
     // we push the page content down by inserting a spacer div and adjusting
@@ -138,7 +190,7 @@ export function GlobalTopbar() {
 
     topbarRef.current = topbar;
 
-    // Wire up click handlers (using event delegation on the topbar)
+    // Wire up click handlers (using event delegation on the topbar + drawer)
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const navLink = target.closest("[data-nav-link]");
@@ -146,12 +198,28 @@ export function GlobalTopbar() {
       const avatar = target.closest("[data-avatar-container]");
       const authBtn = target.closest("[data-auth-button]");
       const loginBtn = target.closest("[data-login-button]");
+      const menuToggle = target.closest("[data-menu-toggle]");
+      const closeDrawer = target.closest("[data-close-drawer]");
 
-      if (navLink) {
+      if (menuToggle) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Open mobile drawer
+        mobileDrawer.style.display = "block";
+        setTimeout(() => {
+          const content = mobileDrawer.querySelector("[data-drawer-content]") as HTMLElement;
+          if (content) content.style.transform = "translateX(0)";
+        }, 10);
+      } else if (closeDrawer) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeMobileDrawer();
+      } else if (navLink) {
         e.preventDefault();
         e.stopPropagation();
         const page = navLink.getAttribute("data-page");
         if (page) setActivePage(page);
+        closeMobileDrawer();
       } else if (themeBtn) {
         e.preventDefault();
         e.stopPropagation();
@@ -177,12 +245,26 @@ export function GlobalTopbar() {
       }
     };
 
+    const closeMobileDrawer = () => {
+      const content = mobileDrawer.querySelector("[data-drawer-content]") as HTMLElement;
+      if (content) content.style.transform = "translateX(-100%)";
+      setTimeout(() => { mobileDrawer.style.display = "none"; }, 300);
+    };
+
+    // Close drawer when clicking outside the content
+    mobileDrawer.addEventListener("click", (e) => {
+      if (e.target === mobileDrawer) closeMobileDrawer();
+    });
+
     topbar.addEventListener("click", handleClick);
+    mobileDrawer.addEventListener("click", handleClick);
 
     // Cleanup function
     return () => {
       topbar.removeEventListener("click", handleClick);
+      mobileDrawer.removeEventListener("click", handleClick);
       topbar.remove();
+      mobileDrawer.remove();
       // Restore original headers
       document.querySelectorAll("header").forEach((h) => {
         (h as HTMLElement).style.display = "";
