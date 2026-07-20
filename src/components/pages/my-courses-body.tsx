@@ -6,59 +6,7 @@ export function MyCoursesBody() {
     <>
       
       
-      <aside className="hidden md:flex flex-col h-screen w-72 sticky top-0 bg-surface-container-low dark:bg-inverse-surface shadow-xl z-40">
-      <div className="flex flex-col p-md space-y-sm h-full">
-      
-      <div className="px-md py-lg flex items-center gap-sm">
-      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKHGHjKPjuBxC5DUJS1A2sOQH51693caj6SakDOvHUHgPTHP2WKux0771sfrEgzzE-LhnWxBkcOTiAHYU2GP599HNmVRD00ki8KNr4iLNpSCDUPhJsUpSkZb8ZCX4bBwcbMrZAN9wGnAXJ9K0fIjhWUVcskVa48V4cc3IrNGmOlCYb8ZQnquNEVZnECU1JggiphBkaa_5G0MkV0uu2QUCvo5cWzEydxJwkbe6-Y9e4x7ShDz2FLkVQ2hPJr9UQmHLfaPw" alt="Zedskillz Hub Logo" className="h-14 w-auto object-contain" />
-      </div>
-      
-      <div className="flex items-center gap-md p-md bg-surface-container-high rounded-xl mb-md">
-      <div className="w-12 h-12 rounded-full overflow-hidden bg-outline-variant">
-      <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbxTeYAB7asW3upi7yCOtZDpqkdL24ImdOVRmcuV5UKwOnT-0OAURFbVy3lIVQSyvcjpylpbVRyIpWKPqHbZLBAVysXs94whlOenwOIKlg5jO34dEtom9Sh_3MqUMRQBNfnFORRf3hnUVO2VOehlRix8OvCaJFf6t8sm63V3ub9HjziOKnVfyB40UlzVw2D-Jhzf6VnHxhY9d39-bRqxjgqA3O4rybrojQhuMt4143lreoIuWuKdIYJQ"  alt="" />
-      </div>
-      <div>
-      <p className="font-headline-md text-body-md font-bold text-primary">Zambian Scholar</p>
-      <p className="font-body-sm text-body-sm text-on-surface-variant">Level 12 • 4500 XP</p>
-      </div>
-      </div>
-      
-      <nav className="flex-1 space-y-xs">
-      <a className="flex items-center gap-md px-md py-sm bg-secondary-container text-on-secondary-container font-semibold rounded-lg active:translate-x-1 duration-150 transition-all" href="#">
-      <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>school</span>
-      <span className="font-body-md text-body-md">My Courses</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">psychology</span>
-      <span className="font-body-md text-body-md">AI Tutor</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">library_books</span>
-      <span className="font-body-md text-body-md">Resources</span>
-      </a><a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">groups</span>
-      <span className="font-body-md text-body-md">Community</span>
-      </a>
-      <div className="pt-xl opacity-40">
-      <hr className="border-outline-variant" />
-      </div>
-      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">settings</span>
-      <span className="font-body-md text-body-md">Settings</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">help</span>
-      <span className="font-body-md text-body-md">Help</span>
-      </a>
-      </nav>
-      
-      <div className="mt-auto p-md text-center">
-      <p className="font-body-sm text-[10px] text-on-surface-variant leading-tight">
-                          © 2024 Zedskillz Hub Zambia.<br />Empowering through AI.
-                      </p>
-      </div>
-      </div>
-      </aside>
+
       
       <main className="flex-1 flex flex-col min-w-0 bg-surface">
       

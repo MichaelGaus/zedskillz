@@ -6,51 +6,10 @@ export function PostBody() {
     <>
       
       
-      <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest shadow-sm z-40 py-lg px-md overflow-y-auto">
-      <div className="mb-xl px-sm">
-      <h1 className="font-display-lg text-display-lg font-bold text-tertiary scale-125 origin-left transition-transform">Zambian Scholar</h1>
-      <p className="font-title-sm text-sm text-secondary">Academic Excellence</p>
-      </div>
-      <nav className="flex-1 space-y-sm">
+
       
-      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150" href="#">
-      <span className="material-symbols-outlined">dashboard</span>
-      <span className="font-title-sm">Dashboard</span>
-      </a>
-      <a className="flex items-center gap-md p-md rounded-xl text-primary font-bold border-r-4 border-primary bg-secondary-container transition-colors" href="#">
-      <span className="material-symbols-outlined">groups</span>
-      <span className="font-title-sm">Community</span>
-      </a>
-      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150" href="#">
-      <span className="material-symbols-outlined">person_search</span>
-      <span className="font-title-sm">Study Partners</span>
-      </a>
-      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150" href="#">
-      <span className="material-symbols-outlined">psychology</span>
-      <span className="font-title-sm">AI Tutor</span>
-      </a>
-      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150" href="#">
-      <span className="material-symbols-outlined">library_books</span>
-      <span className="font-title-sm">Resources</span>
-      </a>
-      </nav>
-      <div className="mt-auto space-y-sm border-t border-outline-variant pt-lg">
-      <button className="w-full bg-primary text-on-primary py-md rounded-xl font-bold flex items-center justify-center gap-sm active:scale-95 transition-transform">
-      <span className="material-symbols-outlined">psychology</span>
-                      Ask AI Tutor
-                  </button>
-      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors" href="#">
-      <span className="material-symbols-outlined">settings</span>
-      <span className="font-title-sm">Settings</span>
-      </a>
-      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors" href="#">
-      <span className="material-symbols-outlined">help_outline</span>
-      <span className="font-title-sm">Help</span>
-      </a>
-      </div>
-      </aside>
       
-      <header className="fixed top-0 right-0 left-0 md:left-64 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-30">
+      <header className="fixed top-0 right-0 left-0 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-30">
       <div className="flex items-center gap-md">
       <button className="p-sm rounded-full hover:bg-surface-variant/50 transition-colors">
       <span className="material-symbols-outlined">language</span>
