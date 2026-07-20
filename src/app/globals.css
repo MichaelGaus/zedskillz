@@ -453,4 +453,10 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
+
+  /* When the global topbar is active, hide page-specific <header> elements
+     to avoid duplicate navigation bars */
+  [data-global-topbar-active] header {
+    display: none !important;
+  }
 }
