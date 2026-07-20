@@ -22,7 +22,7 @@ import { ProfilePage } from "@/components/pages/profile-page";
 import { SettingsPage } from "@/components/pages/settings-page";
 
 export default function Home() {
-  const { activePage, theme } = useAppStore();
+  const { activePage, theme, isAuthenticated, user } = useAppStore();
   useNavDelegation();
 
   // Apply theme class
@@ -41,6 +41,10 @@ export default function Home() {
       case "signup":
         return <SignupPage />;
       case "admin-dashboard":
+        // Only admins can access the admin dashboard
+        if (!isAuthenticated || user?.role !== "admin") {
+          return <LandingBody />;
+        }
         return <AdminBody />;
       case "courses":
       case "course-detail":

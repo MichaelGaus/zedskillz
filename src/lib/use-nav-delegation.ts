@@ -84,6 +84,9 @@ export function useNavDelegation() {
       const adminRestrictedPages = ["courses", "leaderboard", "community", "members", "post", "my-courses", "profile", "settings"];
       const isRestrictedForAdmin = (page: string) => isAdmin && adminRestrictedPages.includes(page);
 
+      // Admin dashboard is restricted for non-admin users — they get redirected to landing
+      const isRestrictedForNonAdmin = (page: string) => !isAdmin && page === "admin-dashboard";
+
       // Route table — action is either "page" (navigate) or "ai" (open overlay)
       const routes: { match: string; action: "page" | "ai"; page?: string }[] = [
         // Nav links
@@ -199,6 +202,9 @@ export function useNavDelegation() {
             } else if (isRestrictedForAdmin(route.page)) {
               // Admin users can only access Home + Admin — redirect restricted pages to admin-dashboard
               setActivePage("admin-dashboard");
+            } else if (isRestrictedForNonAdmin(route.page)) {
+              // Non-admin users cannot access admin-dashboard — redirect to landing
+              setActivePage("landing");
             } else {
               setActivePage(route.page);
             }

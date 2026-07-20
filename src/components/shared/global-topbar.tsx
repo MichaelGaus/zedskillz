@@ -42,7 +42,7 @@ export function GlobalTopbar() {
     });
 
     // Build the topbar HTML
-    // Admin users only see Home + Admin; other users see all links
+    // Admin users only see Home + Admin; non-admin users see all links EXCEPT Admin
     const isAdmin = isAuthenticated && user?.role === "admin";
     const navLinks = isAdmin
       ? [
@@ -53,7 +53,6 @@ export function GlobalTopbar() {
           { label: "Home", page: "landing" },
           { label: "Explore", page: "courses" },
           { label: "Ranks", page: "leaderboard" },
-          { label: "Admin", page: "admin-dashboard" },
           { label: "Community", page: "community" },
         ];
 
