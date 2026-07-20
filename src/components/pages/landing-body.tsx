@@ -6,32 +6,7 @@ export function LandingBody() {
     <>
       
       
-      <header className="w-full sticky top-0 z-50 bg-surface/80 backdrop-blur-md shadow-sm">
-      <nav className="flex justify-between items-center px-container-margin md:px-xl h-touch-target lg:h-20 max-w-[1600px] mx-auto">
-      <div className="flex items-center gap-md">
-      <span className="material-symbols-outlined text-primary">menu</span>
-      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjzWd25i7DgD8P9PZDbRbdpeVZ8VnmeUBa7fVbJALJ2DmYl7Y_mUi6deWBrqjGm8Mx4jhr9hZO3PGqgf0CFVaSXP2b__iXHd5JVcgWdN90FIDFYkGEaBWZIfYZqxt12C9RHg3uRt2T1T-fy5zRKUfsHIduX8Mxy590p94SEb9o-iNgb-OuCxT2Q98U50PrXC39L9P3vdyIbI3_uYplMZD9XArSgGg5yGaWmwu7EzbCGzFhJ_N96FbpO3qxR4OKEr2a_Ek" alt="Zedskillz Hub" className="w-auto object-contain h-10" />
-      </div>
-      
-      <div className="hidden md:flex items-center gap-xl">
-      <a className="text-primary font-bold font-body-md" href="#">Home</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Explore</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Ranks</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Admin</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Community</a></div>
-      <div className="flex items-center gap-md"><button className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors">
-          <span className="material-symbols-outlined">language</span>
-      </button>
-      <button className="hidden lg:flex items-center gap-xs px-md py-sm bg-secondary-container text-on-secondary-container rounded-full font-semibold active:scale-95 transition-all">
-      <span className="material-symbols-outlined">school</span>
-                          My Courses
-                      </button>
-      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant">
-      <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBju0QN8XCOpAUBctPrD4Gn2bn1NuDS1pMBAoybg5LIqziXMibKpPgjKnb8LZ2h-TGbBOvKK_RnZysNgG6PebUtHtGVaSixDWtkW5Bv7Gwc3QLgI-aiwl0Qp8YV_w7i85zECK7VvgKyOyacL_HEZv9zOer1my8JIEv0DywJKJbFFbEuiQWCPT75INZv3QgwXOWDUVlmlZ8qplMTImUkCeJtPKUQsOC-YWBjJUqcZSubJB7h-7A_rFzaDw"  alt="" />
-      </div>
-      </div>
-      </nav>
-      </header>
+
       <main>
       
       <section className="relative overflow-hidden pt-xl pb-32">

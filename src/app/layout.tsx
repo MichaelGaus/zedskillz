@@ -61,10 +61,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Critical inline CSS — prevents FOUC of duplicate headers before stylesheets load */}
-        <style dangerouslySetInnerHTML={{ __html: `[data-global-topbar-active] header{display:none!important}` }} />
-      </head>
       <body
         className={`${plusJakarta.variable} ${inter.variable} ${hankenGrotesk.variable} font-sans antialiased bg-background text-on-surface`}
       >

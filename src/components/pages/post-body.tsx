@@ -9,35 +9,7 @@ export function PostBody() {
 
       
       
-      <header className="fixed top-0 right-0 left-0 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-30">
-      <div className="flex items-center gap-md">
-      <button className="p-sm rounded-full hover:bg-surface-variant/50 transition-colors">
-      <span className="material-symbols-outlined">language</span>
-      </button><button className="md:hidden p-sm rounded-full hover:bg-surface-variant/50">
-      <span className="material-symbols-outlined">menu</span>
-      </button>
-      <span className="font-headline-md text-headline-md font-bold text-tertiary scale-125 origin-left transition-transform">ScholarConnect</span>
-      </div>
-      <div className="flex items-center gap-lg">
-      <div className="hidden sm:flex items-center bg-surface-container-high rounded-full px-md py-xs border border-outline-variant w-64">
-      <span className="material-symbols-outlined text-on-surface-variant mr-xs">search</span>
-      <input className="bg-transparent border-none focus:ring-0 text-body-sm w-full" placeholder="Search discussions..." type="text" />
-      </div>
-      <div className="flex items-center gap-md">
-      <button className="p-sm rounded-full hover:bg-surface-variant/50 transition-colors">
-      <span className="material-symbols-outlined">language</span>
-      </button><button className="p-sm rounded-full hover:bg-surface-variant/50 relative">
-      <span className="material-symbols-outlined">notifications</span>
-      <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
-      </button>
-      <div className="h-10 w-10 rounded-full border border-primary p-0.5 overflow-hidden cursor-pointer">
-      <img className="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuNA8ykaRxHIh7MtizE3qxaDr7PvgmjW9YTy_1hToPkCnFq0WTp-XYp0oCVgrJfNwR6I9qRDdPeLg8lXxZrN7k6MjGWPdT5zl_3V47Rg7Huq0TPT1-ixCV2uvhHxEHETgoj20fZpqSYwat-PBbo8goi-DxU-ja1C9Gvl-5ZgohHhKu0WFJcaPb7ZqxHgvbaILwmkDEnI8_YhmP9AWQF-C0pcWaFNiRiwN3bX3vs9WFOhbjxbtYTZloJw"  alt="" />
-      </div>
-      </div>
-      </div>
-      </header>
-      
-      <main className="pt-24 pb-20 md:pb-lg px-container-margin md:pl-[17rem] md:pr-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-lg">
+      <main className="pt-4 pb-20 md:pb-lg px-container-margin md:pl-[17rem] md:pr-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-lg">
       
       <div className="lg:col-span-8 space-y-lg">
       

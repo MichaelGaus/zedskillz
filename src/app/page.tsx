@@ -73,10 +73,7 @@ export default function Home() {
   const showGlobalTopbar = activePage !== "auth" && activePage !== "signup";
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-background"
-      {...(showGlobalTopbar ? { "data-global-topbar-active": "" } : {})}
-    >
+    <div className="min-h-screen flex flex-col bg-background">
       {showGlobalTopbar && <GlobalTopbar />}
       {renderPage()}
       <AIOverlay />

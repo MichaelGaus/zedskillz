@@ -9,27 +9,6 @@ export function AdminBody() {
       
       <main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
       
-      <header className="w-full sticky top-0 z-40 bg-surface/80 backdrop-blur-md shadow-sm h-touch-target flex justify-between items-center px-container-margin">
-      <div className="flex items-center gap-md">
-      <button className="md:hidden material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">menu</button>
-      <h2 className="font-headline-md text-headline-md text-primary tracking-tight">Admin Dashboard</h2>
-      </div>
-      <div className="flex items-center gap-lg">
-      <div className="hidden lg:flex items-center bg-surface-container-high rounded-full px-4 py-1.5 border border-outline-variant">
-      <span className="material-symbols-outlined text-on-surface-variant text-sm mr-2">search</span>
-      <input className="bg-transparent border-none focus:ring-0 text-body-sm w-48 text-on-surface" placeholder="Search analytics..." type="text" />
-      </div>
-      <div className="flex items-center gap-md"><button className="material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors">
-                                  language
-      </button>
-      <button className="material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors relative">
-                                  notifications
-                                  <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
-      </button>
-      <div className="w-9 h-9 rounded-full bg-cover bg-center border border-outline-variant" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCcOwY5S3gT0TvH3JUfj0hIvLnNTQ_av4UWlUCCTtil9cWD9bJOV4TngwAPhYujZFpx7WgNyKp8C0joIyQ765Ahw0zVSpFOrGyR9Ry71D6TFI9B2H8ASoUIDiSFU8YqI5mn2MmIMbUAPOFmtf_c9pLDTvUq87mQA_Y6dcTnfP2ZK_yccLk2VI4Po_zIajUbvYckJD584_LPMRxezBBntxCba1jO9Sdcb5VNu-zw81RmyieI4V3BX_E1ig')"}}></div>
-      </div>
-      </div>
-      </header>
       
       <div className="flex-1 overflow-y-auto custom-scrollbar p-md md:p-lg space-y-lg">
       

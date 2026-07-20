@@ -453,12 +453,4 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
-
-  /* Page-specific <header> elements are hidden by default to prevent FOUC
-     (flash of duplicate header before React hydrates and GlobalTopbar takes over).
-     They are only shown on pages WITHOUT the global topbar (auth/signup pages),
-     identified by the ABSENCE of data-global-topbar-active. */
-  [data-global-topbar-active] header {
-    display: none !important;
-  }
 }
