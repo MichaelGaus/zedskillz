@@ -89,7 +89,7 @@ export function LandingBody() {
       </div>
       <div>
       <p className="font-bold text-primary">ZedSkillz AI Assistant</p>
-      <p className="text-xs text-on-surface-variant">Online • Ready to help in Bemba, Nyanja & English</p>
+      <p className="text-xs text-on-surface-variant">Online • Ready to help in Bemba, Nyanja &amp; English</p>
       </div>
       </div>
       <span className="material-symbols-outlined text-outline">more_vert</span>
@@ -164,8 +164,8 @@ export function LandingBody() {
       </div>
       </div>
       </div>
+      </div>
       </section>
-      
       <section className="bg-surface-container-low py-32 px-container-margin md:px-xl">
       <div className="max-w-[1600px] mx-auto">
       <div className="text-center mb-20 space-y-md">
