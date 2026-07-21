@@ -133,21 +133,6 @@ export function CommunityBody() {
       </main>
       </div>
       
-      <div className="fixed bottom-lg right-lg z-50">
-      <button className="group relative flex items-center gap-sm bg-gradient-to-br from-primary to-[#70000e] text-on-primary pl-md pr-lg py-md rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all" id="ai-fab">
-      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 rounded-full transition-opacity"></div>
-      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center animate-pulse">
-      <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span>
-      </div>
-      <div className="flex flex-col items-start leading-none">
-      <span className="text-[10px] uppercase font-bold tracking-widest opacity-80">AI Tutor</span>
-      <span className="font-bold text-sm">Ask a Question</span>
-      </div>
-      
-      <div className="absolute -inset-1 bg-primary/20 blur-xl -z-10 rounded-full group-hover:bg-primary/40 transition-colors"></div>
-      </button>
-      </div>
-      
       <div className="hidden fixed inset-0 z-[60] bg-on-background/20 backdrop-blur-sm flex items-center justify-center p-md" id="ai-overlay">
       <div className="ai-surface-glass w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[500px]">
       <div className="bg-primary p-lg flex justify-between items-center">

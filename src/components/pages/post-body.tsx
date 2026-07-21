@@ -271,11 +271,6 @@ export function PostBody() {
       <span className="font-label-caps text-label-caps">Profile</span>
       </a>
       </nav>
-      
-      <button className="fixed bottom-24 right-6 md:bottom-12 md:right-12 w-16 h-16 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group">
-      <span className="material-symbols-outlined text-3xl">psychology</span>
-      <span className="absolute right-full mr-4 bg-on-surface text-surface text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Ask a Question</span>
-      </button>
     </>
   );
 }

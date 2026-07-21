@@ -118,11 +118,6 @@ export function SignupBody() {
       </div>
       </main>
       
-      <button className="fixed bottom-lg right-lg z-50 flex items-center gap-sm bg-gradient-to-r from-primary to-tertiary text-on-primary px-lg h-touch-target rounded-full shadow-lg ai-glow transition-all hover:scale-105 active:scale-95 group">
-      <span className="material-symbols-outlined group-hover:rotate-12 transition-transform" style={{ fontVariationSettings: '"FILL" 1' }}>auto_awesome</span>
-      <span className="font-title-sm hidden md:inline">Ask a Question</span>
-      </button>
-      
     </>
   );
 }

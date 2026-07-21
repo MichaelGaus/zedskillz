@@ -203,8 +203,6 @@ export function MyCoursesBody() {
       </footer>
       </div>
       </main>
-      
-      <button className="fixed bottom-24 right-md z-50 h-12 px-4 rounded-full bg-primary text-on-primary shadow-lg flex items-center justify-center gap-sm active:scale-90 transition-transform ai-glow" aria-label="AI Tutor"><span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span><span className="font-body-sm font-semibold">Ask a Question</span></button>
     </>
   );
 }
