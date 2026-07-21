@@ -81,7 +81,8 @@ export default function Home() {
       <AIOverlay />
       <GlobalUserMenu />
       {showGlobalTopbar && <GlobalBottomNav />}
-      {showGlobalTopbar && <GlobalAIFab />}
+      {/* GlobalAIFab renders on all pages, including auth pages */}
+      <GlobalAIFab />
     </div>
   );
 }

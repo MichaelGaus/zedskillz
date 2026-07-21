@@ -97,19 +97,7 @@ export function SigninBody() {
       </div>
       </main>
       
-      <div className="fixed bottom-xl right-xl z-[60] flex flex-col items-end gap-4">
-      
-      <div className="bg-primary text-white py-2 px-4 rounded-xl font-body-sm shadow-xl animate-bounce" id="ai-tooltip">
-                  Need help with your studies?
-              </div>
-      <button className="group relative flex items-center justify-center w-touch-target h-touch-target rounded-full bg-primary text-white shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 ai-glow" id="ai-tutor-fab">
-      
-      <span className="absolute inset-0 rounded-full bg-primary opacity-20 animate-ping group-hover:animate-none"></span>
-      <span className="material-symbols-outlined text-[28px]" data-weight="fill">psychology</span>
-      
-      <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-[200px] group-hover:ml-3 transition-all duration-500 font-title-sm">Ask AI Tutor</span>
-      </button>
-      </div>
+
       
     </>
   );
