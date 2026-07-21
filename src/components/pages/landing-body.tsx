@@ -354,7 +354,6 @@ export function LandingBody() {
       <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Privacy Policy</a>
       <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Terms of Service</a>
       <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Contact Support</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Zambia Ministry of Education</a>
       </div>
       <div className="flex items-center gap-md">
       <a className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary shadow-sm hover:scale-110 transition-transform" href="#">
