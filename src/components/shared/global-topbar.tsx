@@ -74,10 +74,11 @@ export function GlobalTopbar() {
         }
         @media (max-width: 767px) {
           [data-desktop-only] { display: none !important; }
+          [data-center-nav] { display: none !important; }
         }
       </style>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <!-- Hamburger menu (mobile only) -->
+      <!-- Left: hamburger (mobile) + logo -->
+      <div style="display:flex;align-items:center;gap:12px;flex:1;">
         <button data-menu-toggle style="display:flex;width:40px;height:40px;border-radius:8px;border:none;background:transparent;cursor:pointer;align-items:center;justify-content:center;color:var(--on-surface);flex-shrink:0;" title="Menu">
           <span class="material-symbols-outlined">menu</span>
         </button>
@@ -87,15 +88,16 @@ export function GlobalTopbar() {
           </div>
           <span data-desktop-only style="font-weight:700;font-size:18px;color:var(--primary);white-space:nowrap;">Zedskillz Hub</span>
         </div>
-        <!-- Desktop nav links -->
-        <div data-desktop-nav style="display:none;align-items:center;gap:24px;margin-left:16px;">
-          ${navLinks.map(({ label, page }) => {
-            const isActive = activePage === page;
-            return `<a href="#" data-nav-link data-page="${page}" style="font-size:14px;font-weight:${isActive ? "700" : "500"};color:${isActive ? "var(--primary)" : "var(--on-surface-variant)"};text-decoration:none;white-space:nowrap;">${label}</a>`;
-          }).join("")}
-        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:4px;">
+      <!-- Center: nav links (desktop only, centered) -->
+      <div data-center-nav data-desktop-nav style="display:none;align-items:center;gap:32px;position:absolute;left:50%;transform:translateX(-50%);">
+        ${navLinks.map(({ label, page }) => {
+          const isActive = activePage === page;
+          return `<a href="#" data-nav-link data-page="${page}" style="font-size:14px;font-weight:${isActive ? "700" : "500"};color:${isActive ? "var(--primary)" : "var(--on-surface-variant)"};text-decoration:none;white-space:nowrap;transition:color 0.2s;">${label}</a>`;
+        }).join("")}
+      </div>
+      <!-- Right: theme + language + My Courses + avatar/login -->
+      <div style="display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;">
         <button data-theme-toggle style="width:40px;height:40px;border-radius:9999px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);flex-shrink:0;" title="${theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}">
           <span class="material-symbols-outlined">${theme === "dark" ? "light_mode" : "dark_mode"}</span>
         </button>
