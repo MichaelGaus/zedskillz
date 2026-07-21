@@ -54,7 +54,10 @@ export function CoursesBody() {
       </div>
       </aside>
       
-      <main className="flex-1 md:ml-72 flex flex-col min-h-screen">
+      <main data-page-main className="flex-1 flex flex-col min-h-screen">
+      <style>{`
+        @media (min-width: 1024px) { [data-page-main] { margin-left: 288px !important; } }
+      `}</style>
       
       <header className="w-full sticky top-0 z-30 bg-surface/80 backdrop-blur-md shadow-sm h-touch-target flex justify-between items-center px-container-margin md:px-xl">
       <div className="flex items-center gap-4">

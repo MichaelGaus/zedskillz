@@ -473,3 +473,31 @@
     display: none !important;
   }
 }
+
+/* Mobile responsive fix: prevent horizontal overflow from absolute-positioned elements */
+@media (max-width: 767px) {
+  body {
+    overflow-x: hidden !important;
+  }
+  main {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+  main > div {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+  }
+  section {
+    max-width: 100% !important;
+  }
+  /* Constrain hero sections with absolute children */
+  section.relative.rounded-3xl {
+    overflow: hidden !important;
+    max-width: 100% !important;
+  }
+  /* Constrain content within hero sections */
+  section .relative.z-20 {
+    max-width: 100% !important;
+    padding: 1rem !important;
+  }
+}
