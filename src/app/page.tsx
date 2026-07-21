@@ -7,6 +7,7 @@ import { AIOverlay } from "@/components/shared/ai-overlay";
 import { GlobalUserMenu } from "@/components/shared/global-user-menu";
 import { GlobalTopbar } from "@/components/shared/global-topbar";
 import { GlobalBottomNav } from "@/components/shared/global-bottom-nav";
+import { GlobalAIFab } from "@/components/shared/global-ai-fab";
 
 // Page body components (auto-generated from design HTML)
 import { LandingBody } from "@/components/pages/landing-body";
@@ -80,6 +81,7 @@ export default function Home() {
       <AIOverlay />
       <GlobalUserMenu />
       {showGlobalTopbar && <GlobalBottomNav />}
+      {showGlobalTopbar && <GlobalAIFab />}
     </div>
   );
 }

@@ -501,3 +501,14 @@
     padding: 1rem !important;
   }
 }
+
+/* Hide page-specific AI FABs — replaced by GlobalAIFab */
+@media (max-width: 767px) {
+  /* Hide any fixed bottom-right button that contains "Ask" text on mobile */
+  button.fixed[class*="bottom"][class*="right"]:not([data-global-ai-fab]):not([data-global-bottom-nav]) {
+    display: none !important;
+  }
+  div.fixed[class*="bottom"][class*="right"]:not([data-global-ai-fab]):not([data-global-bottom-nav]) {
+    display: none !important;
+  }
+}
