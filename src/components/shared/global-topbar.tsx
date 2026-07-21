@@ -134,25 +134,46 @@ export function GlobalTopbar() {
           </button>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
-          ${navLinks.map(({ label, page }) => {
-            const isActive = activePage === page;
-            return `<a href="#" data-nav-link data-page="${page}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:${isActive ? "600" : "500"};color:${isActive ? "var(--primary)" : "var(--on-surface)"};background:${isActive ? "var(--secondary-container)" : "transparent"};text-decoration:none;transition:background 0.2s;">
-              <span class="material-symbols-outlined" style="font-size:22px;">${page === "landing" ? "home" : page === "courses" ? "explore" : page === "leaderboard" ? "leaderboard" : page === "admin-dashboard" ? "dashboard" : "groups"}</span>
-              ${label}
-            </a>`;
-          }).join("")}
-          ${isAuthenticated && !isAdmin ? `<a href="#" data-nav-link data-page="my-courses" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
-            <span class="material-symbols-outlined" style="font-size:22px;">school</span>
-            My Courses
-          </a>` : ""}
-          ${isAuthenticated ? `<a href="#" data-nav-link data-page="profile" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
-            <span class="material-symbols-outlined" style="font-size:22px;">person</span>
-            My Profile
-          </a>
-          <a href="#" data-nav-link data-page="settings" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
-            <span class="material-symbols-outlined" style="font-size:22px;">settings</span>
-            Settings
-          </a>` : ""}
+          ${!isAuthenticated ? `
+            <!-- Welcome prompt for unauthenticated users -->
+            <div style="padding:24px 16px;text-align:center;">
+              <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-container);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <span class="material-symbols-outlined" style="font-size:32px;color:var(--primary);">rocket_launch</span>
+              </div>
+              <p style="font-size:18px;font-weight:700;color:var(--on-surface);margin:0 0 8px;">Welcome to Zedskillz Hub!</p>
+              <p style="font-size:13px;color:var(--on-surface-variant);margin:0 0 20px;line-height:1.5;">Sign in or create an account to access courses, leaderboards, community and more.</p>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <button data-getstarted-button style="width:100%;padding:14px;background:var(--primary);color:var(--on-primary);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                  <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:6px;">person_add</span>
+                  Get Started
+                </button>
+                <button data-login-button style="width:100%;padding:14px;background:var(--secondary-container);color:var(--on-secondary-container);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;">
+                  <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:6px;">login</span>
+                  Log In
+                </button>
+              </div>
+            </div>
+          ` : `
+            ${navLinks.map(({ label, page }) => {
+              const isActive = activePage === page;
+              return `<a href="#" data-nav-link data-page="${page}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:${isActive ? "600" : "500"};color:${isActive ? "var(--primary)" : "var(--on-surface)"};background:${isActive ? "var(--secondary-container)" : "transparent"};text-decoration:none;transition:background 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:22px;">${page === "landing" ? "home" : page === "courses" ? "explore" : page === "leaderboard" ? "leaderboard" : page === "admin-dashboard" ? "dashboard" : "groups"}</span>
+                ${label}
+              </a>`;
+            }).join("")}
+            ${isAuthenticated && !isAdmin ? `<a href="#" data-nav-link data-page="my-courses" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
+              <span class="material-symbols-outlined" style="font-size:22px;">school</span>
+              My Courses
+            </a>` : ""}
+            ${isAuthenticated ? `<a href="#" data-nav-link data-page="profile" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
+              <span class="material-symbols-outlined" style="font-size:22px;">person</span>
+              My Profile
+            </a>
+            <a href="#" data-nav-link data-page="settings" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
+              <span class="material-symbols-outlined" style="font-size:22px;">settings</span>
+              Settings
+            </a>` : ""}
+          `}
         </div>
       </div>
     `;
@@ -199,6 +220,7 @@ export function GlobalTopbar() {
       const avatar = target.closest("[data-avatar-container]");
       const authBtn = target.closest("[data-auth-button]");
       const loginBtn = target.closest("[data-login-button]");
+      const getStartedBtn = target.closest("[data-getstarted-button]");
       const menuToggle = target.closest("[data-menu-toggle]");
       const closeDrawer = target.closest("[data-close-drawer]");
 
@@ -239,10 +261,16 @@ export function GlobalTopbar() {
         e.stopPropagation();
         const page = authBtn.getAttribute("data-page");
         if (page) setActivePage(page);
+      } else if (getStartedBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        setActivePage("signup");
+        closeMobileDrawer();
       } else if (loginBtn) {
         e.preventDefault();
         e.stopPropagation();
         setActivePage("auth");
+        closeMobileDrawer();
       }
     };
 
