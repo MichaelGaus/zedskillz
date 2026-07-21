@@ -408,11 +408,16 @@
     border-color: rgba(87, 66, 65, 0.4);
   }
 
-  /* Bento grid — 12 col layout */
+  /* Bento grid — 12 col layout on desktop, 1 col on mobile */
   .bento-grid {
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    .bento-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
   }
 
   /* No scrollbar (horizontal chip rows) */

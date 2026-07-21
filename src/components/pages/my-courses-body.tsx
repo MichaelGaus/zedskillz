@@ -87,7 +87,7 @@ export function MyCoursesBody() {
       <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfc7Qu5Jkav-WzAutuR2GJNYE3KqzSBzApcEjMdmU9LFiobfGvS-_4r74pj6fi4JuK933m_F8bN30LSVW3Z-t8KS7uxgW5Pe1DnecPCfFDpY4dP4ttSmOuNUxj2oFLWGwDk01E2AuvVZp25NeImuYH42hmtjucRhlLJDpmPo0AnxDKQcMQ8zUVP4Kwb52Rh0tyE_93k-9fMdrBRavNNkEkA2f-posJi9eY18XsRJC72uLUK9YnVfMXKQ"  alt="" />
       </div>
       <div className="relative z-20 max-w-2xl text-white">
-      <h2 className="font-display-lg text-display-lg mb-sm whitespace-nowrap">Welcome back, Scholar!</h2>
+      <h2 className="font-display-lg text-display-lg-mobile md:text-display-lg mb-sm">Welcome back, Scholar!</h2>
       <p className="font-body-md text-body-md opacity-90 mb-lg">You've completed 75% of your weekly goal. Keep going to unlock the "AI Pioneer" badge today.</p>
       <button className="bg-surface text-primary font-bold px-lg py-sm rounded-full active:scale-95 transition-transform">
                               Continue Learning
@@ -95,9 +95,9 @@ export function MyCoursesBody() {
       </div>
       </section>
       
-      <div className="bento-grid">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg">
       
-      <div className="col-span-8 space-y-lg">
+      <div className="lg:col-span-8 space-y-lg">
       <div className="flex items-center justify-between">
       <h3 className="font-headline-md text-headline-md text-on-surface">Active Courses</h3>
       <a className="text-primary font-bold text-body-sm hover:underline" href="#">View all</a>
@@ -153,7 +153,7 @@ export function MyCoursesBody() {
       </button>
       </div>
       </div>
-      <div className="flex gap-lg overflow-x-hidden">
+      <div className="flex gap-lg overflow-x-auto no-scrollbar">
       
       <div className="min-w-[280px] bg-surface-container-low rounded-xl p-md border border-outline-variant flex flex-col gap-sm ai-glow">
       <div className="flex items-center gap-sm text-primary mb-xs">
@@ -180,7 +180,7 @@ export function MyCoursesBody() {
       </div>
       </div>
       
-      <div className="col-span-4 space-y-xl">
+      <div className="lg:col-span-4 space-y-xl">
       
       <div className="glass-card rounded-2xl p-lg border-primary/20 ai-glow">
       <div className="flex items-center gap-md mb-md">
