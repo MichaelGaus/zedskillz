@@ -146,13 +146,22 @@ export function GlobalTopbar() {
               <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
             </button>
           ) : (
-            <button
-              onClick={() => setActivePage("auth")}
-              className="flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-full border-none cursor-pointer font-semibold text-sm shrink-0 whitespace-nowrap hover:bg-primary/90 transition-colors"
-            >
-              <Icon name="login" size={18} />
-              <span>Login</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActivePage("auth")}
+                className="flex items-center gap-1.5 px-4 py-2 bg-transparent text-primary border border-outline-variant rounded-full cursor-pointer font-semibold text-sm shrink-0 whitespace-nowrap hover:bg-surface-container transition-colors"
+              >
+                <Icon name="login" size={18} />
+                <span>Login</span>
+              </button>
+              <button
+                onClick={() => setActivePage("signup")}
+                className="flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-full border-none cursor-pointer font-semibold text-sm shrink-0 whitespace-nowrap hover:bg-primary/90 transition-colors"
+              >
+                <Icon name="rocket_launch" size={18} />
+                <span>Get Started</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
