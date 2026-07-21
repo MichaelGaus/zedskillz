@@ -13,6 +13,7 @@ import { SigninPage } from "@/components/pages/signin-page";
 import { SignupPage } from "@/components/pages/signup-page";
 import { AdminBody } from "@/components/pages/admin-body";
 import { CoursesBody } from "@/components/pages/courses-body";
+import { CourseDetailBody } from "@/components/pages/course-detail-body";
 import { MyCoursesBody } from "@/components/pages/my-courses-body";
 import { LeaderboardBody } from "@/components/pages/leaderboard-body";
 import { CommunityBody } from "@/components/pages/community-body";
@@ -47,8 +48,9 @@ export default function Home() {
         }
         return <AdminBody />;
       case "courses":
-      case "course-detail":
         return <CoursesBody />;
+      case "course-detail":
+        return <CourseDetailBody />;
       case "my-courses":
         return <MyCoursesBody />;
       case "leaderboard":
