@@ -1,0 +1,763 @@
+     1→"use client";
+     2→
+     3→import { useAppStore } from "@/lib/store";
+     4→import { useState, useRef, useEffect } from "react";
+     5→import { toast } from "sonner";
+     6→
+     7→/**
+     8→ * ProfilePage — full profile management page.
+     9→ *
+    10→ * Users can edit:
+    11→ * - Profile picture (upload or generate from seed)
+    12→ * - Full name
+    13→ * - Email (read-only)
+    14→ * - Bio
+    15→ * - Date of birth
+    16→ * - Gender
+    17→ * - Phone
+    18→ * - Location (city)
+    19→ * - Province (Zambian provinces dropdown)
+    20→ * - Education level
+    21→ * - School
+    22→ * - Interests (tag input)
+    23→ * - Skills (tag input)
+    24→ * - Languages (tag input)
+    25→ * - Social links
+    26→ *
+    27→ * Changes are saved to the Zustand store and persist for the session.
+    28→ */
+    29→export function ProfilePage() {
+    30→  const { user, updateProfile, signOut, setActivePage } = useAppStore();
+    31→
+    32→  // Redirect to sign-in if not authenticated
+    33→  useEffect(() => {
+    34→    if (!user) {
+    35→      setActivePage("auth");
+    36→    }
+    37→  }, [user, setActivePage]);
+    38→
+    39→  if (!user) return null;
+    40→
+    41→  return <ProfileContent user={user} updateProfile={updateProfile} signOut={signOut} setActivePage={setActivePage} />;
+    42→}
+    43→
+    44→function ProfileContent({ user, updateProfile, signOut, setActivePage }: {
+    45→  user: NonNullable<ReturnType<typeof useAppStore.getState>["user"]>;
+    46→  updateProfile: (updates: Partial<typeof user>) => void;
+    47→  signOut: () => void;
+    48→  setActivePage: (page: string) => void;
+    49→}) {
+    50→  const [editing, setEditing] = useState(false);
+    51→  const [form, setForm] = useState(user);
+    52→  const [avatarSeed, setAvatarSeed] = useState(user.email);
+    53→  const fileInputRef = useRef<HTMLInputElement>(null);
+    54→
+    55→  // Sync form when user changes externally
+    56→  useEffect(() => {
+    57→    setForm(user);
+    58→  }, [user]);
+    59→
+    60→  const handleSave = () => {
+    61→    updateProfile(form);
+    62→    setEditing(false);
+    63→    toast.success("Profile updated successfully! 🎉");
+    64→  };
+    65→
+    66→  const handleCancel = () => {
+    67→    setForm(user);
+    68→    setEditing(false);
+    69→    toast.info("Changes discarded");
+    70→  };
+    71→
+    72→  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    73→    const file = e.target.files?.[0];
+    74→    if (!file) return;
+    75→    if (file.size > 2 * 1024 * 1024) {
+    76→      toast.error("Image must be less than 2MB");
+    77→      return;
+    78→    }
+    79→    const reader = new FileReader();
+    80→    reader.onload = (ev) => {
+    81→      const dataUrl = ev.target?.result as string;
+    82→      setForm({ ...form, avatar: dataUrl });
+    83→      toast.success("Profile picture updated");
+    84→    };
+    85→    reader.readAsDataURL(file);
+    86→  };
+    87→
+    88→  const regenerateAvatar = () => {
+    89→    const newSeed = Math.random().toString(36).substring(7);
+    90→    setAvatarSeed(newSeed);
+    91→    setForm({
+    92→      ...form,
+    93→      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(newSeed)}&backgroundColor=ffdad8,f5dddd,e5dedf`,
+    94→    });
+    95→    toast.success("New avatar generated");
+    96→  };
+    97→
+    98→  // Tag inputs (interests, skills, languages)
+    99→  const addTag = (field: "interests" | "skills" | "languages", value: string) => {
+   100→    if (!value.trim()) return;
+   101→    if (form[field].includes(value.trim())) return;
+   102→    setForm({ ...form, [field]: [...form[field], value.trim()] });
+   103→  };
+   104→
+   105→  const removeTag = (field: "interests" | "skills" | "languages", value: string) => {
+   106→    setForm({ ...form, [field]: form[field].filter((v) => v !== value) });
+   107→  };
+   108→
+   109→  const provinces = [
+   110→    "Lusaka Province", "Copperbelt Province", "Central Province", "Eastern Province",
+   111→    "Northern Province", "Luapula Province", "North-Western Province", "Southern Province",
+   112→    "Western Province", "Muchinga Province",
+   113→  ];
+   114→
+   115→  const educationLevels = [
+   116→    "Primary School", "Junior Secondary", "Senior Secondary (Grade 12)",
+   117→    "Certificate", "Diploma", "Bachelor's Degree", "Master's Degree", "PhD", "Other",
+   118→  ];
+   119→
+   120→  const genders = ["Male", "Female", "Prefer not to say"];
+   121→
+   122→  return (
+   123→    <div className="min-h-screen bg-background">
+   124→      {/* ===== TopAppBar ===== */}
+   125→      <header className="bg-surface border-b border-outline-variant sticky top-0 z-40">
+   126→        <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+   127→          <div className="flex items-center gap-3">
+   128→            <button
+   129→              onClick={() => setActivePage("landing")}
+   130→              className="p-2 hover:bg-surface-container rounded-lg"
+   131→            >
+   132→              <span className="material-symbols-outlined">arrow_back</span>
+   133→            </button>
+   134→            <div className="flex items-center gap-2">
+   135→              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+   136→                <span className="material-symbols-outlined text-on-primary" style={{ fontVariationSettings: '"FILL" 1' }}>school</span>
+   137→              </div>
+   138→              <span className="font-display text-lg font-bold text-primary hidden sm:block">Zedskillz Hub</span>
+   139→            </div>
+   140→          </div>
+   141→          <h1 className="font-headline-md text-headline-md text-primary hidden md:block">My Profile</h1>
+   142→          <div className="flex items-center gap-2">
+   143→            {editing ? (
+   144→              <>
+   145→                <button
+   146→                  onClick={handleCancel}
+   147→                  className="px-4 py-2 text-sm font-medium border border-outline-variant rounded-lg hover:bg-surface-container transition-colors"
+   148→                >
+   149→                  Cancel
+   150→                </button>
+   151→                <button
+   152→                  onClick={handleSave}
+   153→                  className="px-4 py-2 text-sm font-semibold bg-primary text-on-primary rounded-lg hover:bg-primary-container transition-colors flex items-center gap-1"
+   154→                >
+   155→                  <span className="material-symbols-outlined text-[18px]">save</span>
+   156→                  Save Changes
+   157→                </button>
+   158→              </>
+   159→            ) : (
+   160→              <button
+   161→                onClick={() => setEditing(true)}
+   162→                className="px-4 py-2 text-sm font-semibold bg-primary text-on-primary rounded-lg hover:bg-primary-container transition-colors flex items-center gap-1"
+   163→              >
+   164→                <span className="material-symbols-outlined text-[18px]">edit</span>
+   165→                Edit Profile
+   166→              </button>
+   167→            )}
+   168→          </div>
+   169→        </div>
+   170→      </header>
+   171→
+   172→      <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-8">
+   173→        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+   174→          {/* ===== Main content ===== */}
+   175→          <div className="space-y-6">
+   176→            {/* Profile header card */}
+   177→            <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
+   178→              {/* Cover banner */}
+   179→              <div className="h-32 bg-gradient-to-r from-primary via-primary-container to-tertiary-container relative">
+   180→                <button
+   181→                  onClick={() => toast.info("Cover photo upload coming soon!")}
+   182→                  className="absolute top-3 right-3 px-3 py-1.5 bg-black/30 backdrop-blur text-white text-xs font-medium rounded-lg hover:bg-black/40 transition-colors flex items-center gap-1"
+   183→                >
+   184→                  <span className="material-symbols-outlined text-[16px]">photo_camera</span>
+   185→                  Change Cover
+   186→                </button>
+   187→              </div>
+   188→              {/* Avatar + name */}
+   189→              <div className="px-6 pb-6 -mt-12 flex flex-col sm:flex-row sm:items-end gap-4">
+   190→                <div className="relative">
+   191→                  <img
+   192→                    src={form.avatar}
+   193→                    alt={form.name}
+   194→                    className="w-28 h-28 rounded-full ring-4 ring-surface-container-lowest object-cover bg-surface-container"
+   195→                  />
+   196→                  {editing && (
+   197→                    <>
+   198→                      <button
+   199→                        onClick={() => fileInputRef.current?.click()}
+   200→                        className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:bg-primary-container transition-colors"
+   201→                        title="Upload photo"
+   202→                      >
+   203→                        <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+   204→                      </button>
+   205→                      <button
+   206→                        onClick={regenerateAvatar}
+   207→                        className="absolute top-1 right-1 w-8 h-8 rounded-full bg-surface-container-lowest border border-outline-variant flex items-center justify-center shadow-md hover:bg-surface-container transition-colors"
+   208→                        title="Generate random avatar"
+   209→                      >
+   210→                        <span className="material-symbols-outlined text-[16px]">refresh</span>
+   211→                      </button>
+   212→                      <input
+   213→                        ref={fileInputRef}
+   214→                        type="file"
+   215→                        accept="image/*"
+   216→                        onChange={handleAvatarUpload}
+   217→                        className="hidden"
+   218→                      />
+   219→                    </>
+   220→                  )}
+   221→                </div>
+   222→                <div className="flex-1 pb-2">
+   223→                  {editing ? (
+   224→                    <input
+   225→                      type="text"
+   226→                      value={form.name}
+   227→                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+   228→                      className="font-display-lg text-display-lg-mobile text-primary bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none w-full"
+   229→                      placeholder="Your name"
+   230→                    />
+   231→                  ) : (
+   232→                    <h2 className="font-display-lg text-display-lg-mobile text-primary">{form.name}</h2>
+   233→                  )}
+   234→                  <div className="flex items-center gap-2 mt-1">
+   235→                    <span className="material-symbols-outlined text-[16px] text-on-surface-variant">mail</span>
+   236→                    <span className="text-sm text-on-surface-variant">{form.email}</span>
+   237→                  </div>
+   238→                </div>
+   239→              </div>
+   240→            </div>
+   241→
+   242→            {/* Personal Information */}
+   243→            <Section title="Personal Information" icon="person">
+   244→              <div className="grid sm:grid-cols-2 gap-4">
+   245→                <Field label="Full Name" icon="badge">
+   246→                  {editing ? (
+   247→                    <input
+   248→                      type="text"
+   249→                      value={form.name}
+   250→                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+   251→                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   252→                      placeholder="John Doe"
+   253→                    />
+   254→                  ) : (
+   255→                    <p className="text-sm text-on-surface">{form.name || "Not set"}</p>
+   256→                  )}
+   257→                </Field>
+   258→
+   259→                <Field label="Email Address" icon="mail">
+   260→                  <p className="text-sm text-on-surface-variant">{form.email}</p>
+   261→                  <p className="text-[10px] text-on-surface-variant/70 mt-1">Email cannot be changed</p>
+   262→                </Field>
+   263→
+   264→                <Field label="Date of Birth" icon="cake">
+   265→                  {editing ? (
+   266→                    <input
+   267→                      type="date"
+   268→                      value={form.dateOfBirth}
+   269→                      onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
+   270→                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   271→                    />
+   272→                  ) : (
+   273→                    <p className="text-sm text-on-surface">
+   274→                      {form.dateOfBirth
+   275→                        ? new Date(form.dateOfBirth).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+   276→                        : "Not set"}
+   277→                    </p>
+   278→                  )}
+   279→                </Field>
+   280→
+   281→                <Field label="Gender" icon="wc">
+   282→                  {editing ? (
+   283→                    <select
+   284→                      value={form.gender}
+   285→                      onChange={(e) => setForm({ ...form, gender: e.target.value })}
+   286→                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   287→                    >
+   288→                      <option value="">Select gender</option>
+   289→                      {genders.map((g) => (
+   290→                        <option key={g} value={g}>{g}</option>
+   291→                      ))}
+   292→                    </select>
+   293→                  ) : (
+   294→                    <p className="text-sm text-on-surface">{form.gender || "Not set"}</p>
+   295→                  )}
+   296→                </Field>
+   297→
+   298→                <Field label="Phone Number" icon="call">
+   299→                  {editing ? (
+   300→                    <input
+   301→                      type="tel"
+   302→                      value={form.phone}
+   303→                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+   304→                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   305→                      placeholder="+260 97 123 4567"
+   306→                    />
+   307→                  ) : (
+   308→                    <p className="text-sm text-on-surface">{form.phone || "Not set"}</p>
+   309→                  )}
+   310→                </Field>
+   311→              </div>
+   312→            </Section>
+   313→
+   314→            {/* Location & Education */}
+   315→            <Section title="Location & Education" icon="location_on">
+   316→              <div className="grid sm:grid-cols-2 gap-4">
+   317→                <Field label="City / Town" icon="location_city">
+   318→                  {editing ? (
+   319→                    <input
+   320→                      type="text"
+   321→                      value={form.location}
+   322→                      onChange={(e) => setForm({ ...form, location: e.target.value })}
+   323→                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   324→                      placeholder="Lusaka"
+   325→                    />
+   326→                  ) : (
+   327→                    <p className="text-sm text-on-surface">{form.location || "Not set"}</p>
+   328→                  )}
+   329→                </Field>
+   330→
+   331→                <Field label="Province" icon="map">
+   332→                  {editing ? (
+   333→                    <select
+   334→                      value={form.province}
+   335→                      onChange={(e) => setForm({ ...form, province: e.target.value })}
+   336→                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   337→                    >
+   338→                      <option value="">Select province</option>
+   339→                      {provinces.map((p) => (
+   340→                        <option key={p} value={p}>{p}</option>
+   341→                      ))}
+   342→                    </select>
+   343→                  ) : (
+   344→                    <p className="text-sm text-on-surface">{form.province || "Not set"}</p>
+   345→                  )}
+   346→                </Field>
+   347→
+   348→                <Field label="Education Level" icon="school">
+   349→                  {editing ? (
+   350→                    <select
+   351→                      value={form.education}
+   352→                      onChange={(e) => setForm({ ...form, education: e.target.value })}
+   353→                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   354→                    >
+   355→                      <option value="">Select level</option>
+   356→                      {educationLevels.map((e) => (
+   357→                        <option key={e} value={e}>{e}</option>
+   358→                      ))}
+   359→                    </select>
+   360→                  ) : (
+   361→                    <p className="text-sm text-on-surface">{form.education || "Not set"}</p>
+   362→                  )}
+   363→                </Field>
+   364→
+   365→                <Field label="School / Institution" icon="account_balance">
+   366→                  {editing ? (
+   367→                    <input
+   368→                      type="text"
+   369→                      value={form.school}
+   370→                      onChange={(e) => setForm({ ...form, school: e.target.value })}
+   371→                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   372→                      placeholder="University of Zambia"
+   373→                    />
+   374→                  ) : (
+   375→                    <p className="text-sm text-on-surface">{form.school || "Not set"}</p>
+   376→                  )}
+   377→                </Field>
+   378→              </div>
+   379→            </Section>
+   380→
+   381→            {/* About / Bio */}
+   382→            <Section title="About Me" icon="info">
+   383→              <Field label="Bio" icon="description">
+   384→                {editing ? (
+   385→                  <textarea
+   386→                    value={form.bio}
+   387→                    onChange={(e) => setForm({ ...form, bio: e.target.value })}
+   388→                    rows={4}
+   389→                    maxLength={300}
+   390→                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
+   391→                    placeholder="Tell us about yourself..."
+   392→                  />
+   393→                ) : (
+   394→                  <p className="text-sm text-on-surface leading-relaxed">
+   395→                    {form.bio || "No bio added yet. Click Edit Profile to add one."}
+   396→                  </p>
+   397→                )}
+   398→                {editing && (
+   399→                  <p className="text-[10px] text-on-surface-variant mt-1 text-right">
+   400→                    {form.bio.length}/300 characters
+   401→                  </p>
+   402→                )}
+   403→              </Field>
+   404→            </Section>
+   405→
+   406→            {/* Interests, Skills, Languages */}
+   407→            <Section title="Interests & Skills" icon="interests">
+   408→              <div className="space-y-4">
+   409→                <TagInput
+   410→                  label="Interests"
+   411→                  icon="favorite"
+   412→                  tags={form.interests}
+   413→                  onAdd={(v) => addTag("interests", v)}
+   414→                  onRemove={(v) => removeTag("interests", v)}
+   415→                  editing={editing}
+   416→                  placeholder="e.g. AI, Reading, Football"
+   417→                  suggestions={["AI", "Robotics", "Agriculture", "Music", "Football", "Reading", "Coding", "Entrepreneurship"]}
+   418→                />
+   419→                <TagInput
+   420→                  label="Skills"
+   421→                  icon="bolt"
+   422→                  tags={form.skills}
+   423→                  onAdd={(v) => addTag("skills", v)}
+   424→                  onRemove={(v) => removeTag("skills", v)}
+   425→                  editing={editing}
+   426→                  placeholder="e.g. Python, Public Speaking"
+   427→                  suggestions={["Python", "JavaScript", "React", "Public Speaking", "Data Analysis", "Leadership", "Writing", "Design"]}
+   428→                />
+   429→                <TagInput
+   430→                  label="Languages"
+   431→                  icon="translate"
+   432→                  tags={form.languages}
+   433→                  onAdd={(v) => addTag("languages", v)}
+   434→                  onRemove={(v) => removeTag("languages", v)}
+   435→                  editing={editing}
+   436→                  placeholder="e.g. Bemba, Nyanja"
+   437→                  suggestions={["English", "Bemba", "Nyanja", "Tonga", "Lozi", "Kaonde", "Lunda", "Luvale", "French", "Portuguese"]}
+   438→                />
+   439→              </div>
+   440→            </Section>
+   441→
+   442→            {/* Social Links */}
+   443→            <Section title="Social Links" icon="link">
+   444→              <div className="space-y-3">
+   445→                {[
+   446→                  { platform: "twitter", icon: "share", label: "Twitter / X" },
+   447→                  { platform: "github", icon: "code", label: "GitHub" },
+   448→                  { platform: "linkedin", icon: "work", label: "LinkedIn" },
+   449→                  { platform: "facebook", icon: "public", label: "Facebook" },
+   450→                ].map(({ platform, icon, label }) => {
+   451→                  const existing = form.socialLinks.find((s) => s.platform === platform);
+   452→                  return (
+   453→                    <div key={platform} className="flex items-center gap-3">
+   454→                      <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
+   455→                        <span className="material-symbols-outlined text-[20px] text-on-surface-variant">{icon}</span>
+   456→                      </div>
+   457→                      <div className="flex-1">
+   458→                        <div className="text-xs text-on-surface-variant mb-0.5">{label}</div>
+   459→                        {editing ? (
+   460→                          <input
+   461→                            type="url"
+   462→                            value={existing?.url || ""}
+   463→                            onChange={(e) => {
+   464→                              const others = form.socialLinks.filter((s) => s.platform !== platform);
+   465→                              if (e.target.value) {
+   466→                                setForm({ ...form, socialLinks: [...others, { platform, url: e.target.value }] });
+   467→                              } else {
+   468→                                setForm({ ...form, socialLinks: others });
+   469→                              }
+   470→                            }}
+   471→                            className="w-full px-3 py-1.5 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   472→                            placeholder={`https://${platform}.com/yourusername`}
+   473→                          />
+   474→                        ) : (
+   475→                          <p className="text-sm text-on-surface">
+   476→                            {existing?.url || "Not connected"}
+   477→                          </p>
+   478→                        )}
+   479→                      </div>
+   480→                    </div>
+   481→                  );
+   482→                })}
+   483→              </div>
+   484→            </Section>
+   485→
+   486→            {/* Account Actions */}
+   487→            <Section title="Account" icon="manage_accounts">
+   488→              <div className="space-y-2">
+   489→                <button
+   490→                  onClick={() => {
+   491→                    toast.info("Export data feature coming soon!");
+   492→                  }}
+   493→                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors text-left"
+   494→                >
+   495→                  <span className="material-symbols-outlined text-[20px] text-on-surface-variant">download</span>
+   496→                  <div className="flex-1">
+   497→                    <div className="text-sm font-medium text-on-surface">Download my data</div>
+   498→                    <div className="text-xs text-on-surface-variant">Export all your account data (GDPR)</div>
+   499→                  </div>
+   500→                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_right</span>
+   501→                </button>
+   502→                <button
+   503→                  onClick={() => {
+   504→                    signOut();
+   505→                    toast.success("Signed out successfully");
+   506→                  }}
+   507→                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-error/30 bg-error/5 hover:bg-error/10 transition-colors text-left"
+   508→                >
+   509→                  <span className="material-symbols-outlined text-[20px] text-error">logout</span>
+   510→                  <div className="flex-1">
+   511→                    <div className="text-sm font-medium text-error">Sign Out</div>
+   512→                    <div className="text-xs text-on-surface-variant">Sign out of your account</div>
+   513→                  </div>
+   514→                </button>
+   515→                <button
+   516→                  onClick={() => {
+   517→                    if (confirm("Are you sure you want to delete your account? This cannot be undone.")) {
+   518→                      toast.error("Account deletion requested — contact support@zedskillz.com");
+   519→                    }
+   520→                  }}
+   521→                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-error/30 bg-error/5 hover:bg-error/10 transition-colors text-left"
+   522→                >
+   523→                  <span className="material-symbols-outlined text-[20px] text-error">delete_forever</span>
+   524→                  <div className="flex-1">
+   525→                    <div className="text-sm font-medium text-error">Delete Account</div>
+   526→                    <div className="text-xs text-on-surface-variant">Permanently delete your account</div>
+   527→                  </div>
+   528→                </button>
+   529→              </div>
+   530→            </Section>
+   531→          </div>
+   532→
+   533→          {/* ===== Right sidebar ===== */}
+   534→          <aside className="space-y-4">
+   535→            {/* Profile completion */}
+   536→            <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+   537→              <h3 className="font-title-sm text-title-sm text-on-surface mb-3 flex items-center gap-2">
+   538→                <span className="material-symbols-outlined text-[20px] text-primary">checklist</span>
+   539→                Profile Completion
+   540→              </h3>
+   541→              {(() => {
+   542→                const fields = ["name", "bio", "dateOfBirth", "gender", "phone", "location", "province", "education", "school"];
+   543→                const filled = fields.filter((f) => (form as any)[f]).length;
+   544→                const tagsFilled = (form.interests.length > 0 ? 1 : 0) + (form.skills.length > 0 ? 1 : 0) + (form.languages.length > 0 ? 1 : 0);
+   545→                const total = fields.length + 3;
+   546→                const complete = filled + tagsFilled;
+   547→                const pct = Math.round((complete / total) * 100);
+   548→                return (
+   549→                  <>
+   550→                    <div className="flex items-center justify-between mb-2">
+   551→                      <span className="text-2xl font-bold text-primary">{pct}%</span>
+   552→                      <span className="text-xs text-on-surface-variant">{complete}/{total} fields</span>
+   553→                    </div>
+   554→                    <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+   555→                      <div
+   556→                        className="h-full bg-primary transition-all duration-500"
+   557→                        style={{ width: `${pct}%` }}
+   558→                      />
+   559→                    </div>
+   560→                    {pct < 100 && (
+   561→                      <p className="text-xs text-on-surface-variant mt-3">
+   562→                        Complete your profile to improve visibility and connect with more learners.
+   563→                      </p>
+   564→                    )}
+   565→                    {pct === 100 && (
+   566→                      <p className="text-xs text-emerald-600 mt-3 flex items-center gap-1">
+   567→                        <span className="material-symbols-outlined text-[14px]">verified</span>
+   568→                        Profile complete!
+   569→                      </p>
+   570→                    )}
+   571→                  </>
+   572→                );
+   573→              })()}
+   574→            </div>
+   575→
+   576→            {/* Quick stats */}
+   577→            <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
+   578→              <h3 className="font-title-sm text-title-sm text-on-surface mb-3 flex items-center gap-2">
+   579→                <span className="material-symbols-outlined text-[20px] text-primary">insights</span>
+   580→                Quick Stats
+   581→              </h3>
+   582→              <div className="space-y-2">
+   583→                {[
+   584→                  { label: "Member Since", value: "July 2026", icon: "event" },
+   585→                  { label: "Courses Enrolled", value: "3", icon: "school" },
+   586→                  { label: "Courses Completed", value: "1", icon: "workspace_premium" },
+   587→                  { label: "Learning Streak", value: "8 days 🔥", icon: "local_fire_department" },
+   588→                  { label: "Total XP", value: "4,500", icon: "bolt" },
+   589→                ].map((stat) => (
+   590→                  <div key={stat.label} className="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container transition-colors">
+   591→                    <div className="flex items-center gap-2">
+   592→                      <span className="material-symbols-outlined text-[18px] text-on-surface-variant">{stat.icon}</span>
+   593→                      <span className="text-sm text-on-surface-variant">{stat.label}</span>
+   594→                    </div>
+   595→                    <span className="text-sm font-semibold text-on-surface">{stat.value}</span>
+   596→                  </div>
+   597→                ))}
+   598→              </div>
+   599→            </div>
+   600→
+   601→            {/* Privacy tip */}
+   602→            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
+   603→              <div className="flex items-start gap-3">
+   604→                <span className="material-symbols-outlined text-[24px] text-primary">shield</span>
+   605→                <div>
+   606→                  <h4 className="font-title-sm text-title-sm text-primary mb-1">Your Privacy</h4>
+   607→                  <p className="text-xs text-on-surface-variant leading-relaxed">
+   608→                    Your personal information is private and only visible to you. Your name and bio
+   609→                    are visible to other community members.
+   610→                  </p>
+   611→                  <button
+   612→                    onClick={() => toast.info("Privacy settings coming soon!")}
+   613→                    className="mt-2 text-xs text-primary font-semibold hover:underline"
+   614→                  >
+   615→                    Manage privacy settings →
+   616→                  </button>
+   617→                </div>
+   618→              </div>
+   619→            </div>
+   620→          </aside>
+   621→        </div>
+   622→      </div>
+   623→    </div>
+   624→  );
+   625→}
+   626→
+   627→// ===== Helper components =====
+   628→
+   629→function Section({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+   630→  return (
+   631→    <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 md:p-6">
+   632→      <h3 className="font-title-sm text-title-sm text-on-surface mb-4 flex items-center gap-2">
+   633→        <span className="material-symbols-outlined text-[20px] text-primary">{icon}</span>
+   634→        {title}
+   635→      </h3>
+   636→      {children}
+   637→    </div>
+   638→  );
+   639→}
+   640→
+   641→function Field({ label, icon, children }: { label: string; icon: string; children: React.ReactNode }) {
+   642→  return (
+   643→    <div>
+   644→      <label className="flex items-center gap-1.5 text-xs font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-1.5">
+   645→        <span className="material-symbols-outlined text-[14px]">{icon}</span>
+   646→        {label}
+   647→      </label>
+   648→      {children}
+   649→    </div>
+   650→  );
+   651→}
+   652→
+   653→function TagInput({
+   654→  label,
+   655→  icon,
+   656→  tags,
+   657→  onAdd,
+   658→  onRemove,
+   659→  editing,
+   660→  placeholder,
+   661→  suggestions,
+   662→}: {
+   663→  label: string;
+   664→  icon: string;
+   665→  tags: string[];
+   666→  onAdd: (v: string) => void;
+   667→  onRemove: (v: string) => void;
+   668→  editing: boolean;
+   669→  placeholder: string;
+   670→  suggestions: string[];
+   671→}) {
+   672→  const [input, setInput] = useState("");
+   673→  const [showSuggestions, setShowSuggestions] = useState(false);
+   674→
+   675→  const handleAdd = () => {
+   676→    if (input.trim()) {
+   677→      onAdd(input);
+   678→      setInput("");
+   679→    }
+   680→  };
+   681→
+   682→  const filteredSuggestions = suggestions.filter(
+   683→    (s) => !tags.includes(s) && s.toLowerCase().includes(input.toLowerCase())
+   684→  );
+   685→
+   686→  return (
+   687→    <div>
+   688→      <label className="flex items-center gap-1.5 text-xs font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-1.5">
+   689→        <span className="material-symbols-outlined text-[14px]">{icon}</span>
+   690→        {label}
+   691→      </label>
+   692→      <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
+   693→        {tags.map((tag) => (
+   694→          <span
+   695→            key={tag}
+   696→            className="inline-flex items-center gap-1 px-2.5 py-1 bg-secondary-container text-on-secondary-container text-xs rounded-full font-medium"
+   697→          >
+   698→            {tag}
+   699→            {editing && (
+   700→              <button
+   701→                onClick={() => onRemove(tag)}
+   702→                className="hover:text-primary"
+   703→              >
+   704→                <span className="material-symbols-outlined text-[14px]">close</span>
+   705→              </button>
+   706→            )}
+   707→          </span>
+   708→        ))}
+   709→        {tags.length === 0 && !editing && (
+   710→          <span className="text-sm text-on-surface-variant/70 italic">None added yet</span>
+   711→        )}
+   712→      </div>
+   713→      {editing && (
+   714→        <div className="relative">
+   715→          <div className="flex gap-2">
+   716→            <input
+   717→              type="text"
+   718→              value={input}
+   719→              onChange={(e) => {
+   720→                setInput(e.target.value);
+   721→                setShowSuggestions(true);
+   722→              }}
+   723→              onKeyDown={(e) => {
+   724→                if (e.key === "Enter") {
+   725→                  e.preventDefault();
+   726→                  handleAdd();
+   727→                }
+   728→              }}
+   729→              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+   730→              onFocus={() => setShowSuggestions(true)}
+   731→              className="flex-1 px-3 py-1.5 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   732→              placeholder={placeholder}
+   733→            />
+   734→            <button
+   735→              onClick={handleAdd}
+   736→              className="px-3 py-1.5 bg-primary text-on-primary rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors"
+   737→            >
+   738→              Add
+   739→            </button>
+   740→          </div>
+   741→          {showSuggestions && filteredSuggestions.length > 0 && (
+   742→            <div className="absolute z-10 top-full mt-1 left-0 right-0 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg max-h-40 overflow-y-auto">
+   743→              {filteredSuggestions.slice(0, 6).map((s) => (
+   744→                <button
+   745→                  key={s}
+   746→                  onMouseDown={(e) => {
+   747→                    e.preventDefault();
+   748→                    onAdd(s);
+   749→                    setInput("");
+   750→                  }}
+   751→                  className="block w-full text-left px-3 py-2 text-sm hover:bg-surface-container transition-colors"
+   752→                >
+   753→                  {s}
+   754→                </button>
+   755→              ))}
+   756→            </div>
+   757→          )}
+   758→        </div>
+   759→      )}
+   760→    </div>
+   761→  );
+   762→}
+   763→
