@@ -199,7 +199,6 @@ export function MyCoursesBody() {
       <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
       <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
       <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Contact Support</a>
-      <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Zambia Ministry of Education</a>
       </div>
       </footer>
       </div>

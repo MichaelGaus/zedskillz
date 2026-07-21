@@ -225,7 +225,6 @@ export function CoursesBody() {
       <a className="text-on-surface-variant hover:text-primary transition-colors font-body-sm text-body-sm" href="#">Privacy Policy</a>
       <a className="text-on-surface-variant hover:text-primary transition-colors font-body-sm text-body-sm" href="#">Terms of Service</a>
       <a className="text-on-surface-variant hover:text-primary transition-colors font-body-sm text-body-sm" href="#">Contact Support</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors font-body-sm text-body-sm" href="#">Zambia Ministry of Education</a>
       </div>
       </div>
       </footer>

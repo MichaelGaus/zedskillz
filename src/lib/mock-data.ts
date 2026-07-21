@@ -767,7 +767,6 @@ export const footerLinks = [
   { label: "Privacy Policy", href: "#" },
   { label: "Terms of Service", href: "#" },
   { label: "Contact Support", href: "#" },
-  { label: "Zambia Ministry of Education", href: "#" },
 ];
 
 // ============================================================================

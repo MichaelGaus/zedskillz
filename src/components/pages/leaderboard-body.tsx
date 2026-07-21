@@ -223,7 +223,6 @@ export function LeaderboardBody() {
       <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Privacy Policy</a>
       <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Terms of Service</a>
       <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Contact Support</a>
-      <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Zambia Ministry of Education</a>
       </div>
       </div>
       </footer>
