@@ -13,7 +13,7 @@ export function LandingBody() {
       
       
       <header className="w-full sticky top-0 z-50 bg-surface/80 backdrop-blur-md shadow-sm">
-      <nav className="flex justify-between items-center px-container-margin md:px-xl h-touch-target lg:h-20 max-w-7xl mx-auto">
+      <nav className="flex justify-between items-center px-container-margin md:px-xl h-touch-target lg:h-20 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-md">
       <span className="material-symbols-outlined text-primary">menu</span>
       <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjzWd25i7DgD8P9PZDbRbdpeVZ8VnmeUBa7fVbJALJ2DmYl7Y_mUi6deWBrqjGm8Mx4jhr9hZO3PGqgf0CFVaSXP2b__iXHd5JVcgWdN90FIDFYkGEaBWZIfYZqxt12C9RHg3uRt2T1T-fy5zRKUfsHIduX8Mxy590p94SEb9o-iNgb-OuCxT2Q98U50PrXC39L9P3vdyIbI3_uYplMZD9XArSgGg5yGaWmwu7EzbCGzFhJ_N96FbpO3qxR4OKEr2a_Ek" alt="Zedskillz Hub" className="w-auto object-contain h-10" />
@@ -46,7 +46,7 @@ export function LandingBody() {
       <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/3 left-1/2 w-40 h-40 bg-tertiary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="max-w-7xl mx-auto px-container-margin md:px-xl relative z-10 flex flex-col lg:flex-row items-center gap-xl">
+      <div className="max-w-[1600px] mx-auto px-container-margin md:px-xl relative z-10 flex flex-col lg:flex-row items-center gap-xl">
 
       {/* Left: Hero content */}
       <div className="flex-1 space-y-lg w-full max-w-2xl">
@@ -57,7 +57,7 @@ export function LandingBody() {
       <h2 className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary max-w-2xl leading-tight">
                               Master New Skills with Your Personal <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAM_jtTUS0Gy13cX16GAc7kS-naEyfHUvJv_qZSvzy6A2CIDpJ-1VSChazPEIYdbTXU6nIiKQsx8mVL2q4DcL_FXEl533w9aB9ktWW_QjTNI_cK-j1EuQpEIAx7XipusKpEnkQMaBDfmMSKQ2m0KUYU6RmYXw0JoYQZH-QqWGS57NJrCFIuizuV-m3-YvH4OrM0Ezc8oq11RpYNwEi7evUT1uux2JnHRS8CXT46vQPZTF_Ru36WaZtbKoMBn0tSd6Jkz5Y" alt="Zambian AI Tutor" className="inline-block h-10 w-auto align-middle" />
       </h2>
-      <p className="text-body-md text-on-surface-variant max-w-xl leading-relaxed">
+      <p className="text-body-md text-on-surface-variant max-w-2xl leading-relaxed">
                               Access world-class education tailored to local Zambian contexts. Learn in your preferred language, track your progress on national leaderboards, and get instant help from our AI mentor.
                           </p>
       <div className="flex flex-col sm:flex-row gap-md pt-md">
@@ -167,7 +167,7 @@ export function LandingBody() {
       </section>
       
       <section className="bg-surface-container-low py-32 px-container-margin md:px-xl">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1600px] mx-auto">
       <div className="text-center mb-20 space-y-md">
       <h3 className="font-display-lg text-display-lg text-primary">Why Zambia chooses Zedskillz</h3>
       <p className="text-body-md text-on-surface-variant max-w-2xl mx-auto">Bridging the education gap with technology designed specifically for the Zambian classroom.</p>
@@ -215,7 +215,7 @@ export function LandingBody() {
       </div>
       </div>
       </div>
-      </section><section className="py-32 px-container-margin md:px-xl max-w-7xl mx-auto">
+      </section><section className="py-32 px-container-margin md:px-xl max-w-[1600px] mx-auto">
       <div className="flex justify-between items-end mb-16">
       <div className="space-y-sm">
       <h3 className="font-display-lg text-display-lg text-primary">Featured Courses</h3>
@@ -326,14 +326,14 @@ export function LandingBody() {
       </div>
       </section>
       
-      <section className="max-w-7xl mx-auto px-container-margin md:px-xl pb-32">
+      <section className="max-w-[1600px] mx-auto px-container-margin md:px-xl pb-32">
       <div className="bg-primary-container rounded-[40px] p-xl md:p-32 text-center space-y-lg relative overflow-hidden">
       
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"></div>
       <div className="relative z-10">
       <h3 className="text-display-lg text-white font-display-lg max-w-2xl mx-auto">Ready to accelerate your career with AI?</h3>
-      <p className="text-on-primary-container text-body-md max-w-xl mx-auto opacity-90">Join thousands of students and professionals in the largest AI-driven educational community in Zambia.</p>
+      <p className="text-on-primary-container text-body-md max-w-2xl mx-auto opacity-90">Join thousands of students and professionals in the largest AI-driven educational community in Zambia.</p>
       <div className="pt-xl flex flex-col sm:flex-row justify-center gap-md">
       <button className="px-xl py-lg bg-white text-primary rounded-2xl font-bold text-title-sm shadow-xl active:scale-95 transition-all">Get Started for Free</button>
       <button className="px-xl py-lg bg-primary text-white border-2 border-white/20 rounded-2xl font-bold text-title-sm hover:bg-primary-fixed-dim hover:text-primary active:scale-95 transition-all">Talk to an Advisor</button>
@@ -345,10 +345,10 @@ export function LandingBody() {
       </main>
       
       <footer className="w-full py-xl bg-surface-container-highest border-t border-outline-variant">
-      <div className="max-w-7xl mx-auto px-container-margin md:px-xl flex flex-col md:flex-row justify-between items-center gap-md">
-      <div className="flex flex-col items-center md:items-start gap-xs">
+      <div className="max-w-[1600px] mx-auto px-container-margin md:px-xl flex flex-col md:flex-row justify-between items-center gap-md">
+      <div className="flex flex-col items-center md:items-start gap-xs shrink-0">
       <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAt_FFDZ4c-Q-JUYwLwY1cKQBKoSmjAfVar_wkJZhgsmjbNRWI9NfL7Jvg3Ksx1_jojIvCpsYy9TFNCQ0WNHE0uFsHmM2zc-E_sUm2V8tOS0U0vduBoj7Ci8RZZBaY-xP3aLLNruAvg_GzrIU1F9F0esGE93gQSmj5BGEXMaRX2on6cbUCWZCVQhD0IyuzH4z0wKDp6BrBglJIYYUTjIkg7UUTzSP1S0HV-WYu4o0Jd-3HuicT2cvSpfgBDo88i3lTPQOE" alt="Zedskillz Hub" className="w-auto object-contain h-10" />
-      <p className="text-on-surface-variant text-body-sm max-w-xs text-center md:text-left">© 2024 Zedskillz Hub Zambia. Empowering through AI.</p>
+      <p className="text-on-surface-variant text-body-sm whitespace-nowrap text-center md:text-left">© 2024 Zedskillz Hub Zambia. Empowering through AI.</p>
       </div>
       <div className="flex flex-wrap justify-center gap-md">
       <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Privacy Policy</a>

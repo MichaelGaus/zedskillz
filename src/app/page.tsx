@@ -4,20 +4,27 @@ import { useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import { useNavDelegation } from "@/lib/use-nav-delegation";
 import { AIOverlay } from "@/components/shared/ai-overlay";
+import { GlobalUserMenu } from "@/components/shared/global-user-menu";
+import { GlobalTopbar } from "@/components/shared/global-topbar";
+import { GlobalBottomNav } from "@/components/shared/global-bottom-nav";
+import { GlobalAIFab } from "@/components/shared/global-ai-fab";
 
 // Page body components (auto-generated from design HTML)
 import { LandingBody } from "@/components/pages/landing-body";
-import { SigninBody } from "@/components/pages/signin-body";
-import { SignupBody } from "@/components/pages/signup-body";
+import { SigninPage } from "@/components/pages/signin-page";
+import { SignupPage } from "@/components/pages/signup-page";
 import { AdminBody } from "@/components/pages/admin-body";
 import { CoursesBody } from "@/components/pages/courses-body";
 import { MyCoursesBody } from "@/components/pages/my-courses-body";
 import { LeaderboardBody } from "@/components/pages/leaderboard-body";
 import { CommunityBody } from "@/components/pages/community-body";
 import { PostBody } from "@/components/pages/post-body";
+import { MembersBody } from "@/components/pages/members-body";
+import { ProfilePage } from "@/components/pages/profile-page";
+import { SettingsPage } from "@/components/pages/settings-page";
 
 export default function Home() {
-  const { activePage, theme } = useAppStore();
+  const { activePage, theme, isAuthenticated, user } = useAppStore();
   useNavDelegation();
 
   // Apply theme class
@@ -32,10 +39,14 @@ export default function Home() {
       case "landing":
         return <LandingBody />;
       case "auth":
-        return <SigninBody />;
+        return <SigninPage />;
       case "signup":
-        return <SignupBody />;
+        return <SignupPage />;
       case "admin-dashboard":
+        // Only admins can access the admin dashboard
+        if (!isAuthenticated || user?.role !== "admin") {
+          return <LandingBody />;
+        }
         return <AdminBody />;
       case "courses":
       case "course-detail":
@@ -46,6 +57,12 @@ export default function Home() {
         return <LeaderboardBody />;
       case "community":
         return <CommunityBody />;
+      case "members":
+        return <MembersBody />;
+      case "profile":
+        return <ProfilePage />;
+      case "settings":
+        return <SettingsPage />;
       case "post":
       case "scholarconnect":
         return <PostBody />;
@@ -54,10 +71,17 @@ export default function Home() {
     }
   };
 
+  // Don't show the global topbar on auth pages (they have their own full-screen layout)
+  const showGlobalTopbar = activePage !== "auth" && activePage !== "signup";
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {showGlobalTopbar && <GlobalTopbar />}
       {renderPage()}
       <AIOverlay />
+      <GlobalUserMenu />
+      {showGlobalTopbar && <GlobalBottomNav />}
+      {showGlobalTopbar && <GlobalAIFab />}
     </div>
   );
 }

@@ -45,10 +45,10 @@ export function SignupBody() {
       <div className="flex flex-col items-center justify-center w-full">
       
       <img alt="Zedskillz Hub Logo" className="lg:hidden h-12 w-auto mb-lg object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF-80Lfd5mQQA4s1O5B13Fq91EDV7-WdTs80ULfYFcir0EJTreM2ZvJsRMNVdBHtPC--FmmhXg7L_Jk6c1ZttDAtCAh9zdGparpUN5AtvNMqTLDn83HwYjKrzoAyupUqw1VH7gMFgvKh2c1RuPVU-k-8nhMYTYFJ_qKwom4uP4TO7grPIbaKS98TuYSMspEmdedZMSK7VxhpE1z4PturQ2OudZ6lgxGLrIcpY36twJVoPlNPCAk_st9xcFqTwG6kqi5s8" />
-      <div className="glass-panel w-full max-w-md p-lg lg:p-xl rounded-xl shadow-lg">
+      <div className="glass-panel w-full max-w-lg p-lg lg:p-xl rounded-xl shadow-lg">
       <div className="mb-lg">
       <h2 className="font-headline-md text-headline-md text-on-surface">Create an Account</h2>
-      <p className="font-body-sm text-body-sm text-on-surface-variant mt-sm">Start your learning journey today.</p>
+      <p className="font-body-sm text-body-sm text-on-surface-variant mt-sm whitespace-nowrap">Start your learning journey today.</p>
       </div>
       
       <form className="space-y-md" onsubmit="event.preventDefault();">
@@ -88,7 +88,7 @@ export function SignupBody() {
       
       <div className="flex items-start gap-sm pt-sm">
       <input className="mt-1 rounded text-primary focus:ring-primary h-4 w-4 border-outline-variant" id="terms" type="checkbox" />
-      <label className="font-body-sm text-body-sm text-on-surface-variant leading-tight" htmlFor="terms">
+      <label className="font-body-sm text-body-sm text-on-surface-variant leading-tight whitespace-nowrap" htmlFor="terms">
                                       I agree to the <a className="text-primary font-semibold hover:underline" href="#">Terms of Service</a> and <a className="text-primary font-semibold hover:underline" href="#">Privacy Policy</a>.
                                   </label>
       </div>
@@ -99,7 +99,7 @@ export function SignupBody() {
                                   </button>
       <div className="relative flex items-center py-sm">
       <div className="flex-grow border-t border-outline-variant/30"></div>
-      <span className="flex-shrink mx-4 font-label-caps text-label-caps text-outline">OR SIGN UP WITH</span>
+      <span className="flex-shrink mx-4 font-label-caps text-label-caps text-outline whitespace-nowrap">OR SIGN UP WITH</span>
       <div className="flex-grow border-t border-outline-variant/30"></div>
       </div>
       <button className="w-full h-touch-target bg-white border border-outline-variant rounded-lg font-title-sm flex items-center justify-center gap-sm transition-all hover:bg-surface-container active:scale-95" type="button">
@@ -114,9 +114,9 @@ export function SignupBody() {
       </div>
       </form>
       <div className="mt-xl text-center">
-      <p className="font-body-md text-body-md text-on-surface-variant">
+      <p className="font-body-md text-body-md text-on-surface-variant whitespace-nowrap">
                                   Already have an account? 
-                                  <a className="text-primary font-bold hover:underline" href="#" onClick={(event) => {
+                                  <a className="text-primary font-bold hover:underline ml-1" href="#" onClick={(event) => {
                                     event.preventDefault();
                                     setActivePage("auth");
                                   }}>Sign In</a>

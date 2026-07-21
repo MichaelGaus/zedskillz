@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 
 const ICON_NAMES = new Set([
   "home", "explore", "school", "psychology", "leaderboard", "settings", "help",
-  "menu", "search", "language", "notifications", "dashboard", "groups",
+  "menu", "search", "language", "notifications", "dashboard", "groups", "group", "public",
   "person", "person_search", "person_add", "library_books", "bookmark",
   "bookmark_border", "post_add", "add_circle", "forum", "grid_view",
   "more_vert", "more_horiz", "close", "send", "arrow_forward", "arrow_back",
@@ -57,7 +57,7 @@ function stripIconNames(text: string): string {
 }
 
 export function useNavDelegation() {
-  const { setActivePage, setAiOverlayOpen } = useAppStore();
+  const { setActivePage, setAiOverlayOpen, isAuthenticated, user } = useAppStore();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -72,6 +72,20 @@ export function useNavDelegation() {
 
       const rawText = clickable.textContent?.trim() || "";
       const text = stripIconNames(rawText);
+
+      // Admin role check
+      const isAdmin = isAuthenticated && user?.role === "admin";
+
+      // Pages that require authentication — if not signed in, route to sign-in
+      const authRequiredPages = ["my-courses", "admin-dashboard", "members", "post", "scholarconnect", "profile", "settings"];
+      const isAuthRequired = (page: string) => authRequiredPages.includes(page);
+
+      // Pages restricted for admin users — admins can only access Home + Admin
+      const adminRestrictedPages = ["courses", "leaderboard", "community", "members", "post", "my-courses", "profile", "settings"];
+      const isRestrictedForAdmin = (page: string) => isAdmin && adminRestrictedPages.includes(page);
+
+      // Admin dashboard is restricted for non-admin users — they get redirected to landing
+      const isRestrictedForNonAdmin = (page: string) => !isAdmin && page === "admin-dashboard";
 
       // Route table — action is either "page" (navigate) or "ai" (open overlay)
       const routes: { match: string; action: "page" | "ai"; page?: string }[] = [
@@ -89,13 +103,14 @@ export function useNavDelegation() {
         { match: "My Courses", action: "page", page: "my-courses" },
         { match: "My Learning Dashboard", action: "page", page: "my-courses" },
         { match: "Dashboard", action: "page", page: "my-courses" },
-        { match: "Profile", action: "page", page: "my-courses" },
-        { match: "Settings", action: "page", page: "landing" },
+        { match: "Profile", action: "page", page: "profile" },
+        { match: "Settings", action: "page", page: "settings" },
         { match: "Help", action: "page", page: "landing" },
         { match: "Help Center", action: "page", page: "landing" },
         { match: "Resources", action: "page", page: "landing" },
         { match: "Categories", action: "page", page: "community" },
-        { match: "Members", action: "page", page: "community" },
+        { match: "Members", action: "page", page: "members" },
+        { match: "Members Connect", action: "page", page: "members" },
         { match: "Bookmarks", action: "page", page: "community" },
         { match: "Feed", action: "page", page: "community" },
         { match: "Study Partners", action: "page", page: "post" },
@@ -174,9 +189,25 @@ export function useNavDelegation() {
         if (matched) {
           e.preventDefault();
           if (route.action === "ai") {
-            setAiOverlayOpen(true);
+            // AI overlay requires auth
+            if (!isAuthenticated) {
+              setActivePage("auth");
+            } else {
+              setAiOverlayOpen(true);
+            }
           } else if (route.page) {
-            setActivePage(route.page);
+            // Auth-gated pages: if not signed in, go to sign-in instead
+            if (isAuthRequired(route.page) && !isAuthenticated) {
+              setActivePage("auth");
+            } else if (isRestrictedForAdmin(route.page)) {
+              // Admin users can only access Home + Admin — redirect restricted pages to admin-dashboard
+              setActivePage("admin-dashboard");
+            } else if (isRestrictedForNonAdmin(route.page)) {
+              // Non-admin users cannot access admin-dashboard — redirect to landing
+              setActivePage("landing");
+            } else {
+              setActivePage(route.page);
+            }
           }
           return;
         }
@@ -184,5 +215,5 @@ export function useNavDelegation() {
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
-  }, [setActivePage, setAiOverlayOpen]);
+  }, [setActivePage, setAiOverlayOpen, isAuthenticated, user]);
 }

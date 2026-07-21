@@ -3,10 +3,36 @@
 import { create } from "zustand";
 import { currentUser } from "./mock-data";
 
+export interface UserProfile {
+  name: string;
+  email: string;
+  avatar: string;
+  role: "student" | "admin" | "instructor";
+  bio: string;
+  dateOfBirth: string;
+  location: string;
+  province: string;
+  phone: string;
+  gender: string;
+  education: string;
+  school: string;
+  interests: string[];
+  skills: string[];
+  languages: string[];
+  socialLinks: { platform: string; url: string }[];
+}
+
 interface AppState {
   // Navigation
   activePage: string;
   setActivePage: (page: string) => void;
+
+  // Authentication
+  isAuthenticated: boolean;
+  user: UserProfile | null;
+  signIn: (email: string, name?: string) => void;
+  signOut: () => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
 
   // UI State
   theme: "light" | "dark";
@@ -15,6 +41,10 @@ interface AppState {
   // AI Overlay (global FAB toggles this)
   aiOverlayOpen: boolean;
   setAiOverlayOpen: (open: boolean) => void;
+
+  // User menu dropdown (topbar avatar)
+  userMenuOpen: boolean;
+  setUserMenuOpen: (open: boolean) => void;
 
   // Selected entities
   selectedCourseId: string | null;
@@ -32,9 +62,63 @@ interface AppState {
   currentUser: typeof currentUser;
 }
 
+const DEFAULT_PROFILE: Omit<UserProfile, "name" | "email" | "avatar"> = {
+  role: "student",
+  bio: "",
+  dateOfBirth: "",
+  location: "",
+  province: "",
+  phone: "",
+  gender: "",
+  education: "",
+  school: "",
+  interests: [],
+  skills: [],
+  languages: ["English"],
+  socialLinks: [],
+};
+
 export const useAppStore = create<AppState>((set, get) => ({
   activePage: "landing",
   setActivePage: (page) => set({ activePage: page }),
+
+  // Auth — start unauthenticated so user sees landing + can sign in
+  isAuthenticated: false,
+  user: null,
+  signIn: (email, name) => {
+    // Derive a display name from the email if not provided
+    const derivedName = name || email.split("@")[0].split(/[._-]/).map(
+      (s) => s.charAt(0).toUpperCase() + s.slice(1)
+    ).join(" ");
+
+    // Detect admin role from email
+    const isAdmin = email.toLowerCase().includes("admin") || email.toLowerCase().includes("grace.tembo");
+
+    set({
+      isAuthenticated: true,
+      user: {
+        ...DEFAULT_PROFILE,
+        name: derivedName,
+        email,
+        role: isAdmin ? "admin" : "student",
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
+      },
+      activePage: isAdmin ? "admin-dashboard" : "my-courses",
+    });
+  },
+  signOut: () => {
+    set({
+      isAuthenticated: false,
+      user: null,
+      activePage: "landing",
+      userMenuOpen: false,
+    });
+  },
+  updateProfile: (updates) => {
+    const current = get().user;
+    if (!current) return;
+    set({ user: { ...current, ...updates } });
+  },
 
   theme: "light",
   toggleTheme: () => {
@@ -47,6 +131,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   aiOverlayOpen: false,
   setAiOverlayOpen: (open) => set({ aiOverlayOpen: open }),
+
+  userMenuOpen: false,
+  setUserMenuOpen: (open) => set({ userMenuOpen: open }),
 
   selectedCourseId: null,
   setSelectedCourseId: (id) => set({ selectedCourseId: id }),
