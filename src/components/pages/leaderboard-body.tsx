@@ -266,17 +266,6 @@ export function LeaderboardBody() {
       </main>
       </div>
       
-      <footer className="w-full py-xl bg-surface-container-highest border-t border-outline-variant">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center px-container-margin text-center gap-md">
-      <p className="font-body-sm text-on-surface-variant">© 2024 Zedskillz Hub Zambia. Empowering through AI.</p>
-      <div className="flex flex-wrap justify-center gap-lg">
-      <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Privacy Policy</a>
-      <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Terms of Service</a>
-      <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Contact Support</a>
-      <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Zambia Ministry of Education</a>
-      </div>
-      </div>
-      </footer>
       
       <nav className="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/90 backdrop-blur-lg shadow-[0_-2px_10px_rgba(0,0,0,0.05)] flex justify-around items-center h-16 pb-safe">
       <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary active:scale-90 transition-transform" href="#">

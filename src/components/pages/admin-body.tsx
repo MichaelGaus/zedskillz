@@ -252,20 +252,6 @@ export function AdminBody() {
       </div>
       </div>
       
-      <footer className="w-full py-xl bg-surface-container-highest border-t border-outline-variant rounded-xl mt-xl">
-      <div className="flex flex-col md:flex-row justify-between items-center px-container-margin text-center gap-md">
-      <div className="space-y-sm text-left">
-      <p className="text-primary font-bold text-headline-md">Zedskillz Hub</p>
-      <p className="text-on-surface-variant text-body-sm">© 2024 Zedskillz Hub Zambia. Empowering through AI.</p>
-      </div>
-      <div className="flex flex-wrap justify-center gap-lg">
-      <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Privacy Policy</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Terms of Service</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Contact Support</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Zambia Ministry of Education</a>
-      </div>
-      </div>
-      </footer>
       </div>
       </main>
       </div>

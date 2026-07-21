@@ -262,15 +262,6 @@ export function MyCoursesBody() {
       </div>
       </div>
       
-      <footer className="mt-xl w-full py-xl bg-surface-container-highest border-t border-outline-variant flex flex-col md:flex-row justify-between items-center px-container-margin text-center gap-md rounded-t-3xl">
-      <p className="font-body-sm text-body-sm text-on-surface-variant">© 2024 Zedskillz Hub Zambia. Empowering through AI.</p>
-      <div className="flex gap-md flex-wrap justify-center">
-      <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
-      <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
-      <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Contact Support</a>
-      <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Zambia Ministry of Education</a>
-      </div>
-      </footer>
       </div>
       </main>
       
