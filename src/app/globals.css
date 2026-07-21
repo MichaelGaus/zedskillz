@@ -454,3 +454,17 @@
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
 }
+
+/* Hide page-specific bottom navs — replaced by GlobalBottomNav */
+@media (max-width: 767px) {
+  nav.md\:hidden.fixed.bottom-0:not([data-global-bottom-nav]) {
+    display: none !important;
+  }
+}
+
+/* Hide GlobalBottomNav on desktop (≥768px) */
+@media (min-width: 768px) {
+  [data-global-bottom-nav] {
+    display: none !important;
+  }
+}

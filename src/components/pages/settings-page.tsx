@@ -50,6 +50,26 @@ function SettingsContent({ user, theme, toggleTheme, signOut, setActivePage }: {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* ===== TopAppBar ===== */}
+      <header className="bg-surface border-b border-outline-variant sticky top-0 z-40">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setActivePage("my-courses")}
+              className="p-2 hover:bg-surface-container rounded-lg"
+            >
+              <span className="material-symbols-outlined">arrow_back</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+                <span className="material-symbols-outlined text-on-primary">settings</span>
+              </div>
+              <span className="font-display text-lg font-bold text-primary hidden sm:block">Settings</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
           {/* ===== Sidebar navigation ===== */}

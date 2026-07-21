@@ -7,8 +7,80 @@ export function AdminBody() {
       
       <div className="flex h-screen overflow-hidden">
       
+      <aside className="hidden md:flex flex-col h-full w-72 bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-50">
+      <div className="flex items-center gap-sm px-md py-lg"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyRiUkqaqAvc2u_MdalN2oAXFsfqG11P8D_0FuE33cWt7_tXYn_5zbiCKOjnEQv8HLR9rkmhtB-WOtpg2NrmLkhYLd1dkaNfjUViOdSiIdXP5JwaatirlwMKSU5WSmKRh4AECIAzrCvmFO9oFqSEdge-6ZFZBvO6PRf571UslXRaUwjGeF6d75sdmdLwoJtoaRqlZAoIhbSqtloDdr-69PbT_-QTcQJOs6a_GxFrusEU7_9vcuLlo1zFQ039OuTmVyjIQ" alt="Zedskillz Logo" className="h-12 w-auto" />
+      <h1 className="text-primary font-bold font-headline-md tracking-tight">Zedskillz Admin</h1></div>
+      <nav className="flex-1 space-y-1">
+      
+      <div className="space-y-1">
+      <a className="flex items-center gap-md px-md py-3 bg-primary-container text-on-primary-container font-semibold rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">dashboard</span>
+      <span className="font-body-md text-body-md">Home</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">explore</span>
+      <span className="font-body-md text-body-md">Explore</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">leaderboard</span>
+      <span className="font-body-md text-body-md">Ranks</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">groups</span>
+      <span className="font-body-md text-body-md">Community</span>
+      </a></div>
+      <div className="pt-lg pb-sm">
+      <p className="px-md font-label-caps text-label-caps text-on-surface-variant/60">MANAGEMENT</p>
+      </div>
+      <div className="space-y-1">
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">school</span>
+      <span className="font-body-md text-body-md">My Courses</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">psychology</span>
+      <span className="font-body-md text-body-md">AI Tutor</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">library_books</span>
+      <span className="font-body-md text-body-md">Resources</span>
+      </a>
+      </div>
+      </nav>
+      
+      <div className="p-md bg-surface-container-high rounded-xl flex items-center gap-md">
+      <div className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-primary" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDPY_k44yYL-ZiYml3I1WmNawvyCw2YdJGFTQhClekylQ_GUGUiLNi1xsIUbrkZCLliT3TTyJexLKhJpzmx_dI247z_4UA7HXf1SFgO3QkBke2Uv1y3fHVWnjuWUnQM-X8X1HzqLwBrB3iRaTG5N7BHZZ6igPdJG8GQAgNgN3LgoIDM01kVF3qFG4A0MJpizpuc8UJ1_ahwFOpYEbe4IRkmrFn5m8UkqVD3MOqgogV8rCfw4mWPsh4AVw')"}}></div>
+      <div className="flex-1 min-w-0">
+      <p className="font-bold text-body-md truncate text-on-surface">Zambian Scholar</p>
+      <p className="text-body-sm text-on-surface-variant truncate">Level 12 • 4500 XP</p>
+      </div>
+      <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">settings</button>
+      </div>
+      </aside>
+      
       <main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
       
+      <header className="w-full sticky top-0 z-40 bg-surface/80 backdrop-blur-md shadow-sm h-touch-target flex justify-between items-center px-container-margin">
+      <div className="flex items-center gap-md">
+      <button className="md:hidden material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">menu</button>
+      <h2 className="font-headline-md text-headline-md text-primary tracking-tight">Admin Dashboard</h2>
+      </div>
+      <div className="flex items-center gap-lg">
+      <div className="hidden lg:flex items-center bg-surface-container-high rounded-full px-4 py-1.5 border border-outline-variant">
+      <span className="material-symbols-outlined text-on-surface-variant text-sm mr-2">search</span>
+      <input className="bg-transparent border-none focus:ring-0 text-body-sm w-48 text-on-surface" placeholder="Search analytics..." type="text" />
+      </div>
+      <div className="flex items-center gap-md"><button className="material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors">
+                                  language
+      </button>
+      <button className="material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors relative">
+                                  notifications
+                                  <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+      </button>
+      <div className="w-9 h-9 rounded-full bg-cover bg-center border border-outline-variant" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCcOwY5S3gT0TvH3JUfj0hIvLnNTQ_av4UWlUCCTtil9cWD9bJOV4TngwAPhYujZFpx7WgNyKp8C0joIyQ765Ahw0zVSpFOrGyR9Ry71D6TFI9B2H8ASoUIDiSFU8YqI5mn2MmIMbUAPOFmtf_c9pLDTvUq87mQA_Y6dcTnfP2ZK_yccLk2VI4Po_zIajUbvYckJD584_LPMRxezBBntxCba1jO9Sdcb5VNu-zw81RmyieI4V3BX_E1ig')"}}></div>
+      </div>
+      </div>
+      </header>
       
       <div className="flex-1 overflow-y-auto custom-scrollbar p-md md:p-lg space-y-lg">
       
@@ -190,6 +262,7 @@ export function AdminBody() {
       <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Privacy Policy</a>
       <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Terms of Service</a>
       <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Contact Support</a>
+      <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Zambia Ministry of Education</a>
       </div>
       </div>
       </footer>

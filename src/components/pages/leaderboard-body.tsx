@@ -6,7 +6,57 @@ export function LeaderboardBody() {
     <>
       
       
+      <header className="w-full sticky top-0 z-50 bg-surface/80 backdrop-blur-md shadow-sm flex justify-between items-center px-container-margin h-touch-target">
+      <div className="flex items-center gap-md">
+      <button className="material-symbols-outlined text-primary p-2 active:scale-95 duration-200">menu</button>
+      <h1 className="text-headline-md font-headline-md text-primary">Zedskillz Hub</h1>
+      </div>
+      <div className="flex items-center gap-md">
+      <div className="hidden md:flex gap-lg items-center px-lg">
+      <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Home</a>
+      <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Explore</a>
+      <a className="text-primary font-bold font-label-caps" href="#">Ranks</a>
+      <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Admin</a>
+      <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Community</a></div>
+      <button className="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-variant rounded-full transition-colors active:scale-95">language</button><div className="w-12 h-12 flex items-center justify-center scale-125"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPW7FpWglcyl1IRI9MCTggAkgfPnYNLFMwmqTFTsyk4WqTW6vbIYBsuz20u2iZQKT_1sn6LoWdvkDDZVLH-Q6wzlSqDGX4vM_nnlgsfW28LJOoEO4BoHFJUzHqC30VK0zXAkehrOhc3aCxE4xFQmixMlzGJkJhnA8KDNE2nMT_VXkzwIP9WM3lF9mQ_3KmIyh22x3tQpAcTBQ6xPR037X9vj8u7_8vo7P2QgMyfBAX9Am1PYq14qLVhNZthEZdWXHu9C4" alt="Zedskillz Logo" className="w-full h-full object-contain" /></div>
+      </div>
+      </header>
       <div className="flex flex-1 overflow-hidden">
+      
+      <aside className="hidden md:flex flex-col p-md space-y-sm h-full w-72 bg-surface-container-low border-r border-outline-variant">
+      <div className="flex flex-col gap-sm pb-lg mb-lg border-b border-outline-variant">
+      <div className="flex items-center gap-md px-md">
+      <div className="w-12 h-12 flex items-center justify-center scale-125"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9KXuEIH224xeoj-D6opYhl3kCFvldkecfwCtrqdKxfVNB2CyUmLDbpTkRzCl8oPbZLF1U95nz58yKXkXgo1liQk9F-n4LI_efDSJYlpVlZQxCLU-sc4QjEJMQwDocBuohNbyPm6G0271Kgj8LOyjQi-LdBHYTCOSlQbH2RM6Lr6rfh9bx31IdWnni96ZGkMQbRDgmQge3Jg5jQNKqy47lhhRiY9hCURANHihEiytikRo2HunpwFylGbZNmRmJ9KoSuNE" alt="Zedskillz Logo" className="w-full h-full object-contain" /></div>
+      <div>
+      <p className="font-title-sm text-primary">Zambian Scholar</p>
+      <p className="text-body-sm text-on-surface-variant">Level 12 • 4500 XP</p>
+      </div>
+      </div>
+      </div>
+      <nav className="flex flex-col gap-xs">
+      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">school</span>
+      <span className="font-body-md">My Courses</span>
+      </a>
+      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#"><span className="material-symbols-outlined">psychology</span><span className="font-body-md">AI Tutor</span></a>
+      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">library_books</span>
+      <span className="font-body-md">Resources</span>
+      </a>
+      <a className="flex items-center gap-md p-md bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">leaderboard</span>
+      <span className="font-body-md">Leaderboard</span>
+      </a>
+      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">settings</span>
+      <span className="font-body-md">Settings</span>
+      </a>
+      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">help</span>
+      <span className="font-body-md">Help</span>
+      </a>
+      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#"><span className="material-symbols-outlined">groups</span><span className="font-body-md">Community</span></a></nav>
+      </aside>
       
       <main className="flex-1 overflow-y-auto bg-surface pb-xl">
       <div className="max-w-6xl mx-auto px-container-margin pt-xl">
@@ -223,6 +273,7 @@ export function LeaderboardBody() {
       <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Privacy Policy</a>
       <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Terms of Service</a>
       <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Contact Support</a>
+      <a className="text-on-surface-variant font-body-sm hover:text-primary transition-colors hover:underline" href="#">Zambia Ministry of Education</a>
       </div>
       </div>
       </footer>

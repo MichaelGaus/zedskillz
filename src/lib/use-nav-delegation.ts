@@ -189,7 +189,12 @@ export function useNavDelegation() {
         if (matched) {
           e.preventDefault();
           if (route.action === "ai") {
-            setAiOverlayOpen(true);
+            // AI overlay requires auth
+            if (!isAuthenticated) {
+              setActivePage("auth");
+            } else {
+              setAiOverlayOpen(true);
+            }
           } else if (route.page) {
             // Auth-gated pages: if not signed in, go to sign-in instead
             if (isAuthRequired(route.page) && !isAuthenticated) {

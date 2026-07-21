@@ -6,10 +6,79 @@ export function PostBody() {
     <>
       
       
-
+      <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest shadow-sm z-40 py-lg px-md overflow-y-auto">
+      <div className="mb-xl px-sm">
+      <h1 className="font-display-lg text-display-lg font-bold text-tertiary scale-125 origin-left transition-transform">Zambian Scholar</h1>
+      <p className="font-title-sm text-sm text-secondary">Academic Excellence</p>
+      </div>
+      <nav className="flex-1 space-y-sm">
       
+      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150" href="#">
+      <span className="material-symbols-outlined">dashboard</span>
+      <span className="font-title-sm">Dashboard</span>
+      </a>
+      <a className="flex items-center gap-md p-md rounded-xl text-primary font-bold border-r-4 border-primary bg-secondary-container transition-colors" href="#">
+      <span className="material-symbols-outlined">groups</span>
+      <span className="font-title-sm">Community</span>
+      </a>
+      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150" href="#">
+      <span className="material-symbols-outlined">person_search</span>
+      <span className="font-title-sm">Study Partners</span>
+      </a>
+      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150" href="#">
+      <span className="material-symbols-outlined">psychology</span>
+      <span className="font-title-sm">AI Tutor</span>
+      </a>
+      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150" href="#">
+      <span className="material-symbols-outlined">library_books</span>
+      <span className="font-title-sm">Resources</span>
+      </a>
+      </nav>
+      <div className="mt-auto space-y-sm border-t border-outline-variant pt-lg">
+      <button className="w-full bg-primary text-on-primary py-md rounded-xl font-bold flex items-center justify-center gap-sm active:scale-95 transition-transform">
+      <span className="material-symbols-outlined">psychology</span>
+                      Ask AI Tutor
+                  </button>
+      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors" href="#">
+      <span className="material-symbols-outlined">settings</span>
+      <span className="font-title-sm">Settings</span>
+      </a>
+      <a className="flex items-center gap-md p-md rounded-xl text-on-surface-variant hover:bg-secondary-container transition-colors" href="#">
+      <span className="material-symbols-outlined">help_outline</span>
+      <span className="font-title-sm">Help</span>
+      </a>
+      </div>
+      </aside>
       
-      <main className="pt-4 pb-20 md:pb-lg px-container-margin md:pl-[17rem] md:pr-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-lg">
+      <header className="fixed top-0 right-0 left-0 md:left-64 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-30">
+      <div className="flex items-center gap-md">
+      <button className="p-sm rounded-full hover:bg-surface-variant/50 transition-colors">
+      <span className="material-symbols-outlined">language</span>
+      </button><button className="md:hidden p-sm rounded-full hover:bg-surface-variant/50">
+      <span className="material-symbols-outlined">menu</span>
+      </button>
+      <span className="font-headline-md text-headline-md font-bold text-tertiary scale-125 origin-left transition-transform">ScholarConnect</span>
+      </div>
+      <div className="flex items-center gap-lg">
+      <div className="hidden sm:flex items-center bg-surface-container-high rounded-full px-md py-xs border border-outline-variant w-64">
+      <span className="material-symbols-outlined text-on-surface-variant mr-xs">search</span>
+      <input className="bg-transparent border-none focus:ring-0 text-body-sm w-full" placeholder="Search discussions..." type="text" />
+      </div>
+      <div className="flex items-center gap-md">
+      <button className="p-sm rounded-full hover:bg-surface-variant/50 transition-colors">
+      <span className="material-symbols-outlined">language</span>
+      </button><button className="p-sm rounded-full hover:bg-surface-variant/50 relative">
+      <span className="material-symbols-outlined">notifications</span>
+      <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+      </button>
+      <div className="h-10 w-10 rounded-full border border-primary p-0.5 overflow-hidden cursor-pointer">
+      <img className="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuNA8ykaRxHIh7MtizE3qxaDr7PvgmjW9YTy_1hToPkCnFq0WTp-XYp0oCVgrJfNwR6I9qRDdPeLg8lXxZrN7k6MjGWPdT5zl_3V47Rg7Huq0TPT1-ixCV2uvhHxEHETgoj20fZpqSYwat-PBbo8goi-DxU-ja1C9Gvl-5ZgohHhKu0WFJcaPb7ZqxHgvbaILwmkDEnI8_YhmP9AWQF-C0pcWaFNiRiwN3bX3vs9WFOhbjxbtYTZloJw"  alt="" />
+      </div>
+      </div>
+      </div>
+      </header>
+      
+      <main className="pt-24 pb-20 md:pb-lg px-container-margin md:pl-[17rem] md:pr-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-lg">
       
       <div className="lg:col-span-8 space-y-lg">
       
@@ -271,6 +340,11 @@ export function PostBody() {
       <span className="font-label-caps text-label-caps">Profile</span>
       </a>
       </nav>
+      
+      <button className="fixed bottom-24 right-6 md:bottom-12 md:right-12 w-16 h-16 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group">
+      <span className="material-symbols-outlined text-3xl">psychology</span>
+      <span className="absolute right-full mr-4 bg-on-surface text-surface text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Ask a Question</span>
+      </button>
     </>
   );
 }

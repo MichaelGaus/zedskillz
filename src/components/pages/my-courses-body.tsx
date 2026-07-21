@@ -6,10 +6,79 @@ export function MyCoursesBody() {
     <>
       
       
-
+      <aside className="hidden md:flex flex-col h-screen w-72 sticky top-0 bg-surface-container-low dark:bg-inverse-surface shadow-xl z-40">
+      <div className="flex flex-col p-md space-y-sm h-full">
+      
+      <div className="px-md py-lg flex items-center gap-sm">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKHGHjKPjuBxC5DUJS1A2sOQH51693caj6SakDOvHUHgPTHP2WKux0771sfrEgzzE-LhnWxBkcOTiAHYU2GP599HNmVRD00ki8KNr4iLNpSCDUPhJsUpSkZb8ZCX4bBwcbMrZAN9wGnAXJ9K0fIjhWUVcskVa48V4cc3IrNGmOlCYb8ZQnquNEVZnECU1JggiphBkaa_5G0MkV0uu2QUCvo5cWzEydxJwkbe6-Y9e4x7ShDz2FLkVQ2hPJr9UQmHLfaPw" alt="Zedskillz Hub Logo" className="h-14 w-auto object-contain" />
+      </div>
+      
+      <div className="flex items-center gap-md p-md bg-surface-container-high rounded-xl mb-md">
+      <div className="w-12 h-12 rounded-full overflow-hidden bg-outline-variant">
+      <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbxTeYAB7asW3upi7yCOtZDpqkdL24ImdOVRmcuV5UKwOnT-0OAURFbVy3lIVQSyvcjpylpbVRyIpWKPqHbZLBAVysXs94whlOenwOIKlg5jO34dEtom9Sh_3MqUMRQBNfnFORRf3hnUVO2VOehlRix8OvCaJFf6t8sm63V3ub9HjziOKnVfyB40UlzVw2D-Jhzf6VnHxhY9d39-bRqxjgqA3O4rybrojQhuMt4143lreoIuWuKdIYJQ"  alt="" />
+      </div>
+      <div>
+      <p className="font-headline-md text-body-md font-bold text-primary">Zambian Scholar</p>
+      <p className="font-body-sm text-body-sm text-on-surface-variant">Level 12 • 4500 XP</p>
+      </div>
+      </div>
+      
+      <nav className="flex-1 space-y-xs">
+      <a className="flex items-center gap-md px-md py-sm bg-secondary-container text-on-secondary-container font-semibold rounded-lg active:translate-x-1 duration-150 transition-all" href="#">
+      <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>school</span>
+      <span className="font-body-md text-body-md">My Courses</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
+      <span className="material-symbols-outlined group-hover:text-primary">psychology</span>
+      <span className="font-body-md text-body-md">AI Tutor</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
+      <span className="material-symbols-outlined group-hover:text-primary">library_books</span>
+      <span className="font-body-md text-body-md">Resources</span>
+      </a><a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
+      <span className="material-symbols-outlined group-hover:text-primary">groups</span>
+      <span className="font-body-md text-body-md">Community</span>
+      </a>
+      <div className="pt-xl opacity-40">
+      <hr className="border-outline-variant" />
+      </div>
+      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
+      <span className="material-symbols-outlined group-hover:text-primary">settings</span>
+      <span className="font-body-md text-body-md">Settings</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
+      <span className="material-symbols-outlined group-hover:text-primary">help</span>
+      <span className="font-body-md text-body-md">Help</span>
+      </a>
+      </nav>
+      
+      <div className="mt-auto p-md text-center">
+      <p className="font-body-sm text-[10px] text-on-surface-variant leading-tight">
+                          © 2024 Zedskillz Hub Zambia.<br />Empowering through AI.
+                      </p>
+      </div>
+      </div>
+      </aside>
       
       <main className="flex-1 flex flex-col min-w-0 bg-surface">
       
+      <header className="w-full sticky top-0 z-50 bg-surface/80 backdrop-blur-md shadow-sm flex justify-between items-center px-container-margin h-touch-target">
+      <h1 className="font-headline-md text-headline-md text-primary">My Learning Dashboard</h1>
+      <div className="flex items-center gap-md">
+      <div className="relative hidden lg:block">
+      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+      <input className="pl-10 pr-4 py-2 rounded-full border-none bg-surface-container-high text-body-sm focus:ring-2 focus:ring-primary w-64" placeholder="Search courses..." type="text" />
+      </div>
+      <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors">
+      <span className="material-symbols-outlined">language</span>
+      </button><button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors">
+      <span className="material-symbols-outlined">notifications</span>
+      </button>
+      <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+      <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBL0taS2cl9roWn4hR65TUHUqQWVtI5P_6XGCYbj3xJCbAq8JN_oKIldSxIwpmEq6KgiuwKt7TsJ14As5qrAp1MndC_AlEm3TCFaBafbgcpqZZWrUYaPaunNegsw7tpoAnNZGy3-kqwzveZkBXeahiD1X32ZEJ5nApYmHkvgve43KsD_jiPMPT4nO9sFdEH-eAcz6OE6v1EPlEBDbqOx6J35JU4F2b9SIKVLM-IbDtk7-wwYs-BGNomJw"  alt="" />
+      </div>
+      </div>
+      </header>
       <div className="flex-1 p-lg overflow-y-auto custom-scrollbar">
       
       <section className="mb-xl relative rounded-3xl overflow-hidden h-64 flex items-center px-xl shadow-lg">
@@ -199,10 +268,13 @@ export function MyCoursesBody() {
       <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
       <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
       <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Contact Support</a>
+      <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Zambia Ministry of Education</a>
       </div>
       </footer>
       </div>
       </main>
+      
+      <button className="fixed bottom-24 right-md z-50 h-12 px-4 rounded-full bg-primary text-on-primary shadow-lg flex items-center justify-center gap-sm active:scale-90 transition-transform ai-glow" aria-label="AI Tutor"><span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span><span className="font-body-sm font-semibold">Ask a Question</span></button>
     </>
   );
 }

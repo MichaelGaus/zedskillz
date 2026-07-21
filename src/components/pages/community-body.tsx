@@ -6,9 +6,75 @@ export function CommunityBody() {
     <>
       
       
+      <header className="bg-surface dark:bg-surface-dim docked full-width top-0 border-b border-outline-variant dark:border-outline shadow-sm sticky z-50">
+      <div className="flex justify-between items-center px-lg py-md w-full max-w-7xl mx-auto">
+      <div className="flex items-center gap-xl">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEYHWSbBWFss50TSceaJIxWuzuiahbKQuC1SkKtCCksAznmNPkkJD6pAmPcAb23TakFxQwfnWHZyXZ1elmYxJ_BNMnViM2yrZtYrig_TLFFOOzG_3l8JUB8k2UXIq73b7Gc-gEynoPkOvkdiKZFSuMpZ4WaI45w8yWgi38qJHOduKySiSkZkAHxH-HvLrXIUY1HHcjuADWeDPDkLWH4RssMDuhoYlPS6d6rS0ZD_oBjzBKvJljMHuL3It59uKJQDBxfM8" alt="Zedskillz Hub" className="h-10 w-auto cursor-pointer" />
+      <nav className="hidden lg:flex items-center gap-lg">
+      <a className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Home</a>
+      <a className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Courses</a>
+      <a className="font-body-md text-body-md text-primary dark:text-inverse-primary font-bold border-b-2 border-primary pb-1" href="#">Community</a>
+      <a className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Leaderboard</a>
+      <a className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Support</a>
+      </nav>
+      </div>
+      <div className="flex items-center gap-md">
+      <div className="hidden sm:flex relative items-center">
+      <span className="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]">search</span>
+      <input className="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-sm focus:ring-2 focus:ring-primary focus:border-primary w-64 transition-all" placeholder="Search discussions..." type="text" />
+      </div>
+      <div className="flex items-center gap-sm">
+      <button className="p-2 hover:bg-surface-variant rounded-full transition-colors" title="Select Language"><span className="material-symbols-outlined">language</span></button><button className="p-2 hover:bg-surface-variant rounded-full transition-colors"><span className="material-symbols-outlined">notifications</span></button>
+      <div className="h-10 w-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline-variant cursor-pointer">
+      <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUa1jux6VbUrNWVq2gfvKC7KGXzhQoc5qWVjPfukJhFBT-pF9Fbdr3eMipuG9tgoRMxoIBZwJZl5yQ9ZZ81_KwYRa3-kv4R_APrQ3K_GCg8-vAUeKO_So3g3NoQv0cKrsdKp4TDfvz6JVKgOpFAbZ4IbI1cSXd4AtDpYW58l11VETxoG_lAncKoG_J7MbpvmtExO-CZm7ZjK_mrlduoTLt0lvc9Bv5NSde-8MGvkbf5lzrKNaMOg1Bhw"  alt="" />
+      </div>
+      </div>
+      </div>
+      </div>
+      </header>
       <div className="flex max-w-7xl mx-auto">
       
-      <main className="flex-1 p-lg lg:p-xl w-full">
+      <aside className="h-[calc(100vh-64px)] w-64 fixed left-0 top-16 hidden lg:flex flex-col bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant dark:border-outline p-md gap-sm z-40">
+      <div className="flex flex-col gap-xs mb-lg">
+      <div className="px-2 mb-2"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUmw2oAZE3rCcmhO4Hk-N6u9s8YewERNd1VJtFaz5l6Yo_dpMZJhFL8E_bZO8sGQTG7_qqpWDp1YNk35d5UGGu-Xgi-hlqWCt_DaSmrxNg_k_c8SFCfo_y2BPKDurdcwpQb_S28GFmZRDGe2BjoFEj8DOmSaBhvoSojaTv8vtdTRhB75KjAgq7sFYGJmw48je_FbAI_ih6Ws0Uui_XL74yLYkhXhWEZGXmeYw1CP-hl9119bsCshYl08Md5fonmxq2c8s" alt="Zedskillz Hub" className="h-14 w-auto" /></div>
+      </div>
+      <nav className="flex flex-col gap-1"><a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#"><span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">public</span><span className="font-label-caps text-label-caps">Community</span></a>
+      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
+      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">forum</span>
+      <span className="font-label-caps text-label-caps">Feed</span>
+      </a>
+      <a className="flex items-center gap-md px-4 py-3 bg-secondary-container dark:bg-tertiary-container text-on-secondary-container dark:text-on-tertiary-container rounded-lg font-bold" href="#">
+      <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: '"FILL" 1' }}>grid_view</span>
+      <span className="font-label-caps text-label-caps">Categories</span>
+      </a>
+      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
+      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">group</span>
+      <span className="font-label-caps text-label-caps">Members</span>
+      </a>
+      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
+      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">bookmark</span>
+      <span className="font-label-caps text-label-caps">Bookmarks</span>
+      </a>
+      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
+      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">settings</span>
+      <span className="font-label-caps text-label-caps">Settings</span>
+      </a>
+      </nav>
+      <div className="mt-lg px-2">
+      <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold flex items-center justify-center gap-sm active:scale-95 transition-transform shadow-md">
+      <span className="material-symbols-outlined">add_circle</span>
+                          Create New Post
+                      </button>
+      </div>
+      <div className="mt-auto border-t border-outline-variant pt-md">
+      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
+      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">help_outline</span>
+      <span className="font-label-caps text-label-caps">Help Center</span>
+      </a>
+      </div>
+      </aside>
+      
+      <main className="flex-1 lg:ml-64 p-lg lg:p-xl w-full">
       <div className="max-w-5xl mx-auto">
       
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
@@ -131,6 +197,21 @@ export function CommunityBody() {
       </div>
       </div>
       </main>
+      </div>
+      
+      <div className="fixed bottom-lg right-lg z-50">
+      <button className="group relative flex items-center gap-sm bg-gradient-to-br from-primary to-[#70000e] text-on-primary pl-md pr-lg py-md rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all" id="ai-fab">
+      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 rounded-full transition-opacity"></div>
+      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center animate-pulse">
+      <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span>
+      </div>
+      <div className="flex flex-col items-start leading-none">
+      <span className="text-[10px] uppercase font-bold tracking-widest opacity-80">AI Tutor</span>
+      <span className="font-bold text-sm">Ask a Question</span>
+      </div>
+      
+      <div className="absolute -inset-1 bg-primary/20 blur-xl -z-10 rounded-full group-hover:bg-primary/40 transition-colors"></div>
+      </button>
       </div>
       
       <div className="hidden fixed inset-0 z-[60] bg-on-background/20 backdrop-blur-sm flex items-center justify-center p-md" id="ai-overlay">
