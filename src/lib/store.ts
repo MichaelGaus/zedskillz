@@ -7,7 +7,7 @@ export interface UserProfile {
   name: string;
   email: string;
   avatar: string;
-  role: "student" | "admin" | "instructor" | "parent" | "tutor" | "school";
+  role: "student" | "admin" | "parent" | "tutor" | "school";
   bio: string;
   dateOfBirth: string;
   location: string;
