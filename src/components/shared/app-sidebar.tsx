@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
-import { currentUser, sidebarNav } from "@/lib/mock-data";
+import { currentUser, sidebarNav as nav } from "@/lib/mock-data";
 import { Icon } from "@/components/shared/icon";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
