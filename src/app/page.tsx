@@ -79,12 +79,18 @@ export default function Home() {
     }
   };
 
-  // Don't show the global topbar on auth pages (they have their own full-screen layout)
-  const showGlobalTopbar = activePage !== "auth" && activePage !== "signup";
+  // Determine which UI shells to show based on page type
+  const isAuthPage = activePage === "auth" || activePage === "signup";
+  // Top-level/main pages: global navbar always visible
+  const topLevelPages = ["landing", "courses", "leaderboard", "community", "my-courses", "admin-dashboard", "tutor-dashboard"];
+  // Inner/detail pages: show page-specific header, hide global navbar entirely
+  const showGlobalTopbar = !isAuthPage && topLevelPages.includes(activePage);
+  // Sidebar CSS, footer, bottom-nav — show on all non-auth pages (including inner pages)
+  const showGlobalElements = !isAuthPage;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {showGlobalTopbar && (
+      {showGlobalElements && (
         <style>{`
           header { display: none !important; }
           @media (min-width: 768px) {
@@ -122,10 +128,10 @@ export default function Home() {
       </div>
       {/* Shared footer — mt-auto pushes it below viewport on short pages;
           on pages with their own min-h-screen (like courses), it sits naturally after content */}
-      {showGlobalTopbar && <Footer className="mt-auto" />}
+      {showGlobalElements && <Footer className="mt-auto" />}
       <AIOverlay />
       <GlobalUserMenu />
-      {showGlobalTopbar && <GlobalBottomNav />}
+      {showGlobalElements && <GlobalBottomNav />}
       {/* GlobalAIFab renders on all pages, including auth pages */}
       <GlobalAIFab />
     </div>
