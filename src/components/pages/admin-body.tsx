@@ -2,6 +2,7 @@
 
 import { AppSidebar } from "@/components/shared/app-sidebar";
 import { useState } from "react";
+import { useAppStore } from "@/lib/store";
 
 // Sample data
 const RECENT_COURSES = [
@@ -33,7 +34,11 @@ const AI_MODELS = [
 type AdminTab = "dashboard" | "courses" | "users" | "ai-monitor";
 
 export function AdminBody() {
-  const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
+  const { activePage } = useAppStore();
+  // Default to "courses" tab when navigated from Explore so admins see course management directly
+  const [activeTab, setActiveTab] = useState<AdminTab>(
+    activePage === "courses" || activePage === "course-detail" ? "courses" : "dashboard"
+  );
   const [courseSearch, setCourseSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState<"all" | "active" | "draft" | "pending">("all");

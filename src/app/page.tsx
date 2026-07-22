@@ -62,6 +62,10 @@ export default function Home() {
         if (isAuthenticated && user?.role === "tutor") {
           return <TutorBody key={activePage} />;
         }
+        // Admins see their admin panel with course management
+        if (isAuthenticated && user?.role === "admin") {
+          return <AdminBody key={activePage} />;
+        }
         return <CoursesBody />;
       case "my-courses":
         return <MyCoursesBody />;

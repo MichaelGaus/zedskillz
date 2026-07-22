@@ -131,9 +131,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       (s) => s.charAt(0).toUpperCase() + s.slice(1)
     ).join(" ");
 
-    // Detect admin role from email (overrides selected role)
+    // Detect admin/tutor role from email (overrides selected role)
     const isAdmin = email.toLowerCase().includes("admin") || email.toLowerCase().includes("grace.tembo");
-    const role = isAdmin ? "admin" : (selectedRole || "student");
+    const role = isAdmin ? "admin" : (email.toLowerCase().includes("tutor") ? "tutor" : (selectedRole || "student"));
 
     const user: UserProfile = {
       ...DEFAULT_PROFILE,
