@@ -74,32 +74,33 @@ export function AdminBody() {
         <AppSidebar activePage="admin-dashboard" />
 
         <main data-page-main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
-          {/* Top bar (uses div instead of header so GlobalTopbar doesn't hide it) */}
-          <div className="w-full bg-surface/80 backdrop-blur-md shadow-sm h-16 flex items-center justify-between px-4 md:px-6 border-b border-outline-variant">
-            <div className="flex items-center gap-4">
-              <button className="md:hidden material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">menu</button>
-              <h2 className="font-headline-md text-headline-md text-primary tracking-tight">Admin Panel</h2>
+          {/* Merged header: toolbar + tab navigation */}
+          <div className="w-full bg-surface/80 backdrop-blur-md shadow-sm border-b border-outline-variant">
+            {/* Row 1: Title + actions */}
+            <div className="h-16 flex items-center justify-between px-4 md:px-6">
+              <div className="flex items-center gap-4">
+                <button className="md:hidden material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">menu</button>
+                <h2 className="font-headline-md text-headline-md text-primary tracking-tight">Admin Panel</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Quick action buttons */}
+                <button className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95 shadow-sm">
+                  <span className="material-symbols-outlined text-sm">add_circle</span>
+                  <span>New Course</span>
+                </button>
+                <button className="hidden sm:flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-xl text-sm font-bold hover:bg-surface-variant transition-all active:scale-95">
+                  <span className="material-symbols-outlined text-sm">person_add</span>
+                  <span>Add User</span>
+                </button>
+                <button className="relative p-2 hover:bg-surface-variant/50 rounded-full transition-colors" title="Notifications">
+                  <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full ring-2 ring-surface"></span>
+                </button>
+                <div className="w-9 h-9 rounded-full bg-cover bg-center border border-outline-variant" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCcOwY5S3gT0TvH3JUfj0hIvLnNTQ_av4UWlUCCTtil9cWD9bJOV4TngwAPhYujZFpx7WgNyKp8C0joIyQ765Ahw0zVSpFOrGyR9Ry71D6TFI9B2H8ASoUIDiSFU8YqI5mn2MmIMbUAPOFmtf_c9pLDTvUq87mQA_Y6dcTnfP2ZK_yccLk2VI4Po_zIajUbvYckJD584_LPMRxezBBntxCba1jO9Sdcb5VNu-zw81RmyieI4V3BX_E1ig')"}}></div>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Quick action buttons */}
-              <button className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95 shadow-sm">
-                <span className="material-symbols-outlined text-sm">add_circle</span>
-                <span>New Course</span>
-              </button>
-              <button className="hidden sm:flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-xl text-sm font-bold hover:bg-surface-variant transition-all active:scale-95">
-                <span className="material-symbols-outlined text-sm">person_add</span>
-                <span>Add User</span>
-              </button>
-              <button className="relative p-2 hover:bg-surface-variant/50 rounded-full transition-colors" title="Notifications">
-                <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full ring-2 ring-surface"></span>
-              </button>
-              <div className="w-9 h-9 rounded-full bg-cover bg-center border border-outline-variant" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCcOwY5S3gT0TvH3JUfj0hIvLnNTQ_av4UWlUCCTtil9cWD9bJOV4TngwAPhYujZFpx7WgNyKp8C0joIyQ765Ahw0zVSpFOrGyR9Ry71D6TFI9B2H8ASoUIDiSFU8YqI5mn2MmIMbUAPOFmtf_c9pLDTvUq87mQA_Y6dcTnfP2ZK_yccLk2VI4Po_zIajUbvYckJD584_LPMRxezBBntxCba1jO9Sdcb5VNu-zw81RmyieI4V3BX_E1ig')"}}></div>
-            </div>
-          </div>
-
-          {/* Tab navigation */}
-          <div className="flex items-center gap-1 px-4 md:px-6 pt-4 pb-0 border-b border-outline-variant bg-surface">
+            {/* Row 2: Tab navigation */}
+            <div className="flex items-center gap-1 px-4 md:px-6 pb-2">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -121,6 +122,7 @@ export function AdminBody() {
               <button className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-variant/50 rounded-md transition-colors">30D</button>
               <button className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-variant/50 rounded-md transition-colors">ALL</button>
             </div>
+          </div>
           </div>
 
           {/* Scrollable content area */}

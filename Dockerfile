@@ -12,6 +12,7 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PATH=/app/node_modules/.bin:$PATH
 
 # Required for sharp (image optimization) on Alpine Linux
 RUN apk add --no-cache libc6-compat
@@ -29,14 +30,13 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
-# Prisma CLI needed at runtime for db push (not bundled by Next.js standalone)
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+RUN mkdir -p /app/.next && chown -R appuser:appuser /app
 
 USER appuser
 
 EXPOSE 3000
-CMD ["sh", "-c", "npx prisma db push --skip-generate --accept-data-loss && node server.js"]
+CMD ["sh", "-c", "node node_modules/.bin/prisma db push --skip-generate --accept-data-loss && node server.js"]
 

@@ -82,7 +82,7 @@ export default function Home() {
   // Determine which UI shells to show based on page type
   const isAuthPage = activePage === "auth" || activePage === "signup";
   // Top-level/main pages: global navbar always visible
-  const topLevelPages = ["landing", "courses", "leaderboard", "community", "my-courses"];
+  const topLevelPages = ["landing", "courses", "leaderboard", "community", "my-courses", "members"];
   // Inner/detail pages: show page-specific header, hide global navbar entirely
   const showGlobalTopbar = !isAuthPage && topLevelPages.includes(activePage);
   // Sidebar CSS, footer, bottom-nav — show on all non-auth pages (including inner pages)

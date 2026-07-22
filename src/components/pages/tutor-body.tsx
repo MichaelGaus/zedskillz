@@ -406,35 +406,36 @@ export function TutorBody() {
         <AppSidebar activePage="tutor-dashboard" />
 
         <main data-page-main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
-          {/* ── Top Bar (uses div instead of header so GlobalTopbar doesn't hide it) ── */}
-          <div className="w-full bg-surface/80 backdrop-blur-md shadow-sm h-16 flex items-center justify-between px-4 md:px-6 border-b border-outline-variant">
-            <div className="flex items-center gap-4">
-              <button className="md:hidden material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">menu</button>
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-on-primary text-sm" style={{fontVariationSettings: '"FILL" 1'}}>auto_stories</span>
+          {/* ── Merged header: toolbar + tab navigation ── */}
+          <div className="w-full bg-surface/80 backdrop-blur-md shadow-sm border-b border-outline-variant">
+            {/* Row 1: Title + actions */}
+            <div className="h-16 flex items-center justify-between px-4 md:px-6">
+              <div className="flex items-center gap-4">
+                <button className="md:hidden material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">menu</button>
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-on-primary text-sm" style={{fontVariationSettings: '"FILL" 1'}}>auto_stories</span>
+                </div>
+                <h2 className="font-headline-md text-headline-md text-primary tracking-tight">Tutor Panel</h2>
               </div>
-              <h2 className="font-headline-md text-headline-md text-primary tracking-tight">Tutor Panel</h2>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={openAIAssistant}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95 shadow-sm"
-              >
-                <span className="material-symbols-outlined text-sm">auto_awesome</span>
-                <span>AI Assistant</span>
-              </button>
-              <button className="relative p-2 hover:bg-surface-variant/50 rounded-full transition-colors" title="Notifications">
-                <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full ring-2 ring-surface"></span>
-              </button>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-on-primary text-xs font-bold shrink-0">
-                T
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={openAIAssistant}
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95 shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-sm">auto_awesome</span>
+                  <span>AI Assistant</span>
+                </button>
+                <button className="relative p-2 hover:bg-surface-variant/50 rounded-full transition-colors" title="Notifications">
+                  <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full ring-2 ring-surface"></span>
+                </button>
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-on-primary text-xs font-bold shrink-0">
+                  T
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* ── Tab Navigation ── */}
-          <div className="flex items-center gap-1 px-4 md:px-6 pt-4 pb-0 border-b border-outline-variant bg-surface">
+            {/* Row 2: Tab navigation */}
+            <div className="flex items-center gap-1 px-4 md:px-6 pb-2">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -450,6 +451,7 @@ export function TutorBody() {
               </button>
             ))}
             <div className="flex-1" />
+          </div>
           </div>
 
           {/* ── Scrollable Content ── */}
