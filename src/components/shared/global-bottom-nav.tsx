@@ -30,6 +30,7 @@ export function GlobalBottomNav() {
     if (existing) existing.remove();
 
     const isAdmin = isAuthenticated && user?.role === "admin";
+    const isTutor = isAuthenticated && user?.role === "tutor";
 
     // Build nav items based on role
     const navItems = isAdmin
@@ -37,12 +38,19 @@ export function GlobalBottomNav() {
           { label: "Home", icon: "home", page: "landing" },
           { label: "Admin", icon: "dashboard", page: "admin-dashboard", elevated: true },
         ]
-      : [
-          { label: "Home", icon: "home", page: "landing" },
-          { label: "Explore", icon: "explore", page: "courses" },
-          { label: "Ranks", icon: "leaderboard", page: "leaderboard", elevated: true },
-          { label: "Community", icon: "groups", page: "community" },
-        ];
+      : isTutor
+        ? [
+            { label: "Home", icon: "home", page: "landing" },
+            { label: "Explore", icon: "explore", page: "courses" },
+            { label: "Tutor", icon: "auto_stories", page: "tutor-dashboard", elevated: true },
+            { label: "Community", icon: "groups", page: "community" },
+          ]
+        : [
+            { label: "Home", icon: "home", page: "landing" },
+            { label: "Explore", icon: "explore", page: "courses" },
+            { label: "Ranks", icon: "leaderboard", page: "leaderboard", elevated: true },
+            { label: "Community", icon: "groups", page: "community" },
+          ];
 
     // Create the bottom nav
     const nav = document.createElement("nav");

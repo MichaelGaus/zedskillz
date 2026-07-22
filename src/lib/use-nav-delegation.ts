@@ -75,13 +75,14 @@ export function useNavDelegation() {
 
       // Admin role check
       const isAdmin = isAuthenticated && user?.role === "admin";
+      const isTutor = isAuthenticated && user?.role === "tutor";
 
       // Pages that require authentication — if not signed in, route to sign-in
-      const authRequiredPages = ["my-courses", "admin-dashboard", "members", "post", "scholarconnect", "profile", "settings"];
+      const authRequiredPages = ["my-courses", "admin-dashboard", "tutor-dashboard", "members", "post", "scholarconnect", "profile", "settings"];
       const isAuthRequired = (page: string) => authRequiredPages.includes(page);
 
       // Pages restricted for admin users — admins can only access Home + Admin
-      const adminRestrictedPages = ["courses", "leaderboard", "community", "members", "post", "my-courses", "profile", "settings"];
+      const adminRestrictedPages = ["courses", "leaderboard", "community", "members", "post", "my-courses", "profile", "settings", "tutor-dashboard"];
       const isRestrictedForAdmin = (page: string) => isAdmin && adminRestrictedPages.includes(page);
 
       // Admin dashboard is restricted for non-admin users — they get redirected to landing
@@ -98,6 +99,8 @@ export function useNavDelegation() {
         { match: "Leaderboard", action: "page", page: "leaderboard" },
         { match: "Admin Dashboard", action: "page", page: "admin-dashboard" },
         { match: "Admin", action: "page", page: "admin-dashboard" },
+        { match: "Tutor Panel", action: "page", page: "tutor-dashboard" },
+        { match: "Tutor Dashboard", action: "page", page: "tutor-dashboard" },
         { match: "Community Forums", action: "page", page: "community" },
         { match: "Community", action: "page", page: "community" },
         { match: "My Courses", action: "page", page: "my-courses" },

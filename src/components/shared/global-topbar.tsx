@@ -14,7 +14,7 @@ import { useEffect, useRef } from "react";
  * Does NOT show on auth pages (sign-in, sign-up).
  */
 export function GlobalTopbar() {
-  const { isAuthenticated, user, setActivePage, theme, toggleTheme, activePage, toggleSidebar } = useAppStore();
+  const { isAuthenticated, user, setActivePage, theme, toggleTheme, activePage, toggleSidebar, language, setLanguage } = useAppStore();
   const topbarRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -42,19 +42,27 @@ export function GlobalTopbar() {
     });
 
     // Build the topbar HTML
-    // Admin users only see Home + Admin; non-admin users see all links EXCEPT Admin
+    // Admin users only see Home + Admin; tutors see Home + Tutor Panel; others see all links
     const isAdmin = isAuthenticated && user?.role === "admin";
+    const isTutor = isAuthenticated && user?.role === "tutor";
     const navLinks = isAdmin
       ? [
           { label: "Home", page: "landing" },
           { label: "Admin", page: "admin-dashboard" },
         ]
-      : [
-          { label: "Home", page: "landing" },
-          { label: "Explore", page: "courses" },
-          { label: "Ranks", page: "leaderboard" },
-          { label: "Community", page: "community" },
-        ];
+      : isTutor
+        ? [
+            { label: "Home", page: "landing" },
+            { label: "Tutor Panel", page: "tutor-dashboard" },
+            { label: "Explore", page: "courses" },
+            { label: "Community", page: "community" },
+          ]
+        : [
+            { label: "Home", page: "landing" },
+            { label: "Explore", page: "courses" },
+            { label: "Ranks", page: "leaderboard" },
+            { label: "Community", page: "community" },
+          ];
 
     const topbar = document.createElement("div");
     topbar.setAttribute("data-global-topbar", "true");
@@ -106,10 +114,21 @@ export function GlobalTopbar() {
         <button data-theme-toggle style="width:40px;height:40px;border-radius:9999px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);flex-shrink:0;" title="${theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}">
           <span class="material-symbols-outlined">${theme === "dark" ? "light_mode" : "dark_mode"}</span>
         </button>
-        <button data-desktop-only style="width:40px;height:40px;border-radius:9999px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);flex-shrink:0;" title="Language">
-          <span class="material-symbols-outlined">language</span>
-        </button>
-        <button data-auth-button data-page="${isAuthenticated ? "my-courses" : "auth"}" style="display:${isAuthenticated && !isAdmin ? "flex" : "none"};align-items:center;gap:6px;padding:8px 12px;background:var(--secondary-container);color:var(--on-secondary-container);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:13px;flex-shrink:0;white-space:nowrap;">
+        <div style="position:relative;" data-language-container>
+          <button data-language-toggle style="width:40px;height:40px;border-radius:9999px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);flex-shrink:0;" title="Select Language">
+            <span class="material-symbols-outlined">language</span>
+          </button>
+          <div data-language-dropdown style="display:none;position:absolute;top:52px;right:0;min-width:200px;background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.12);padding:8px;z-index:60;backdrop-filter:blur(16px);">
+            <div style="padding:8px 12px;font-size:13px;font-weight:600;color:var(--on-surface-variant);border-bottom:1px solid var(--outline-variant);margin-bottom:4px;">Interface Language</div>
+            ${["English", "Bemba", "Nyanja", "Tonga", "Lozi", "Kaonde", "Lunda", "Luvale"].map(lang => `
+              <div data-language-option="${lang}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:${language === lang ? "600" : "400"};color:${language === lang ? "var(--primary)" : "var(--on-surface)"};background:${language === lang ? "var(--primary-container)" : "transparent"};transition:background 0.15s;" onmouseenter="this.style.background='var(--surface-variant)'" onmouseleave="this.style.background='${language === lang ? "var(--primary-container)" : "transparent"}'">
+                ${language === lang ? `<span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1;">check</span>` : `<span style="width:18px;"></span>`}
+                <span>${lang}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+        <button data-auth-button data-page="${isAuthenticated ? (isTutor ? "tutor-dashboard" : isAdmin ? "admin-dashboard" : "my-courses") : "auth"}" style="display:${isAuthenticated && !isAdmin ? "flex" : "none"};align-items:center;gap:6px;padding:8px 12px;background:var(--secondary-container);color:var(--on-secondary-container);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:13px;flex-shrink:0;white-space:nowrap;">
           <span class="material-symbols-outlined" style="font-size:18px;">school</span>
           <span data-desktop-only>My Courses</span>
         </button>
@@ -175,10 +194,16 @@ export function GlobalTopbar() {
                 ${label}
               </a>`;
             }).join("")}
-            ${isAuthenticated && !isAdmin ? `<a href="#" data-nav-link data-page="my-courses" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
-              <span class="material-symbols-outlined" style="font-size:22px;">school</span>
-              My Courses
-            </a>` : ""}
+            ${isAuthenticated && !isAdmin ? (isTutor
+              ? `<a href="#" data-nav-link data-page="tutor-dashboard" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:22px;">auto_stories</span>
+                Tutor Panel
+              </a>`
+              : `<a href="#" data-nav-link data-page="my-courses" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:22px;">school</span>
+                My Courses
+              </a>`
+            ) : ""}
             ${isAuthenticated ? `<a href="#" data-nav-link data-page="profile" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--on-surface);text-decoration:none;transition:background 0.2s;">
               <span class="material-symbols-outlined" style="font-size:22px;">person</span>
               My Profile
@@ -237,8 +262,28 @@ export function GlobalTopbar() {
       const menuToggle = target.closest("[data-menu-toggle]");
       const sidebarToggle = target.closest("[data-sidebar-toggle]");
       const closeDrawer = target.closest("[data-close-drawer]");
+      const langToggle = target.closest("[data-language-toggle]");
+      const langOption = target.closest("[data-language-option]");
 
-      if (sidebarToggle) {
+      if (langToggle) {
+        e.preventDefault();
+        e.stopPropagation();
+        const dropdown = topbar.querySelector("[data-language-dropdown]") as HTMLElement;
+        if (dropdown) {
+          const isVisible = dropdown.style.display !== "none";
+          dropdown.style.display = isVisible ? "none" : "block";
+        }
+      } else if (langOption) {
+        e.preventDefault();
+        e.stopPropagation();
+        const lang = langOption.getAttribute("data-language-option");
+        if (lang) {
+          setLanguage(lang);
+          // Close dropdown
+          const dropdown = topbar.querySelector("[data-language-dropdown]") as HTMLElement;
+          if (dropdown) dropdown.style.display = "none";
+        }
+      } else if (sidebarToggle) {
         e.preventDefault();
         e.stopPropagation();
         toggleSidebar();
@@ -311,6 +356,16 @@ export function GlobalTopbar() {
       setTimeout(() => { mobileDrawer.style.display = "none"; }, 350);
     };
 
+    // Close language dropdown when clicking outside
+    const closeLanguageDropdown = (e: MouseEvent) => {
+      const container = topbar.querySelector("[data-language-container]");
+      const dropdown = topbar.querySelector("[data-language-dropdown]") as HTMLElement;
+      if (dropdown && dropdown.style.display !== "none" && container && !container.contains(e.target as Node)) {
+        dropdown.style.display = "none";
+      }
+    };
+    document.addEventListener("click", closeLanguageDropdown);
+
     // Close drawer when clicking outside the content
     mobileDrawer.addEventListener("click", (e) => {
       if (e.target === mobileDrawer) closeMobileDrawer();
@@ -323,6 +378,7 @@ export function GlobalTopbar() {
     return () => {
       topbar.removeEventListener("click", handleClick);
       mobileDrawer.removeEventListener("click", handleClick);
+      document.removeEventListener("click", closeLanguageDropdown);
       topbar.remove();
       mobileDrawer.remove();
       // Restore original headers
@@ -342,7 +398,7 @@ export function GlobalTopbar() {
         (el as HTMLElement).style.height = "";
       });
     };
-  }, [activePage, isAuthenticated, user, theme, setActivePage, toggleTheme]);
+  }, [activePage, isAuthenticated, user, theme, setActivePage, toggleTheme, language, setLanguage]);
 
   return null;
 }

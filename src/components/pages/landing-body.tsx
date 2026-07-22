@@ -6,7 +6,7 @@
 import { useAppStore } from "@/lib/store";
 
 export function LandingBody() {
-  const { setActivePage } = useAppStore();
+  const { setActivePage, setAiOverlayOpen } = useAppStore();
 
   return (
     <>
@@ -64,7 +64,7 @@ export function LandingBody() {
                                   Explore Courses
                                   <span className="material-symbols-outlined">arrow_forward</span>
       </button>
-      <button className="px-xl py-md bg-white border-2 border-primary text-primary rounded-xl font-bold text-title-sm hover:bg-primary-fixed transition-all flex items-center justify-center gap-sm"><span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span>
+      <button onClick={() => setAiOverlayOpen(true)} className="px-xl py-md bg-white border-2 border-primary text-primary rounded-xl font-bold text-title-sm hover:bg-primary-fixed transition-all flex items-center justify-center gap-sm"><span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span>
                                   Try AI Tutor</button>
       </div>
       <div className="flex items-center gap-md pt-md">

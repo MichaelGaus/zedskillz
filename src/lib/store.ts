@@ -63,6 +63,10 @@ interface AppState {
   unreadNotifications: number;
   markAllNotificationsRead: () => void;
 
+  // Language
+  language: string;
+  setLanguage: (lang: string) => void;
+
   // Convenience getters
   currentUser: typeof currentUser;
 }
@@ -83,13 +87,44 @@ const DEFAULT_PROFILE: Omit<UserProfile, "name" | "email" | "avatar"> = {
   socialLinks: [],
 };
 
+// ---- localStorage persistence helpers ----
+const STORAGE_KEY = "zedskillz_store";
+
+function loadPersistedState(): Partial<AppState> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function savePersistedState(state: { isAuthenticated: boolean; user: UserProfile | null; language: string; theme: string; activePage: string }) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch { /* quota exceeded or private mode */ }
+}
+
+function clearPersistedState() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch { /* noop */ }
+}
+
+// ---- Restore persisted state on load ----
+const persisted = loadPersistedState();
+
 export const useAppStore = create<AppState>((set, get) => ({
-  activePage: "landing",
+  activePage: persisted.activePage || "landing",
   setActivePage: (page) => set({ activePage: page }),
 
-  // Auth — start unauthenticated so user sees landing + can sign in
-  isAuthenticated: false,
-  user: null,
+  // Auth — attempt restore from localStorage, else unauthenticated
+  isAuthenticated: persisted.isAuthenticated || false,
+  user: persisted.user || null,
   signIn: (email, name, selectedRole) => {
     // Derive a display name from the email if not provided
     const derivedName = name || email.split("@")[0].split(/[._-]/).map(
@@ -100,17 +135,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     const isAdmin = email.toLowerCase().includes("admin") || email.toLowerCase().includes("grace.tembo");
     const role = isAdmin ? "admin" : (selectedRole || "student");
 
-    set({
-      isAuthenticated: true,
-      user: {
-        ...DEFAULT_PROFILE,
-        name: derivedName,
-        email,
-        role: role as UserProfile["role"],
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
-      },
-      activePage: isAdmin ? "admin-dashboard" : "my-courses",
-    });
+    const user: UserProfile = {
+      ...DEFAULT_PROFILE,
+      name: derivedName,
+      email,
+      role: role as UserProfile["role"],
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
+    };
+    const isTutor = role === "tutor";
+    const activePage = isAdmin ? "admin-dashboard" : isTutor ? "tutor-dashboard" : "my-courses";
+
+    set({ isAuthenticated: true, user, activePage });
+
+    // Persist to localStorage
+    const { language, theme } = get();
+    savePersistedState({ isAuthenticated: true, user, language, theme: theme as string, activePage });
   },
   signOut: () => {
     set({
@@ -119,20 +158,28 @@ export const useAppStore = create<AppState>((set, get) => ({
       activePage: "landing",
       userMenuOpen: false,
     });
+    clearPersistedState();
   },
   updateProfile: (updates) => {
     const current = get().user;
     if (!current) return;
-    set({ user: { ...current, ...updates } });
+    const updatedUser = { ...current, ...updates };
+    set({ user: updatedUser });
+    // Persist updated profile
+    const { language, theme, isAuthenticated, activePage } = get();
+    savePersistedState({ isAuthenticated, user: updatedUser, language, theme: theme as string, activePage });
   },
 
-  theme: "light",
+  theme: (persisted.theme as "light" | "dark") || "light",
   toggleTheme: () => {
     const next = get().theme === "light" ? "dark" : "light";
     set({ theme: next });
     if (typeof document !== "undefined") {
       document.documentElement.classList.toggle("dark", next === "dark");
     }
+    // Persist
+    const { isAuthenticated, user, language, activePage } = get();
+    savePersistedState({ isAuthenticated, user, language, theme: next, activePage });
   },
 
   aiOverlayOpen: false,
@@ -160,6 +207,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   unreadNotifications: 3,
   markAllNotificationsRead: () => set({ unreadNotifications: 0 }),
+
+  language: persisted.language || "English",
+  setLanguage: (lang) => {
+    set({ language: lang });
+    // Persist
+    const { isAuthenticated, user, theme, activePage } = get();
+    savePersistedState({ isAuthenticated, user, language: lang, theme: theme as string, activePage });
+  },
 
   currentUser,
 }));

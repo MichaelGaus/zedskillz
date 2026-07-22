@@ -22,8 +22,16 @@ const defaultItems = [
  * Center item is elevated in a primary-container pill.
  */
 export function BottomNav({ activePage, items = defaultItems }: BottomNavProps) {
-  const { activePage: storePage, setActivePage } = useAppStore();
+  const { activePage: storePage, setActivePage, setAiOverlayOpen } = useAppStore();
   const current = activePage ?? storePage;
+
+  const handleNavClick = (item: typeof items[0]) => {
+    if (item.page === "ai-tutor") {
+      setAiOverlayOpen(true);
+    } else {
+      setActivePage(item.page);
+    }
+  };
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-surface/95 backdrop-blur-lg border-t border-outline-variant flex items-center justify-around px-2 pb-safe">
@@ -33,7 +41,7 @@ export function BottomNav({ activePage, items = defaultItems }: BottomNavProps) 
           return (
             <button
               key={item.label}
-              onClick={() => setActivePage(item.page)}
+              onClick={() => handleNavClick(item)}
               className="flex flex-col items-center -mt-6"
             >
               <div className="w-14 h-14 rounded-full bg-primary-container flex items-center justify-center shadow-lg border-4 border-surface">
@@ -48,7 +56,7 @@ export function BottomNav({ activePage, items = defaultItems }: BottomNavProps) 
         return (
           <button
             key={item.label}
-            onClick={() => setActivePage(item.page)}
+            onClick={() => handleNavClick(item)}
             className="flex flex-col items-center gap-1 px-3 py-2"
           >
             <Icon

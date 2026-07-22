@@ -15,6 +15,7 @@ import { LandingBody } from "@/components/pages/landing-body";
 import { SigninPage } from "@/components/pages/signin-page";
 import { SignupPage } from "@/components/pages/signup-page";
 import { AdminBody } from "@/components/pages/admin-body";
+import { TutorBody } from "@/components/pages/tutor-body";
 import { CoursesBody } from "@/components/pages/courses-body";
 import { MyCoursesBody } from "@/components/pages/my-courses-body";
 import { LeaderboardBody } from "@/components/pages/leaderboard-body";
@@ -49,6 +50,12 @@ export default function Home() {
           return <LandingBody />;
         }
         return <AdminBody />;
+      case "tutor-dashboard":
+        // Only tutors can access the tutor dashboard
+        if (!isAuthenticated || user?.role !== "tutor") {
+          return <LandingBody />;
+        }
+        return <TutorBody />;
       case "courses":
       case "course-detail":
         return <CoursesBody />;
@@ -82,12 +89,12 @@ export default function Home() {
           header { display: none !important; }
           @media (min-width: 768px) {
             ${isAuthenticated ? `
-              /* Collapsed (68px icons): sidebar sits beside content with margin shift (no stacking) */
-              /* Expanded (288px full): sidebar overlays content with no margin (stacking) */
+              /* Collapsed (68px icons): sidebar sits beside content, content shifted right */
+              /* Expanded (288px full): sidebar pushes content to the right (no stacking, no overlay) */
               [data-page-main],
-              .lg\\:ml-72 { margin-left: ${sidebarExpanded ? "0" : "68px"} !important; }
-              .lg\\:ml-64 { margin-left: ${sidebarExpanded ? "0" : "68px"} !important; }
-              .md\\:pl-72 { padding-left: ${sidebarExpanded ? "0" : "68px"} !important; }
+              .lg\\:ml-72 { margin-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+              .lg\\:ml-64 { margin-left: ${sidebarExpanded ? "256px" : "68px"} !important; }
+              .md\\:pl-72 { padding-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
               .md\\:left-72 { left: ${sidebarExpanded ? "288px" : "68px"} !important; }
               /* Smooth transitions so content slides alongside the sidebar animation */
               [data-page-main] { transition: margin-left 0.3s ease !important; }

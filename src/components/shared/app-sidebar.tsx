@@ -16,8 +16,9 @@ interface AppSidebarProps {
  * NavigationDrawer — left sidebar with logo, profile card, nav groups, footer.
  * Supports expanded (full) and collapsed (icon-only) modes via the store.
  *
- * Collapsed: fixed 68px icon bar, content is margin-shifted to sit beside it (no stacking).
- * Expanded: fixed 288px drawer overlay on top of content, with backdrop to close.
+ * The sidebar is always fixed and content is margin-shifted to sit beside it.
+ * Both collapsed (68px) and expanded (288px) modes push content to the right
+ * instead of overlaying — no stacking, no backdrop.
  *
  * Always starts below the GlobalTopbar (top-16) to avoid overlap.
  *
@@ -32,7 +33,7 @@ export function AppSidebar({
   showProfile = true,
   children,
 }: AppSidebarProps) {
-  const { activePage: storePage, setActivePage, sidebarExpanded, toggleSidebar, isAuthenticated } = useAppStore();
+  const { activePage: storePage, setActivePage, sidebarExpanded, isAuthenticated, user, setAiOverlayOpen } = useAppStore();
   const current = activePage ?? storePage;
 
   // Don't render sidebar for non-authenticated users
@@ -41,20 +42,12 @@ export function AppSidebar({
   const isOpen = sidebarExpanded;
 
   return (
-    <>
-      {/* Backdrop — visible when expanded, click to close */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/20 backdrop-blur-sm"
-          onClick={() => toggleSidebar()}
-        />
+    <aside
+      className={cn(
+        "hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] bg-surface-container-low border-r border-outline-variant p-md z-40 transition-all duration-300 ease-in-out",
+        isOpen ? "w-72" : "w-[68px]"
       )}
-      <aside
-        className={cn(
-          "hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] bg-surface-container-low border-r border-outline-variant p-md z-40 transition-all duration-300 ease-in-out",
-          isOpen ? "w-72 shadow-2xl" : "w-[68px]"
-        )}
-      >
+    >
       {/* Brand — collapsed: icon only; expanded: icon + text */}
       <div className={cn(
         "flex items-center shrink-0 overflow-hidden",
@@ -116,6 +109,31 @@ export function AppSidebar({
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto space-y-1">
+        {/* Tutor Panel — only shown for tutor role users */}
+        {user?.role === "tutor" && (
+          <button
+            onClick={() => setActivePage("tutor-dashboard")}
+            title={!isOpen ? "Tutor Panel" : undefined}
+            className={cn(
+              "w-full flex items-center rounded-lg transition-all active:translate-x-1 duration-150",
+              isOpen ? "gap-md px-md py-3" : "justify-center py-3 px-0",
+              current === "tutor-dashboard"
+                ? "bg-secondary-container text-on-secondary-container font-semibold"
+                : "text-on-surface-variant hover:bg-surface-variant"
+            )}
+          >
+            <Icon
+              name="auto_stories"
+              filled={current === "tutor-dashboard"}
+              size={22}
+              className={cn("shrink-0", current === "tutor-dashboard" ? "text-primary" : "")}
+            />
+            <span className={cn(
+              "font-body-md transition-all duration-300 overflow-hidden",
+              isOpen ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
+            )}>Tutor Panel</span>
+          </button>
+        )}
         {nav.primary.map((item) => {
           const active = current === item.page;
           return (
@@ -229,7 +247,7 @@ export function AppSidebar({
         <div className="border-t border-outline-variant pt-4 shrink-0">
           {variant === "scholarconnect" ? (
             <button
-              onClick={() => setActivePage("ai-tutor")}
+              onClick={() => setAiOverlayOpen(true)}
               className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-semibold shadow-md hover:bg-primary-container transition-colors"
             >
               <Icon name="psychology" filled size={18} />
@@ -245,6 +263,5 @@ export function AppSidebar({
         </div>
       )}
     </aside>
-    </>
   );
 }
