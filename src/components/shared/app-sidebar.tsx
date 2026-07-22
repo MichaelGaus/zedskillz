@@ -6,9 +6,12 @@ import { Icon } from "@/components/shared/icon";
 import { cn } from "@/lib/utils";
 
 interface AppSidebarProps {
-  variant?: "default" | "scholarconnect";
+  variant?: "default" | "scholarconnect" | "community";
   activePage?: string;
   showProfile?: boolean;
+  children?: React.ReactNode;
+  /** True if the sidebar should be positioned below a sticky header */
+  hasStickyHeader?: boolean;
 }
 
 /**
@@ -16,13 +19,21 @@ interface AppSidebarProps {
  * Variants:
  * - default: standard Zedskillz layout
  * - scholarconnect: ScholarConnect branding with tertiary-colored brand
+ * - community: Community/Members pages with customized nav items
  */
-export function AppSidebar({ variant = "default", activePage, showProfile = true }: AppSidebarProps) {
+export function AppSidebar({
+  variant = "default",
+  activePage,
+  showProfile = true,
+  children,
+  hasStickyHeader = false,
+}: AppSidebarProps) {
   const { activePage: storePage, setActivePage } = useAppStore();
   const current = activePage ?? storePage;
 
-  const nav = variant === "scholarconnect"
-    ? {
+  const getNav = () => {
+    if (variant === "scholarconnect") {
+      return {
         primary: [
           { label: "Dashboard", icon: "dashboard", page: "scholarconnect" },
           { label: "Community", icon: "groups", page: "post" },
@@ -34,13 +45,39 @@ export function AppSidebar({ variant = "default", activePage, showProfile = true
           { label: "Settings", icon: "settings", page: "settings" },
           { label: "Help", icon: "help", page: "help" },
         ],
-      }
-    : sidebarNav;
+      };
+    }
+    if (variant === "community") {
+      return {
+        primary: [
+          { label: "Community", icon: "public", page: "community" },
+          { label: "Feed", icon: "forum", page: "community" },
+          { label: "Categories", icon: "grid_view", page: "community" },
+          { label: "Members", icon: "group", page: "members" },
+          { label: "Bookmarks", icon: "bookmark", page: "community" },
+          { label: "Settings", icon: "settings", page: "settings" },
+        ],
+        secondary: [],
+      };
+    }
+    return sidebarNav;
+  };
+
+  const nav = getNav();
+
+  const topClass = hasStickyHeader
+    ? "top-16 h-[calc(100vh-64px)]"
+    : "top-0 h-full";
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 bg-surface-container-low border-r border-outline-variant h-screen sticky top-0 z-30">
+    <aside
+      className={cn(
+        "hidden md:flex flex-col w-72 fixed left-0 bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40",
+        topClass
+      )}
+    >
       {/* Brand */}
-      <div className="h-16 flex items-center px-6 border-b border-outline-variant shrink-0">
+      <div className="flex items-center gap-sm px-md py-lg shrink-0">
         <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
           <Icon name="school" filled size={22} className="text-on-primary" />
         </div>
@@ -67,7 +104,7 @@ export function AppSidebar({ variant = "default", activePage, showProfile = true
 
       {/* Profile card */}
       {showProfile && (
-        <div className="p-3">
+        <div className="px-md">
           <div className="bg-surface-container-high rounded-xl p-3 flex items-center gap-3">
             <img
               src={currentUser.avatar}
@@ -93,7 +130,7 @@ export function AppSidebar({ variant = "default", activePage, showProfile = true
       )}
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+      <nav className="flex-1 overflow-y-auto space-y-1">
         {nav.primary.map((item) => {
           const active = current === item.page;
           return (
@@ -101,10 +138,10 @@ export function AppSidebar({ variant = "default", activePage, showProfile = true
               key={item.label}
               onClick={() => setActivePage(item.page)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all active:translate-x-1 duration-150",
+                "w-full flex items-center gap-md px-md py-3 rounded-lg font-body-md transition-all active:translate-x-1 duration-150",
                 active
                   ? "bg-secondary-container text-on-secondary-container font-semibold"
-                  : "text-on-surface-variant hover:bg-surface-container"
+                  : "text-on-surface-variant hover:bg-surface-variant"
               )}
             >
               <Icon
@@ -121,22 +158,22 @@ export function AppSidebar({ variant = "default", activePage, showProfile = true
         {/* Management divider — default variant only */}
         {variant === "default" && (
           <>
-            <div className="pt-4 pb-1 px-3">
+            <div className="pt-4 pb-1 px-md">
               <span className="font-label-caps text-[11px] uppercase tracking-widest text-on-surface-variant opacity-60">
                 Management
               </span>
             </div>
-            {nav.management.map((item) => {
+            {nav.management?.map((item) => {
               const active = current === item.page;
               return (
                 <button
                   key={item.label}
                   onClick={() => setActivePage(item.page)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all active:translate-x-1 duration-150",
+                    "w-full flex items-center gap-md px-md py-3 rounded-lg font-body-md transition-all active:translate-x-1 duration-150",
                     active
                       ? "bg-secondary-container text-on-secondary-container font-semibold"
-                      : "text-on-surface-variant hover:bg-surface-container"
+                      : "text-on-surface-variant hover:bg-surface-variant"
                   )}
                 >
                   <Icon
@@ -152,33 +189,50 @@ export function AppSidebar({ variant = "default", activePage, showProfile = true
           </>
         )}
 
-        <div className="pt-4 pb-1 px-3">
-          <span className="font-label-caps text-[11px] uppercase tracking-widest text-on-surface-variant opacity-60">
-            Account
-          </span>
-        </div>
-        {nav.secondary.map((item) => {
-          const active = current === item.page;
-          return (
-            <button
-              key={item.label}
-              onClick={() => setActivePage(item.page)}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all active:translate-x-1 duration-150",
-                active
-                  ? "bg-secondary-container text-on-secondary-container font-semibold"
-                  : "text-on-surface-variant hover:bg-surface-container"
-              )}
-            >
-              <Icon name={item.icon} filled={active} size={22} className={active ? "text-primary" : ""} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
+        {/* Secondary items */}
+        {nav.secondary.length > 0 && (
+          <>
+            <div className="pt-4 pb-1 px-md">
+              <span className="font-label-caps text-[11px] uppercase tracking-widest text-on-surface-variant opacity-60">
+                Account
+              </span>
+            </div>
+            {nav.secondary.map((item) => {
+              const active = current === item.page;
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => setActivePage(item.page)}
+                  className={cn(
+                    "w-full flex items-center gap-md px-md py-3 rounded-lg font-body-md transition-all active:translate-x-1 duration-150",
+                    active
+                      ? "bg-secondary-container text-on-secondary-container font-semibold"
+                      : "text-on-surface-variant hover:bg-surface-variant"
+                  )}
+                >
+                  <Icon
+                    name={item.icon}
+                    filled={active}
+                    size={22}
+                    className={active ? "text-primary" : ""}
+                  />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </>
+        )}
       </nav>
 
+      {/* Custom content from pages (Create Post button, etc.) */}
+      {children && (
+        <div className="shrink-0 space-y-2">
+          {children}
+        </div>
+      )}
+
       {/* Sidebar footer */}
-      <div className="p-3 border-t border-outline-variant shrink-0">
+      <div className="border-t border-outline-variant pt-4 shrink-0">
         {variant === "scholarconnect" ? (
           <button
             onClick={() => setActivePage("ai-tutor")}
@@ -187,13 +241,13 @@ export function AppSidebar({ variant = "default", activePage, showProfile = true
             <Icon name="psychology" filled size={18} />
             Ask AI Tutor
           </button>
-        ) : (
-          <div className="text-[10px] text-on-surface-variant opacity-60 text-center">
+        ) : variant !== "community" ? (
+          <div className="text-[10px] text-on-surface-variant opacity-60 text-center pb-2">
             © 2024 Zedskillz Hub Zambia.
             <br />
             Empowering through AI.
           </div>
-        )}
+        ) : null}
       </div>
     </aside>
   );

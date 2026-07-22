@@ -1,54 +1,14 @@
 // AUTO-GENERATED from zedskillz_individual_post_view.txt — DO NOT EDIT MANUALLY
 // Conversion: HTML body → JSX (class=→className=, void tags self-closed, style attrs converted)
 
+import { AppSidebar } from "@/components/shared/app-sidebar";
+
 export function PostBody() {
   return (
     <>
       
       
-      <aside className="hidden md:flex flex-col w-72 fixed left-0 top-0 h-full bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40 overflow-y-auto">
-      <div className="flex items-center px-4 py-6">
-      <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-      <span className="material-symbols-outlined text-on-primary text-[22px]">school</span>
-      </div>
-      <div className="ml-2">
-      <div className="font-display text-base font-bold text-primary leading-none">Zedskillz Hub</div>
-      <div className="font-label-caps text-[10px] uppercase tracking-wider text-on-surface-variant mt-0.5">AI Learning Platform</div>
-      </div>
-      </div>
-      <nav className="flex-1 space-y-2">
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">dashboard</span>
-      <span className="font-body-md">Dashboard</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all" href="#">
-      <span className="material-symbols-outlined">groups</span>
-      <span className="font-body-md">Community</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">person_search</span>
-      <span className="font-body-md">Study Partners</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">psychology</span>
-      <span className="font-body-md">AI Tutor</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">library_books</span>
-      <span className="font-body-md">Resources</span>
-      </a>
-      </nav>
-      <div className="border-t border-outline-variant pt-4 mt-auto space-y-2">
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">settings</span>
-      <span className="font-body-md">Settings</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">help_outline</span>
-      <span className="font-body-md">Help</span>
-      </a>
-      </div>
-      </aside>
+      <AppSidebar variant="scholarconnect" activePage="post" />
       
       <header className="fixed top-0 right-0 left-0 md:left-72 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-30">
       <div className="flex items-center gap-md">

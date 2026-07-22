@@ -1,62 +1,15 @@
 // AUTO-GENERATED from zedskillz_admin_dashboard_ui.txt — DO NOT EDIT MANUALLY
 // Conversion: HTML body → JSX (class=→className=, void tags self-closed, style attrs converted)
 
+import { AppSidebar } from "@/components/shared/app-sidebar";
+
 export function AdminBody() {
   return (
     <>
       
       <div className="flex h-screen overflow-hidden">
       
-      <aside className="hidden md:flex flex-col w-72 fixed left-0 top-0 h-full bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40">
-      <div className="flex items-center gap-sm px-md py-lg"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyRiUkqaqAvc2u_MdalN2oAXFsfqG11P8D_0FuE33cWt7_tXYn_5zbiCKOjnEQv8HLR9rkmhtB-WOtpg2NrmLkhYLd1dkaNfjUViOdSiIdXP5JwaatirlwMKSU5WSmKRh4AECIAzrCvmFO9oFqSEdge-6ZFZBvO6PRf571UslXRaUwjGeF6d75sdmdLwoJtoaRqlZAoIhbSqtloDdr-69PbT_-QTcQJOs6a_GxFrusEU7_9vcuLlo1zFQ039OuTmVyjIQ" alt="Zedskillz Logo" className="h-12 w-auto" />
-      <h1 className="text-primary font-bold font-headline-md tracking-tight">Zedskillz Admin</h1></div>
-      <nav className="flex-1 space-y-1">
-      
-      <div className="space-y-1">
-      <a className="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all" href="#">
-      <span className="material-symbols-outlined">dashboard</span>
-      <span className="font-body-md">Home</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">explore</span>
-      <span className="font-body-md">Explore</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">leaderboard</span>
-      <span className="font-body-md">Ranks</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">groups</span>
-      <span className="font-body-md">Community</span>
-      </a></div>
-      <div className="pt-lg pb-sm">
-      <p className="px-md font-label-caps text-label-caps text-on-surface-variant/60">MANAGEMENT</p>
-      </div>
-      <div className="space-y-1">
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">school</span>
-      <span className="font-body-md">My Courses</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">psychology</span>
-      <span className="font-body-md">AI Tutor</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">library_books</span>
-      <span className="font-body-md">Resources</span>
-      </a>
-      </div>
-      </nav>
-      
-      <div className="p-md bg-surface-container-high rounded-xl flex items-center gap-md">
-      <div className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-primary" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDPY_k44yYL-ZiYml3I1WmNawvyCw2YdJGFTQhClekylQ_GUGUiLNi1xsIUbrkZCLliT3TTyJexLKhJpzmx_dI247z_4UA7HXf1SFgO3QkBke2Uv1y3fHVWnjuWUnQM-X8X1HzqLwBrB3iRaTG5N7BHZZ6igPdJG8GQAgNgN3LgoIDM01kVF3qFG4A0MJpizpuc8UJ1_ahwFOpYEbe4IRkmrFn5m8UkqVD3MOqgogV8rCfw4mWPsh4AVw')"}}></div>
-      <div className="flex-1 min-w-0">
-      <p className="font-bold text-body-md truncate text-on-surface">Zambian Scholar</p>
-      <p className="text-body-sm text-on-surface-variant truncate">Level 12 • 4500 XP</p>
-      </div>
-      <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">settings</button>
-      </div>
-      </aside>
+      <AppSidebar activePage="admin-dashboard" />
       
       <main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
       

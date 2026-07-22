@@ -1,58 +1,14 @@
 // AUTO-GENERATED from zedskillz_my_courses_ui.txt — DO NOT EDIT MANUALLY
 // Conversion: HTML body → JSX (class=→className=, void tags self-closed, style attrs converted)
 
+import { AppSidebar } from "@/components/shared/app-sidebar";
+
 export function MyCoursesBody() {
   return (
     <>
       
       
-      <aside className="hidden md:flex flex-col w-72 fixed left-0 top-0 h-full bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40">
-      <div className="flex flex-col p-md space-y-sm h-full">
-      
-      <div className="px-md py-lg flex items-center gap-sm">
-      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKHGHjKPjuBxC5DUJS1A2sOQH51693caj6SakDOvHUHgPTHP2WKux0771sfrEgzzE-LhnWxBkcOTiAHYU2GP599HNmVRD00ki8KNr4iLNpSCDUPhJsUpSkZb8ZCX4bBwcbMrZAN9wGnAXJ9K0fIjhWUVcskVa48V4cc3IrNGmOlCYb8ZQnquNEVZnECU1JggiphBkaa_5G0MkV0uu2QUCvo5cWzEydxJwkbe6-Y9e4x7ShDz2FLkVQ2hPJr9UQmHLfaPw" alt="Zedskillz Hub Logo" className="h-14 w-auto object-contain" />
-      </div>
-      
-      <div className="flex items-center gap-md p-md bg-surface-container-high rounded-xl mb-md">
-      <div className="w-12 h-12 rounded-full overflow-hidden bg-outline-variant">
-      <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbxTeYAB7asW3upi7yCOtZDpqkdL24ImdOVRmcuV5UKwOnT-0OAURFbVy3lIVQSyvcjpylpbVRyIpWKPqHbZLBAVysXs94whlOenwOIKlg5jO34dEtom9Sh_3MqUMRQBNfnFORRf3hnUVO2VOehlRix8OvCaJFf6t8sm63V3ub9HjziOKnVfyB40UlzVw2D-Jhzf6VnHxhY9d39-bRqxjgqA3O4rybrojQhuMt4143lreoIuWuKdIYJQ"  alt="" />
-      </div>
-      <div>
-      <p className="font-headline-md text-body-md font-bold text-primary">Zambian Scholar</p>
-      <p className="font-body-sm text-body-sm text-on-surface-variant">Level 12 • 4500 XP</p>
-      </div>
-      </div>
-      
-      <nav className="flex-1 space-y-2">
-      <a className="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all" href="#">
-      <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>school</span>
-      <span className="font-body-md">My Courses</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">psychology</span>
-      <span className="font-body-md">AI Tutor</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">library_books</span>
-      <span className="font-body-md">Resources</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">groups</span>
-      <span className="font-body-md">Community</span>
-      </a>
-      <div className="pt-4 mt-auto border-t border-outline-variant">
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">settings</span>
-      <span className="font-body-md">Settings</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">help</span>
-      <span className="font-body-md">Help</span>
-      </a>
-      </div>
-      </nav>
-      </div>
-      </aside>
+      <AppSidebar activePage="my-courses" />
       
       <main className="flex-1 flex flex-col min-w-0 bg-surface">
       

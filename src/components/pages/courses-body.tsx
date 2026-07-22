@@ -1,58 +1,15 @@
 // AUTO-GENERATED from zedskillz_couse_explorer_ui.txt — DO NOT EDIT MANUALLY
 // Conversion: HTML body → JSX (class=→className=, void tags self-closed, style attrs converted)
 
+import { AppSidebar } from "@/components/shared/app-sidebar";
+
 export function CoursesBody() {
   return (
     <>
       
       <div className="flex min-h-screen">
       
-      <aside className="hidden md:flex flex-col w-72 fixed left-0 top-0 h-full bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40">
-      <div className="flex items-center px-4 py-6">
-      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDzfffacdcwMQNxdW8Y6hiS-y0t9lAqLj1FQmz10DYc5knxMKK4uG9jbNCADGfcikMfphB1CgofLuuWD4gVdTsFz9Ueg_xzGLixfKWN1PxALOJ0jmb11iHDYcPWDhteBFADbcMl3UYAIjt7S13S4ewpQNyVHCMsJ540pzZCej0P-GrW0v7jKy3SJpA-BNy2GsLSP7r6TUxSba4MBLIXEbj7uu6WuBYKQLeLe5PmFiQZysT5g-L6-DEcy8SpYeH-VeG2AI" alt="Zedskillz Hub" className="w-auto object-contain h-14" />
-      </div>
-      <div className="flex flex-col items-start px-4 py-4 mb-6 bg-white rounded-xl shadow-sm border border-outline-variant">
-      <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden">
-      <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHewOfHuChpURSeXqwASJRTKYOMJYjJx6hx_Nbe7CkZrmm6QmnHrHEJJsOQ8IXMV5RBYeTDxS0GpjHdZK88NW2kdsVZya6wpSSmi5Bb4XjuRHMzYXaqeT5yNdryD3HZ_VG61Qrt1svbqWtkXRmwWi4_-HWyzsm9xBh1inbRrz_7L4V5U_5RFBL-HAlbU3RiSZ1jDAk1IgQdC6lWEJ0VnoJ2RpBT0GQhI3zlgX1SqDiL_9I9AizmKXuTw"  alt="" />
-      </div>
-      <div>
-      <p className="font-semibold text-on-surface">Zambian Scholar</p>
-      <p className="text-xs text-on-surface-variant">Level 12 • 4500 XP</p>
-      </div>
-      </div>
-      </div>
-      <nav className="flex-1 space-y-2">
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">home</span>
-      <span className="font-body-md">Home</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all" href="#">
-      <span className="material-symbols-outlined">explore</span>
-      <span className="font-body-md">Explore</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">school</span>
-      <span className="font-body-md">My Courses</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#"><span className="material-symbols-outlined">psychology</span>
-      <span className="font-body-md">AI Tutor</span></a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">leaderboard</span>
-      <span className="font-body-md">Ranks</span>
-      </a>
-      </nav>
-      <div className="pt-4 mt-auto border-t border-outline-variant">
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">settings</span>
-      <span className="font-body-md">Settings</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-      <span className="material-symbols-outlined">help</span>
-      <span className="font-body-md">Help</span>
-      </a>
-      </div>
-      </aside>
+      <AppSidebar activePage="courses" />
       
       <main data-page-main className="flex-1 flex flex-col min-h-screen">
       <style>{`

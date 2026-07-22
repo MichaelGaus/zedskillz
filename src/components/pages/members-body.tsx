@@ -1,6 +1,8 @@
 // Members Connect page — matches the community page layout with Members sidebar item active.
 // Main content shows a members directory with search, filters, and member cards.
 
+import { AppSidebar } from "@/components/shared/app-sidebar";
+
 export function MembersBody() {
   return (
     <>
@@ -35,49 +37,18 @@ export function MembersBody() {
 
       <div className="flex max-w-7xl mx-auto">
         {/* ===== Sidebar ===== */}
-        <aside className="hidden md:flex flex-col w-72 fixed left-0 top-16 h-[calc(100vh-64px)] bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40">
-          <div className="flex items-center px-4 py-6">
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUmw2oAZE3rCcmhO4Hk-N6u9s8YewERNd1VJtFaz5l6Yo_dpMZJhFL8E_bZO8sGQTG7_qqpWDp1YNk35d5UGGu-Xgi-hlqWCt_DaSmrxNg_k_c8SFCfo_y2BPKDurdcwpQb_S28GFmZRDGe2BjoFEj8DOmSaBhvoSojaTv8vtdTRhB75KjAgq7sFYGJmw48je_FbAI_ih6Ws0Uui_XL74yLYkhXhWEZGXmeYw1CP-hl9119bsCshYl08Md5fonmxq2c8s" alt="Zedskillz Hub" className="h-14 w-auto object-contain" />
+        <AppSidebar variant="community" hasStickyHeader showProfile={false}>
+          <div className="px-md">
+            <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold flex items-center justify-center gap-sm active:scale-95 transition-transform shadow-md">
+              <span className="material-symbols-outlined">add_circle</span>
+              Create New Post
+            </button>
           </div>
-          <nav className="flex-1 space-y-2">
-            <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-              <span className="material-symbols-outlined">public</span>
-              <span className="font-body-md">Community</span>
-            </a>
-            <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-              <span className="material-symbols-outlined">forum</span>
-              <span className="font-body-md">Feed</span>
-            </a>
-            <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-              <span className="material-symbols-outlined">grid_view</span>
-              <span className="font-body-md">Categories</span>
-            </a>
-            <a className="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all" href="#">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>group</span>
-              <span className="font-body-md">Members</span>
-            </a>
-            <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-              <span className="material-symbols-outlined">bookmark</span>
-              <span className="font-body-md">Bookmarks</span>
-            </a>
-            <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-              <span className="material-symbols-outlined">settings</span>
-              <span className="font-body-md">Settings</span>
-            </a>
-          </nav>
-          <div className="border-t border-outline-variant pt-4 mt-auto">
-            <div className="px-md py-3">
-              <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold flex items-center justify-center gap-sm active:scale-95 transition-transform shadow-md">
-                <span className="material-symbols-outlined">add_circle</span>
-                Create New Post
-              </button>
-            </div>
-            <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
-              <span className="material-symbols-outlined">help_outline</span>
-              <span className="font-body-md">Help Center</span>
-            </a>
-          </div>
-        </aside>
+          <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+            <span className="material-symbols-outlined">help_outline</span>
+            <span className="font-body-md">Help Center</span>
+          </a>
+        </AppSidebar>
 
         {/* ===== Main content ===== */}
         <main className="flex-1 lg:ml-72 p-lg lg:p-xl w-full">
