@@ -8,6 +8,7 @@ import { GlobalUserMenu } from "@/components/shared/global-user-menu";
 import { GlobalTopbar } from "@/components/shared/global-topbar";
 import { GlobalBottomNav } from "@/components/shared/global-bottom-nav";
 import { GlobalAIFab } from "@/components/shared/global-ai-fab";
+import { Footer } from "@/components/shared/footer";
 
 // Page body components (auto-generated from design HTML)
 import { LandingBody } from "@/components/pages/landing-body";
@@ -90,6 +91,8 @@ export default function Home() {
       )}
       {showGlobalTopbar && <GlobalTopbar />}
       {renderPage()}
+      {/* Shared footer — part of normal document flow, scrolls with the page */}
+      {showGlobalTopbar && <Footer />}
       <AIOverlay />
       <GlobalUserMenu />
       {showGlobalTopbar && <GlobalBottomNav />}

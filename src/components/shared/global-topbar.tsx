@@ -136,33 +136,38 @@ export function GlobalTopbar() {
     mobileDrawer.style.cssText = "position:fixed;top:64px;left:0;right:0;bottom:0;z-index:39;background:rgba(0,0,0,0.3);display:none;backdrop-filter:blur(4px);";
     mobileDrawer.innerHTML = `
       <div style="position:absolute;top:0;left:0;width:280px;max-width:80vw;height:100%;background:var(--surface-container-lowest);border-right:1px solid var(--outline-variant);padding:16px;overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,0.1);transform:translateX(-100%);transition:transform 0.3s ease;" data-drawer-content>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--outline-variant);">
-          <span style="font-weight:700;font-size:18px;color:var(--primary);">Navigation</span>
-          <button data-close-drawer style="width:36px;height:36px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          ${!isAuthenticated ? `
-            <!-- Welcome prompt for unauthenticated users -->
-            <div style="padding:24px 16px;text-align:center;">
-              <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-container);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-                <span class="material-symbols-outlined" style="font-size:32px;color:var(--primary);">rocket_launch</span>
-              </div>
-              <p style="font-size:18px;font-weight:700;color:var(--on-surface);margin:0 0 8px;">Welcome to Zedskillz Hub!</p>
-              <p style="font-size:13px;color:var(--on-surface-variant);margin:0 0 20px;line-height:1.5;">Sign in or create an account to access courses, leaderboards, community and more.</p>
-              <div style="display:flex;flex-direction:column;gap:10px;">
-                <button data-getstarted-button style="width:100%;padding:14px;background:var(--primary);color:var(--on-primary);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                  <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:6px;">person_add</span>
-                  Get Started
-                </button>
-                <button data-login-button style="width:100%;padding:14px;background:var(--secondary-container);color:var(--on-secondary-container);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;">
-                  <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:6px;">login</span>
-                  Log In
-                </button>
-              </div>
+        ${!isAuthenticated ? `
+          <!-- Welcome-only drawer for unauthenticated users (no Navigation header) -->
+          <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;">
+            <button data-close-drawer style="width:36px;height:36px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <div style="padding:24px 16px;text-align:center;">
+            <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-container);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <span class="material-symbols-outlined" style="font-size:32px;color:var(--primary);">rocket_launch</span>
             </div>
-          ` : `
+            <p style="font-size:18px;font-weight:700;color:var(--on-surface);margin:0 0 8px;">Welcome to Zedskillz Hub!</p>
+            <p style="font-size:13px;color:var(--on-surface-variant);margin:0 0 20px;line-height:1.5;">Sign in or create an account to access courses, leaderboards, community and more.</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <button data-getstarted-button style="width:100%;padding:14px;background:var(--primary);color:var(--on-primary);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:6px;">person_add</span>
+                Get Started
+              </button>
+              <button data-login-button style="width:100%;padding:14px;background:var(--secondary-container);color:var(--on-secondary-container);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:6px;">login</span>
+                Log In
+              </button>
+            </div>
+          </div>
+        ` : `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--outline-variant);">
+            <span style="font-weight:700;font-size:18px;color:var(--primary);">Navigation</span>
+            <button data-close-drawer style="width:36px;height:36px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--on-surface-variant);">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
             ${navLinks.map(({ label, page }) => {
               const isActive = activePage === page;
               return `<a href="#" data-nav-link data-page="${page}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;font-size:15px;font-weight:${isActive ? "600" : "500"};color:${isActive ? "var(--primary)" : "var(--on-surface)"};background:${isActive ? "var(--secondary-container)" : "transparent"};text-decoration:none;transition:background 0.2s;">
@@ -182,8 +187,7 @@ export function GlobalTopbar() {
               <span class="material-symbols-outlined" style="font-size:22px;">settings</span>
               Settings
             </a>` : ""}
-          `}
-        </div>
+          </div>`}
       </div>
     `;
     document.body.appendChild(mobileDrawer);
