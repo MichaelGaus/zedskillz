@@ -23,7 +23,7 @@ export function LeaderboardBody() {
       </header>
       <div className="flex flex-1 overflow-hidden">
       
-      <aside className="hidden md:flex flex-col p-md space-y-sm h-full w-72 bg-surface-container-low border-r border-outline-variant">
+      <aside className="hidden md:flex flex-col w-72 fixed left-0 top-0 h-full bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40">
       <div className="flex flex-col gap-sm pb-lg mb-lg border-b border-outline-variant">
       <div className="flex items-center gap-md px-md">
       <div className="w-12 h-12 flex items-center justify-center scale-125"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9KXuEIH224xeoj-D6opYhl3kCFvldkecfwCtrqdKxfVNB2CyUmLDbpTkRzCl8oPbZLF1U95nz58yKXkXgo1liQk9F-n4LI_efDSJYlpVlZQxCLU-sc4QjEJMQwDocBuohNbyPm6G0271Kgj8LOyjQi-LdBHYTCOSlQbH2RM6Lr6rfh9bx31IdWnni96ZGkMQbRDgmQge3Jg5jQNKqy47lhhRiY9hCURANHihEiytikRo2HunpwFylGbZNmRmJ9KoSuNE" alt="Zedskillz Logo" className="w-full h-full object-contain" /></div>
@@ -33,29 +33,29 @@ export function LeaderboardBody() {
       </div>
       </div>
       </div>
-      <nav className="flex flex-col gap-xs">
-      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <nav className="flex-1 space-y-2">
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">school</span>
       <span className="font-body-md">My Courses</span>
       </a>
-      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#"><span className="material-symbols-outlined">psychology</span><span className="font-body-md">AI Tutor</span></a>
-      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#"><span className="material-symbols-outlined">psychology</span><span className="font-body-md">AI Tutor</span></a>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">library_books</span>
       <span className="font-body-md">Resources</span>
       </a>
-      <a className="flex items-center gap-md p-md bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <a className="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">leaderboard</span>
       <span className="font-body-md">Leaderboard</span>
       </a>
-      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">settings</span>
       <span className="font-body-md">Settings</span>
       </a>
-      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">help</span>
       <span className="font-body-md">Help</span>
       </a>
-      <a className="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#"><span className="material-symbols-outlined">groups</span><span className="font-body-md">Community</span></a></nav>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#"><span className="material-symbols-outlined">groups</span><span className="font-body-md">Community</span></a></nav>
       </aside>
       
       <main className="flex-1 overflow-y-auto bg-surface pb-xl">

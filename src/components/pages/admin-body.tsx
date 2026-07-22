@@ -7,27 +7,27 @@ export function AdminBody() {
       
       <div className="flex h-screen overflow-hidden">
       
-      <aside className="hidden md:flex flex-col h-full w-72 bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-50">
+      <aside className="hidden md:flex flex-col w-72 fixed left-0 top-0 h-full bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40">
       <div className="flex items-center gap-sm px-md py-lg"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyRiUkqaqAvc2u_MdalN2oAXFsfqG11P8D_0FuE33cWt7_tXYn_5zbiCKOjnEQv8HLR9rkmhtB-WOtpg2NrmLkhYLd1dkaNfjUViOdSiIdXP5JwaatirlwMKSU5WSmKRh4AECIAzrCvmFO9oFqSEdge-6ZFZBvO6PRf571UslXRaUwjGeF6d75sdmdLwoJtoaRqlZAoIhbSqtloDdr-69PbT_-QTcQJOs6a_GxFrusEU7_9vcuLlo1zFQ039OuTmVyjIQ" alt="Zedskillz Logo" className="h-12 w-auto" />
       <h1 className="text-primary font-bold font-headline-md tracking-tight">Zedskillz Admin</h1></div>
       <nav className="flex-1 space-y-1">
       
       <div className="space-y-1">
-      <a className="flex items-center gap-md px-md py-3 bg-primary-container text-on-primary-container font-semibold rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <a className="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all" href="#">
       <span className="material-symbols-outlined">dashboard</span>
-      <span className="font-body-md text-body-md">Home</span>
+      <span className="font-body-md">Home</span>
       </a>
       <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">explore</span>
-      <span className="font-body-md text-body-md">Explore</span>
+      <span className="font-body-md">Explore</span>
       </a>
       <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">leaderboard</span>
-      <span className="font-body-md text-body-md">Ranks</span>
+      <span className="font-body-md">Ranks</span>
       </a>
       <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">groups</span>
-      <span className="font-body-md text-body-md">Community</span>
+      <span className="font-body-md">Community</span>
       </a></div>
       <div className="pt-lg pb-sm">
       <p className="px-md font-label-caps text-label-caps text-on-surface-variant/60">MANAGEMENT</p>
@@ -35,15 +35,15 @@ export function AdminBody() {
       <div className="space-y-1">
       <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">school</span>
-      <span className="font-body-md text-body-md">My Courses</span>
+      <span className="font-body-md">My Courses</span>
       </a>
       <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">psychology</span>
-      <span className="font-body-md text-body-md">AI Tutor</span>
+      <span className="font-body-md">AI Tutor</span>
       </a>
       <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
       <span className="material-symbols-outlined">library_books</span>
-      <span className="font-body-md text-body-md">Resources</span>
+      <span className="font-body-md">Resources</span>
       </a>
       </div>
       </nav>

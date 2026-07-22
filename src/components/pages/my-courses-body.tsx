@@ -6,7 +6,7 @@ export function MyCoursesBody() {
     <>
       
       
-      <aside className="hidden md:flex flex-col h-screen w-72 sticky top-0 bg-surface-container-low dark:bg-inverse-surface shadow-xl z-40">
+      <aside className="hidden md:flex flex-col w-72 fixed left-0 top-0 h-full bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40">
       <div className="flex flex-col p-md space-y-sm h-full">
       
       <div className="px-md py-lg flex items-center gap-sm">
@@ -23,40 +23,34 @@ export function MyCoursesBody() {
       </div>
       </div>
       
-      <nav className="flex-1 space-y-xs">
-      <a className="flex items-center gap-md px-md py-sm bg-secondary-container text-on-secondary-container font-semibold rounded-lg active:translate-x-1 duration-150 transition-all" href="#">
+      <nav className="flex-1 space-y-2">
+      <a className="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all" href="#">
       <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>school</span>
-      <span className="font-body-md text-body-md">My Courses</span>
+      <span className="font-body-md">My Courses</span>
       </a>
-      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">psychology</span>
-      <span className="font-body-md text-body-md">AI Tutor</span>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">psychology</span>
+      <span className="font-body-md">AI Tutor</span>
       </a>
-      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">library_books</span>
-      <span className="font-body-md text-body-md">Resources</span>
-      </a><a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">groups</span>
-      <span className="font-body-md text-body-md">Community</span>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">library_books</span>
+      <span className="font-body-md">Resources</span>
       </a>
-      <div className="pt-xl opacity-40">
-      <hr className="border-outline-variant" />
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">groups</span>
+      <span className="font-body-md">Community</span>
+      </a>
+      <div className="pt-4 mt-auto border-t border-outline-variant">
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">settings</span>
+      <span className="font-body-md">Settings</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">help</span>
+      <span className="font-body-md">Help</span>
+      </a>
       </div>
-      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">settings</span>
-      <span className="font-body-md text-body-md">Settings</span>
-      </a>
-      <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg active:translate-x-1 duration-150 transition-all group" href="#">
-      <span className="material-symbols-outlined group-hover:text-primary">help</span>
-      <span className="font-body-md text-body-md">Help</span>
-      </a>
       </nav>
-      
-      <div className="mt-auto p-md text-center">
-      <p className="font-body-sm text-[10px] text-on-surface-variant leading-tight">
-                          © 2024 Zedskillz Hub Zambia.<br />Empowering through AI.
-                      </p>
-      </div>
       </div>
       </aside>
       

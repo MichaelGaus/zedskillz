@@ -34,47 +34,51 @@ export function CommunityBody() {
       </header>
       <div className="flex max-w-7xl mx-auto">
       
-      <aside className="h-[calc(100vh-64px)] w-64 fixed left-0 top-16 hidden lg:flex flex-col bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant dark:border-outline p-md gap-sm z-40">
-      <div className="flex flex-col gap-xs mb-lg">
-      <div className="px-2 mb-2"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUmw2oAZE3rCcmhO4Hk-N6u9s8YewERNd1VJtFaz5l6Yo_dpMZJhFL8E_bZO8sGQTG7_qqpWDp1YNk35d5UGGu-Xgi-hlqWCt_DaSmrxNg_k_c8SFCfo_y2BPKDurdcwpQb_S28GFmZRDGe2BjoFEj8DOmSaBhvoSojaTv8vtdTRhB75KjAgq7sFYGJmw48je_FbAI_ih6Ws0Uui_XL74yLYkhXhWEZGXmeYw1CP-hl9119bsCshYl08Md5fonmxq2c8s" alt="Zedskillz Hub" className="h-14 w-auto" /></div>
+      <aside className="hidden md:flex flex-col w-72 fixed left-0 top-16 h-[calc(100vh-64px)] bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40">
+      <div className="flex items-center px-4 py-6">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUmw2oAZE3rCcmhO4Hk-N6u9s8YewERNd1VJtFaz5l6Yo_dpMZJhFL8E_bZO8sGQTG7_qqpWDp1YNk35d5UGGu-Xgi-hlqWCt_DaSmrxNg_k_c8SFCfo_y2BPKDurdcwpQb_S28GFmZRDGe2BjoFEj8DOmSaBhvoSojaTv8vtdTRhB75KjAgq7sFYGJmw48je_FbAI_ih6Ws0Uui_XL74yLYkhXhWEZGXmeYw1CP-hl9119bsCshYl08Md5fonmxq2c8s" alt="Zedskillz Hub" className="h-14 w-auto object-contain" />
       </div>
-      <nav className="flex flex-col gap-1"><a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#"><span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">public</span><span className="font-label-caps text-label-caps">Community</span></a>
-      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
-      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">forum</span>
-      <span className="font-label-caps text-label-caps">Feed</span>
+      <nav className="flex-1 space-y-2">
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">public</span>
+      <span className="font-body-md">Community</span>
       </a>
-      <a className="flex items-center gap-md px-4 py-3 bg-secondary-container dark:bg-tertiary-container text-on-secondary-container dark:text-on-tertiary-container rounded-lg font-bold" href="#">
-      <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: '"FILL" 1' }}>grid_view</span>
-      <span className="font-label-caps text-label-caps">Categories</span>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">forum</span>
+      <span className="font-body-md">Feed</span>
       </a>
-      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
-      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">group</span>
-      <span className="font-label-caps text-label-caps">Members</span>
+      <a className="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all" href="#">
+      <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>grid_view</span>
+      <span className="font-body-md">Categories</span>
       </a>
-      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
-      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">bookmark</span>
-      <span className="font-label-caps text-label-caps">Bookmarks</span>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">group</span>
+      <span className="font-body-md">Members</span>
       </a>
-      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
-      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">settings</span>
-      <span className="font-label-caps text-label-caps">Settings</span>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">bookmark</span>
+      <span className="font-body-md">Bookmarks</span>
+      </a>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">settings</span>
+      <span className="font-body-md">Settings</span>
       </a>
       </nav>
-      <div className="mt-lg px-2">
+      <div className="border-t border-outline-variant pt-4 mt-auto">
+      <div className="px-md py-3">
       <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold flex items-center justify-center gap-sm active:scale-95 transition-transform shadow-md">
       <span className="material-symbols-outlined">add_circle</span>
-                          Create New Post
-                      </button>
+      Create New Post
+      </button>
       </div>
-      <div className="mt-auto border-t border-outline-variant pt-md">
-      <a className="flex items-center gap-md px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-variant/50 rounded-lg transition-colors group" href="#">
-      <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">help_outline</span>
-      <span className="font-label-caps text-label-caps">Help Center</span>
+      <a className="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:translate-x-1 duration-150" href="#">
+      <span className="material-symbols-outlined">help_outline</span>
+      <span className="font-body-md">Help Center</span>
       </a>
       </div>
       </aside>
       
-      <main className="flex-1 lg:ml-64 p-lg lg:p-xl w-full">
+      <main className="flex-1 lg:ml-72 p-lg lg:p-xl w-full">
       <div className="max-w-5xl mx-auto">
       
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
