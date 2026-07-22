@@ -68,8 +68,8 @@ export function GlobalTopbar() {
     topbar.innerHTML = `
       <style>
         @media (min-width: 768px) {
-          [data-menu-toggle] { display: none !important; }
-          [data-sidebar-toggle] { display: flex !important; }
+          ${isAuthenticated ? `[data-menu-toggle] { display: none !important; }` : `[data-menu-toggle] { display: flex !important; }`}
+          ${isAuthenticated ? `[data-sidebar-toggle] { display: flex !important; }` : `[data-sidebar-toggle] { display: none !important; }`}
           [data-desktop-nav] { display: flex !important; }
           [data-mobile-only] { display: none !important; }
         }

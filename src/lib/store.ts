@@ -141,7 +141,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   userMenuOpen: false,
   setUserMenuOpen: (open) => set({ userMenuOpen: open }),
 
-  sidebarExpanded: true,
+  sidebarExpanded: false,
   setSidebarExpanded: (expanded) => set({ sidebarExpanded: expanded }),
   toggleSidebar: () => set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
 

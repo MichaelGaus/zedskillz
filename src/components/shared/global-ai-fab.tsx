@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
  * GlobalAIFab — a consistent AI Tutor floating button rendered as a proper
  * React component using Tailwind classes.
  *
- * Mobile (< 768px): Icon only (48px circle), positioned above the bottom nav bar
- * Desktop (≥ 768px): Icon + "Ask AI Tutor" label pill, positioned at bottom-right
+ * Mobile & Tablet (< 1024px): Icon only (48px circle), positioned above the bottom nav bar
+ * Desktop (≥ 1024px): Icon + "Ask AI Tutor" label pill, positioned at bottom-right
  *
  * Clicking opens the AI overlay (setAiOverlayOpen).
  */
@@ -23,8 +23,8 @@ function useFirstVisitTooltip() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Only show on desktop — mobile has icon-only FAB
-    if (window.innerWidth < 768) return;
+    // Only show on large desktop — mobile/tablet has icon-only FAB
+    if (window.innerWidth < 1024) return;
 
     const seen = localStorage.getItem(TOOLTIP_STORAGE_KEY);
     if (seen === "true") return;
@@ -54,14 +54,15 @@ function useFirstVisitTooltip() {
 
 export function GlobalAIFab() {
   const { activePage, setAiOverlayOpen } = useAppStore();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const { show: showTooltip, dismiss: dismissTooltip } = useFirstVisitTooltip();
 
   // Responsive detection using CSS media query (avoids resize thrashing)
+  // Icon-only on mobile & tablet (< 1024px), icon + label on desktop (≥ 1024px)
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    const mq = window.matchMedia("(max-width: 1023px)");
+    setIsSmallScreen(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsSmallScreen(e.matches);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
   }, []);
@@ -77,7 +78,7 @@ export function GlobalAIFab() {
   return (
     <>
       {/* First-visit tooltip — desktop only, positioned to the left of the FAB */}
-      {showTooltip && !isMobile && (
+      {showTooltip && !isSmallScreen && (
         <div
           className={cn(
             "fixed z-50 flex items-center gap-2",
@@ -104,22 +105,29 @@ export function GlobalAIFab() {
       <button
         key={activePage}
         onClick={handleFabClick}
+        data-global-ai-fab="true"
         className={cn(
-          "fixed z-50 flex items-center justify-center gap-2 rounded-full bg-primary text-on-primary shadow-[0_0_20px_rgba(112,0,14,0.15)] transition-transform duration-200 hover:scale-110 active:scale-95",
-          "animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out",
-          isMobile ? "right-4 h-12 w-12" : "bottom-6 right-6 h-12 px-5",
-          isMobile && (hasBottomNav ? "bottom-20" : "bottom-4")
+          "relative fixed z-50 flex items-center justify-center gap-2 rounded-full bg-primary text-on-primary shadow-[0_0_20px_rgba(112,0,14,0.15)] transition-transform duration-200 hover:scale-110 active:scale-95",
+          isSmallScreen
+            ? "animate-in fade-in zoom-in-90 slide-in-from-bottom-6 duration-500 delay-150 ease-out"
+            : "animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out",
+          isSmallScreen ? "right-4 h-12 w-12" : "bottom-6 right-6 h-12 px-5",
+          isSmallScreen && (hasBottomNav ? "bottom-20" : "bottom-4")
         )}
         title="Ask AI Tutor"
         aria-label="Ask AI Tutor"
       >
+        {/* Subtle pulsing glow ring — only on mobile/tablet, starts after entrance */}
+        {isSmallScreen && (
+          <span className="absolute inset-0 rounded-full animate-glow-pulse pointer-events-none" aria-hidden="true" />
+        )}
         <span
           className="material-symbols-outlined text-2xl"
           style={{ fontVariationSettings: '"FILL" 1' }}
         >
           psychology
         </span>
-        {!isMobile && (
+        {!isSmallScreen && (
           <span className="text-sm font-semibold whitespace-nowrap">
             Ask AI Tutor
           </span>

@@ -227,6 +227,9 @@
 
   --outline: #8a7170;
   --outline-variant: #ddc0be;
+  --outline-variant-rgb: 221, 192, 190;
+
+  --ai-glow-rgb: 72, 0, 8;
 
   --inverse-surface: #2f3131;
   --inverse-on-surface: #f1f1f1;
@@ -288,6 +291,9 @@
 
   --outline: #a08c8b;
   --outline-variant: #574241;
+  --outline-variant-rgb: 87, 66, 65;
+
+  --ai-glow-rgb: 255, 179, 176;
 
   --inverse-surface: #e5e2e2;
   --inverse-on-surface: #2f3131;
@@ -374,38 +380,38 @@
    COMPONENT UTILITIES (match design's custom classes)
    ============================================================================ */
 @layer components {
-  /* AI glow — red shadow on AI surfaces */
+  /* AI glow — primary-colored shadow that adapts to dark mode via --ai-glow-rgb */
   .ai-glow {
-    box-shadow: 0 0 20px rgba(112, 0, 14, 0.1);
+    box-shadow: 0 0 20px rgba(var(--ai-glow-rgb), 0.1);
   }
   .ai-glow-lg {
-    box-shadow: 0 0 40px rgba(112, 0, 14, 0.15);
+    box-shadow: 0 0 40px rgba(var(--ai-glow-rgb), 0.15);
   }
 
-  /* Glassmorphism surfaces */
+  /* Glassmorphism surfaces — border adapts to dark mode via --outline-variant-rgb */
   .glass-surface {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(221, 192, 190, 0.3);
+    border: 1px solid rgba(var(--outline-variant-rgb), 0.3);
   }
   .glass-panel {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(221, 192, 190, 0.3);
+    border: 1px solid rgba(var(--outline-variant-rgb), 0.3);
   }
   .glass-card {
     background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(221, 192, 190, 0.25);
+    border: 1px solid rgba(var(--outline-variant-rgb), 0.25);
   }
   .dark .glass-surface,
   .dark .glass-panel,
   .dark .glass-card {
     background: rgba(36, 30, 30, 0.7);
-    border-color: rgba(87, 66, 65, 0.4);
+    border-color: rgba(var(--outline-variant-rgb), 0.4);
   }
 
   /* Bento grid — 12 col layout on desktop, 1 col on mobile */
@@ -452,6 +458,23 @@
   }
   .animate-ping-slow {
     animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* Subtle pulsing glow ring for mobile/tablet FAB — starts after entrance animation */
+  /* Uses --ai-glow-rgb CSS variable to adapt to dark mode */
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 12px rgba(var(--ai-glow-rgb), 0.12);
+      opacity: 0.5;
+    }
+    50% {
+      box-shadow: 0 0 24px rgba(var(--ai-glow-rgb), 0.28), 0 0 48px rgba(var(--ai-glow-rgb), 0.08);
+      opacity: 1;
+    }
+  }
+  .animate-glow-pulse {
+    animation: glow-pulse 3s ease-in-out infinite;
+    animation-delay: 800ms;
   }
 
   /* pb-safe for iOS safe area */
@@ -503,8 +526,8 @@
 }
 
 /* Hide page-specific AI FABs — replaced by GlobalAIFab */
-@media (max-width: 767px) {
-  /* Hide any fixed bottom-right button that contains "Ask" text on mobile */
+@media (max-width: 1023px) {
+  /* Hide any fixed bottom-right button that contains "Ask" text on mobile/tablet */
   button.fixed[class*="bottom"][class*="right"]:not([data-global-ai-fab]):not([data-global-bottom-nav]) {
     display: none !important;
   }
