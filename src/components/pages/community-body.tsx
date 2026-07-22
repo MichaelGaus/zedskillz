@@ -8,32 +8,7 @@ export function CommunityBody() {
     <>
       
       
-      <div className="bg-surface dark:bg-surface-dim docked full-width top-0 border-b border-outline-variant dark:border-outline shadow-sm sticky z-50">
-      <div className="flex justify-between items-center px-lg py-md w-full max-w-7xl mx-auto">
-      <div className="flex items-center gap-xl">
-      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEYHWSbBWFss50TSceaJIxWuzuiahbKQuC1SkKtCCksAznmNPkkJD6pAmPcAb23TakFxQwfnWHZyXZ1elmYxJ_BNMnViM2yrZtYrig_TLFFOOzG_3l8JUB8k2UXIq73b7Gc-gEynoPkOvkdiKZFSuMpZ4WaI45w8yWgi38qJHOduKySiSkZkAHxH-HvLrXIUY1HHcjuADWeDPDkLWH4RssMDuhoYlPS6d6rS0ZD_oBjzBKvJljMHuL3It59uKJQDBxfM8" alt="Zedskillz Hub" className="h-10 w-auto cursor-pointer" />
-      <nav className="hidden lg:flex items-center gap-lg">
-      <a className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Home</a>
-      <a className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Courses</a>
-      <a className="font-body-md text-body-md text-primary dark:text-inverse-primary font-bold border-b-2 border-primary pb-1" href="#">Community</a>
-      <a className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Leaderboard</a>
-      <a className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Support</a>
-      </nav>
-      </div>
-      <div className="flex items-center gap-md">
-      <div className="hidden sm:flex relative items-center">
-      <span className="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]">search</span>
-      <input className="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-sm focus:ring-2 focus:ring-primary focus:border-primary w-64 transition-all" placeholder="Search discussions..." type="text" />
-      </div>
-      <div className="flex items-center gap-sm">
-      <button className="p-2 hover:bg-surface-variant rounded-full transition-colors" title="Select Language"><span className="material-symbols-outlined">language</span></button><button className="p-2 hover:bg-surface-variant rounded-full transition-colors"><span className="material-symbols-outlined">notifications</span></button>
-      <div className="h-10 w-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline-variant cursor-pointer">
-      <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUa1jux6VbUrNWVq2gfvKC7KGXzhQoc5qWVjPfukJhFBT-pF9Fbdr3eMipuG9tgoRMxoIBZwJZl5yQ9ZZ81_KwYRa3-kv4R_APrQ3K_GCg8-vAUeKO_So3g3NoQv0cKrsdKp4TDfvz6JVKgOpFAbZ4IbI1cSXd4AtDpYW58l11VETxoG_lAncKoG_J7MbpvmtExO-CZm7ZjK_mrlduoTLt0lvc9Bv5NSde-8MGvkbf5lzrKNaMOg1Bhw"  alt="" />
-      </div>
-      </div>
-      </div>
-      </div>
-      </div>
+
       <div className="flex max-w-7xl mx-auto">
       
       <AppSidebar variant="community" showProfile={false}>
