@@ -58,7 +58,7 @@ export function GlobalTopbar() {
 
     const topbar = document.createElement("div");
     topbar.setAttribute("data-global-topbar", "true");
-    topbar.className = "fixed top-0 left-0 right-0 z-40 bg-surface/80 backdrop-blur-md border-b border-outline-variant shadow-sm";
+    topbar.className = "fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant shadow-sm";
     topbar.style.height = "64px";
     topbar.style.display = "flex";
     topbar.style.alignItems = "center";

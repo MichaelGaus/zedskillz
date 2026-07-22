@@ -10,13 +10,13 @@ interface AppSidebarProps {
   activePage?: string;
   showProfile?: boolean;
   children?: React.ReactNode;
-  /** True if the sidebar should be positioned below a sticky header */
-  hasStickyHeader?: boolean;
 }
 
 /**
  * NavigationDrawer — left sidebar with logo, profile card, nav groups, footer.
  * Supports expanded (full) and collapsed (icon-only) modes via the store.
+ *
+ * Always starts below the GlobalTopbar (top-16) to avoid overlap.
  *
  * Variants:
  * - default: standard Zedskillz layout
@@ -28,7 +28,6 @@ export function AppSidebar({
   activePage,
   showProfile = true,
   children,
-  hasStickyHeader = false,
 }: AppSidebarProps) {
   const { activePage: storePage, setActivePage, sidebarExpanded } = useAppStore();
   const current = activePage ?? storePage;
@@ -67,16 +66,11 @@ export function AppSidebar({
 
   const nav = getNav();
 
-  const topClass = hasStickyHeader
-    ? "top-16 h-[calc(100vh-64px)]"
-    : "top-0 h-full";
-
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col fixed left-0 bg-surface-container-low border-r border-outline-variant p-md z-40 transition-all duration-300 ease-in-out",
-        sidebarExpanded ? "w-72" : "w-[68px]",
-        topClass
+        "hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] bg-surface-container-low border-r border-outline-variant p-md z-40 transition-all duration-300 ease-in-out",
+        sidebarExpanded ? "w-72" : "w-[68px]"
       )}
     >
       {/* Brand — collapsed: icon only; expanded: icon + text */}

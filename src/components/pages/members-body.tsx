@@ -37,7 +37,7 @@ export function MembersBody() {
 
       <div className="flex max-w-7xl mx-auto">
         {/* ===== Sidebar ===== */}
-        <AppSidebar variant="community" hasStickyHeader showProfile={false}>
+        <AppSidebar variant="community" showProfile={false}>
           <div className="px-md">
             <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold flex items-center justify-center gap-sm active:scale-95 transition-transform shadow-md">
               <span className="material-symbols-outlined">add_circle</span>

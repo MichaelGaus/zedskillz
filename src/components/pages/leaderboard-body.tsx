@@ -26,7 +26,7 @@ export function LeaderboardBody() {
       
       <AppSidebar activePage="leaderboard" />
       
-      <main className="flex-1 overflow-y-auto bg-surface pb-xl">
+      <main className="flex-1 overflow-y-auto bg-surface pb-xl md:pl-72">
       <div className="max-w-6xl mx-auto px-container-margin pt-xl">
       
       <section className="mb-xl text-center">
