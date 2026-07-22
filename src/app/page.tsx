@@ -82,26 +82,40 @@ export default function Home() {
           header { display: none !important; }
           @media (min-width: 768px) {
             ${isAuthenticated ? `
+              /* Collapsed (68px icons): sidebar sits beside content with margin shift (no stacking) */
+              /* Expanded (288px full): sidebar overlays content with no margin (stacking) */
               [data-page-main],
-              .lg\\:ml-72 { margin-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
-              .lg\\:ml-64 { margin-left: ${sidebarExpanded ? "256px" : "68px"} !important; }
-              .md\\:pl-72 { padding-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+              .lg\\:ml-72 { margin-left: ${sidebarExpanded ? "0" : "68px"} !important; }
+              .lg\\:ml-64 { margin-left: ${sidebarExpanded ? "0" : "68px"} !important; }
+              .md\\:pl-72 { padding-left: ${sidebarExpanded ? "0" : "68px"} !important; }
               .md\\:left-72 { left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+              /* Smooth transitions so content slides alongside the sidebar animation */
+              [data-page-main] { transition: margin-left 0.3s ease !important; }
+              .lg\\:ml-72,
+              .lg\\:ml-64 { transition: margin-left 0.3s ease !important; }
+              .md\\:pl-72 { transition: padding-left 0.3s ease !important; }
+              .md\\:left-72 { transition: left 0.3s ease !important; }
             ` : `
-              /* Higher-specificity selectors (body prefix) to override page-body sidebar margins */
+              /* Higher-specificity selectors (body prefix) to override page-body sidebar margins/padding */
               body [data-page-main],
               body .lg\\:ml-72,
-              body .lg\\:ml-64,
-              body .md\\:pl-72 { margin-left: 0 !important; }
+              body .lg\\:ml-64 { margin-left: 0 !important; }
+              body .md\\:pl-72 { padding-left: 0 !important; }
               body .md\\:left-72 { left: 0 !important; }
             `}
           }
         `}</style>
       )}
       {showGlobalTopbar && <GlobalTopbar />}
-      {renderPage()}
-      {/* Shared footer — part of normal document flow, scrolls with the page */}
-      {showGlobalTopbar && <Footer />}
+      {/* data-page-content wrapper — GlobalBottomNav adds bottom padding here
+          to prevent content from being hidden behind the fixed bottom nav,
+          without creating empty space below the Footer */}
+      <div data-page-content className="flex flex-col">
+        {renderPage()}
+      </div>
+      {/* Shared footer — mt-auto pushes it below viewport on short pages;
+          on pages with their own min-h-screen (like courses), it sits naturally after content */}
+      {showGlobalTopbar && <Footer className="mt-auto" />}
       <AIOverlay />
       <GlobalUserMenu />
       {showGlobalTopbar && <GlobalBottomNav />}

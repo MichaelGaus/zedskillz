@@ -4,7 +4,6 @@ import { useAppStore } from "@/lib/store";
 import { currentUser, sidebarNav as nav } from "@/lib/mock-data";
 import { Icon } from "@/components/shared/icon";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 interface AppSidebarProps {
   variant?: "default" | "scholarconnect" | "community";
@@ -16,7 +15,9 @@ interface AppSidebarProps {
 /**
  * NavigationDrawer — left sidebar with logo, profile card, nav groups, footer.
  * Supports expanded (full) and collapsed (icon-only) modes via the store.
- * When collapsed, hovering over the sidebar temporarily expands it (VSCode-style).
+ *
+ * Collapsed: fixed 68px icon bar, content is margin-shifted to sit beside it (no stacking).
+ * Expanded: fixed 288px drawer overlay on top of content, with backdrop to close.
  *
  * Always starts below the GlobalTopbar (top-16) to avoid overlap.
  *
@@ -31,25 +32,29 @@ export function AppSidebar({
   showProfile = true,
   children,
 }: AppSidebarProps) {
-  const { activePage: storePage, setActivePage, sidebarExpanded, isAuthenticated } = useAppStore();
+  const { activePage: storePage, setActivePage, sidebarExpanded, toggleSidebar, isAuthenticated } = useAppStore();
   const current = activePage ?? storePage;
-  const [hovered, setHovered] = useState(false);
 
   // Don't render sidebar for non-authenticated users
   if (!isAuthenticated) return null;
 
-  // Collapsed + hover = temporarily expanded; hamburger toggle is persistent
-  const isOpen = sidebarExpanded || hovered;
+  const isOpen = sidebarExpanded;
 
   return (
-    <aside
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={cn(
-        "hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] bg-surface-container-low border-r border-outline-variant p-md z-40 transition-all duration-300 ease-in-out",
-        isOpen ? "w-72" : "w-[68px]"
+    <>
+      {/* Backdrop — visible when expanded, click to close */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/20 backdrop-blur-sm"
+          onClick={() => toggleSidebar()}
+        />
       )}
-    >
+      <aside
+        className={cn(
+          "hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] bg-surface-container-low border-r border-outline-variant p-md z-40 transition-all duration-300 ease-in-out",
+          isOpen ? "w-72 shadow-2xl" : "w-[68px]"
+        )}
+      >
       {/* Brand — collapsed: icon only; expanded: icon + text */}
       <div className={cn(
         "flex items-center shrink-0 overflow-hidden",
@@ -240,5 +245,6 @@ export function AppSidebar({
         </div>
       )}
     </aside>
+    </>
   );
 }

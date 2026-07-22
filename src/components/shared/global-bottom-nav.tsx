@@ -122,10 +122,11 @@ export function GlobalBottomNav() {
 
     document.body.appendChild(nav);
 
-    // Add bottom padding to body so content isn't hidden behind the nav
-    const pageWrapper = document.querySelector(".min-h-screen") as HTMLElement | null;
-    if (pageWrapper) {
-      pageWrapper.style.setProperty("padding-bottom", "64px", "important");
+    // Add bottom padding to page content so it isn't hidden behind the nav
+    // Target [data-page-content] instead of .min-h-screen to avoid creating space below the Footer
+    const pageContent = document.querySelector("[data-page-content]") as HTMLElement | null;
+    if (pageContent) {
+      pageContent.style.setProperty("padding-bottom", "64px", "important");
     }
 
     // Wire up click handler
@@ -146,8 +147,8 @@ export function GlobalBottomNav() {
     return () => {
       nav.removeEventListener("click", handleClick);
       nav.remove();
-      if (pageWrapper) {
-        pageWrapper.style.paddingBottom = "";
+      if (pageContent) {
+        pageContent.style.paddingBottom = "";
       }
     };
   }, [activePage, isAuthenticated, user, setActivePage]);

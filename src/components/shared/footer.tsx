@@ -7,14 +7,13 @@ import { Icon } from "@/components/shared/icon";
  * Standard footer used across all pages.
  * Logo + copyright + 4 links + social icons.
  */
-export function Footer({ variant = "default" }: { variant?: "default" | "rounded" }) {
+export function Footer({ variant = "default", className = "" }: { variant?: "default" | "rounded"; className?: string }) {
   return (
     <footer
-      className={
-        variant === "rounded"
-          ? "mt-8 rounded-t-3xl w-full py-8 bg-surface-container-highest border-t border-outline-variant"
-          : "w-full py-8 bg-surface-container-highest border-t border-outline-variant"
-      }
+      className={`${variant === "rounded"
+        ? "mt-8 rounded-t-3xl w-full py-8 bg-surface-container-highest border-t border-outline-variant"
+        : "w-full py-8 bg-surface-container-highest border-t border-outline-variant"
+      } ${className}`.trim()}
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
