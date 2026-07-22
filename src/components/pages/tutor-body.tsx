@@ -120,8 +120,11 @@ function generateId() {
 
 // ─── Component ───────────────────────────────────────────────────────
 export function TutorBody() {
-  const { setAiOverlayOpen } = useAppStore();
-  const [activeTab, setActiveTab] = useState<TutorTab>("dashboard");
+  const { setAiOverlayOpen, activePage } = useAppStore();
+  // Default to "courses" tab when navigated from Explore (courses page) so tutors see course management directly
+  const [activeTab, setActiveTab] = useState<TutorTab>(
+    activePage === "courses" || activePage === "course-detail" ? "courses" : "dashboard"
+  );
   const [courses, setCourses] = useState<TutorCourse[]>(initialCourses);
   const [editingCourse, setEditingCourse] = useState<TutorCourse | null>(null);
   const [isCreating, setIsCreating] = useState(false);
