@@ -51,7 +51,7 @@ export function SignupBody() {
       <p className="font-body-sm text-body-sm text-on-surface-variant mt-sm whitespace-nowrap">Start your learning journey today.</p>
       </div>
       
-      <form className="space-y-md" onsubmit="event.preventDefault();">
+      <form className="space-y-md" onSubmit={(e) => { e.preventDefault(); }}>
       
       {/* Role selector */}
       <div className="space-y-xs">

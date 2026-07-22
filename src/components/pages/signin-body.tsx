@@ -36,7 +36,7 @@ export function SigninBody() {
       <label className="block font-label-caps text-label-caps text-on-surface-variant" htmlFor="email">Email Address</label>
       <div className="relative group">
       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">mail</span>
-      <input className="w-full pl-12 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md outline-none" id="email" placeholder="name@example.com" required="" type="email" />
+      <input className="w-full pl-12 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md outline-none" id="email" placeholder="name@example.com" required type="email" />
       </div>
       </div>
       
@@ -47,7 +47,7 @@ export function SigninBody() {
       </div>
       <div className="relative group">
       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
-      <input className="w-full pl-12 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md outline-none" id="password" placeholder="••••••••" required="" type="password" />
+      <input className="w-full pl-12 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md outline-none" id="password" placeholder="••••••••" required type="password" />
       <button className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" type="button">
       <span className="material-symbols-outlined">visibility</span>
       </button>

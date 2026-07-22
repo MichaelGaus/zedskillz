@@ -10,10 +10,10 @@ import { useState } from "react";
  */
 export function AIOverlay() {
   const { aiOverlayOpen, setAiOverlayOpen } = useAppStore();
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<{ id: string; role: "ai" | "user"; content: string }[]>([
     {
       id: "m1",
-      role: "ai" as const,
+      role: "ai",
       content: "Hello! I'm your Zedskillz AI Tutor. How can I help you today? I can summarize lessons, explain concepts in Bemba/Nyanja/Tonga, generate quizzes, or recommend next lessons.",
     },
   ]);

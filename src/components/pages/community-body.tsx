@@ -183,7 +183,7 @@ export function CommunityBody() {
       <span className="material-symbols-outlined text-on-primary">psychology</span>
       <h3 className="font-headline-md text-on-primary text-title-sm">ZedAI Assistant</h3>
       </div>
-      <button className="text-on-primary/60 hover:text-on-primary" onclick="toggleAI()"><span className="material-symbols-outlined">close</span></button>
+      <button className="text-on-primary/60 hover:text-on-primary" onClick={() => { /* AI overlay toggle */ }}><span className="material-symbols-outlined">close</span></button>
       </div>
       <div className="flex-1 p-lg overflow-y-auto custom-scrollbar flex flex-col gap-md">
       <div className="flex gap-sm">
