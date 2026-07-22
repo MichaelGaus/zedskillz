@@ -788,7 +788,6 @@ export const sidebarNav = {
     { label: "Community", icon: "groups", page: "community" },
   ],
   management: [
-    { label: "Admin Dashboard", icon: "dashboard", page: "admin-dashboard" },
     { label: "Resources", icon: "library_books", page: "resources" },
   ],
   secondary: [

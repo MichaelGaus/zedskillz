@@ -23,7 +23,6 @@ export function LandingBody() {
       <a className="text-primary font-bold font-body-md" href="#">Home</a>
       <a className="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Explore</a>
       <a className="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Ranks</a>
-      <a className="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Admin</a>
       <a className="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Community</a></div>
       <div className="flex items-center gap-md"><button className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors">
           <span className="material-symbols-outlined">language</span>
@@ -55,7 +54,7 @@ export function LandingBody() {
       <span className="font-label-caps text-label-caps">AI-POWERED EDUCATION IN ZAMBIA</span>
       </div>
       <h2 className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary max-w-2xl leading-tight">
-                              Master New Skills with Your Personal <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAM_jtTUS0Gy13cX16GAc7kS-naEyfHUvJv_qZSvzy6A2CIDpJ-1VSChazPEIYdbTXU6nIiKQsx8mVL2q4DcL_FXEl533w9aB9ktWW_QjTNI_cK-j1EuQpEIAx7XipusKpEnkQMaBDfmMSKQ2m0KUYU6RmYXw0JoYQZH-QqWGS57NJrCFIuizuV-m3-YvH4OrM0Ezc8oq11RpYNwEi7evUT1uux2JnHRS8CXT46vQPZTF_Ru36WaZtbKoMBn0tSd6Jkz5Y" alt="Zambian AI Tutor" className="inline-block h-10 w-auto align-middle" />
+                              Master New Skills with Your Personal AI Tutor
       </h2>
       <p className="text-body-md text-on-surface-variant max-w-2xl leading-relaxed">
                               Access world-class education tailored to local Zambian contexts. Learn in your preferred language, track your progress on national leaderboards, and get instant help from our AI mentor.

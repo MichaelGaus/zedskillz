@@ -18,7 +18,6 @@ export function LeaderboardBody() {
       <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Home</a>
       <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Explore</a>
       <a className="text-primary font-bold font-label-caps" href="#">Ranks</a>
-      <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Admin</a>
       <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Community</a></div>
       <button className="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-variant rounded-full transition-colors active:scale-95">language</button><div className="w-12 h-12 flex items-center justify-center scale-125"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPW7FpWglcyl1IRI9MCTggAkgfPnYNLFMwmqTFTsyk4WqTW6vbIYBsuz20u2iZQKT_1sn6LoWdvkDDZVLH-Q6wzlSqDGX4vM_nnlgsfW28LJOoEO4BoHFJUzHqC30VK0zXAkehrOhc3aCxE4xFQmixMlzGJkJhnA8KDNE2nMT_VXkzwIP9WM3lF9mQ_3KmIyh22x3tQpAcTBQ6xPR037X9vj8u7_8vo7P2QgMyfBAX9Am1PYq14qLVhNZthEZdWXHu9C4" alt="Zedskillz Logo" className="w-full h-full object-contain" /></div>
       </div>
@@ -248,10 +247,6 @@ export function LeaderboardBody() {
       <a className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform" href="#">
       <span className="material-symbols-outlined">leaderboard</span>
       <span className="font-label-caps text-label-caps">Ranks</span>
-      </a>
-      <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary active:scale-90 transition-transform" href="#">
-      <span className="material-symbols-outlined">dashboard_customize</span>
-      <span className="font-label-caps text-label-caps">Admin</span>
       </a>
       </nav>
     </>

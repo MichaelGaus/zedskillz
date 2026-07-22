@@ -7,7 +7,7 @@ export interface UserProfile {
   name: string;
   email: string;
   avatar: string;
-  role: "student" | "admin" | "instructor";
+  role: "student" | "admin" | "instructor" | "parent" | "tutor" | "school";
   bio: string;
   dateOfBirth: string;
   location: string;
@@ -30,7 +30,7 @@ interface AppState {
   // Authentication
   isAuthenticated: boolean;
   user: UserProfile | null;
-  signIn: (email: string, name?: string) => void;
+  signIn: (email: string, name?: string, role?: string) => void;
   signOut: () => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
 
@@ -45,6 +45,11 @@ interface AppState {
   // User menu dropdown (topbar avatar)
   userMenuOpen: boolean;
   setUserMenuOpen: (open: boolean) => void;
+
+  // Sidebar drawer
+  sidebarExpanded: boolean;
+  setSidebarExpanded: (expanded: boolean) => void;
+  toggleSidebar: () => void;
 
   // Selected entities
   selectedCourseId: string | null;
@@ -85,14 +90,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Auth — start unauthenticated so user sees landing + can sign in
   isAuthenticated: false,
   user: null,
-  signIn: (email, name) => {
+  signIn: (email, name, selectedRole) => {
     // Derive a display name from the email if not provided
     const derivedName = name || email.split("@")[0].split(/[._-]/).map(
       (s) => s.charAt(0).toUpperCase() + s.slice(1)
     ).join(" ");
 
-    // Detect admin role from email
+    // Detect admin role from email (overrides selected role)
     const isAdmin = email.toLowerCase().includes("admin") || email.toLowerCase().includes("grace.tembo");
+    const role = isAdmin ? "admin" : (selectedRole || "student");
 
     set({
       isAuthenticated: true,
@@ -100,7 +106,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         ...DEFAULT_PROFILE,
         name: derivedName,
         email,
-        role: isAdmin ? "admin" : "student",
+        role: role as UserProfile["role"],
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
       },
       activePage: isAdmin ? "admin-dashboard" : "my-courses",
@@ -134,6 +140,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   userMenuOpen: false,
   setUserMenuOpen: (open) => set({ userMenuOpen: open }),
+
+  sidebarExpanded: true,
+  setSidebarExpanded: (expanded) => set({ sidebarExpanded: expanded }),
+  toggleSidebar: () => set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
 
   selectedCourseId: null,
   setSelectedCourseId: (id) => set({ selectedCourseId: id }),

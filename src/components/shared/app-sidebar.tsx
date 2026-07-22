@@ -16,6 +16,8 @@ interface AppSidebarProps {
 
 /**
  * NavigationDrawer — left sidebar with logo, profile card, nav groups, footer.
+ * Supports expanded (full) and collapsed (icon-only) modes via the store.
+ *
  * Variants:
  * - default: standard Zedskillz layout
  * - scholarconnect: ScholarConnect branding with tertiary-colored brand
@@ -28,7 +30,7 @@ export function AppSidebar({
   children,
   hasStickyHeader = false,
 }: AppSidebarProps) {
-  const { activePage: storePage, setActivePage } = useAppStore();
+  const { activePage: storePage, setActivePage, sidebarExpanded } = useAppStore();
   const current = activePage ?? storePage;
 
   const getNav = () => {
@@ -72,29 +74,36 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col w-72 fixed left-0 bg-surface-container-low border-r border-outline-variant p-md space-y-sm z-40",
+        "hidden md:flex flex-col fixed left-0 bg-surface-container-low border-r border-outline-variant p-md z-40 transition-all duration-300 ease-in-out",
+        sidebarExpanded ? "w-72" : "w-[68px]",
         topClass
       )}
     >
-      {/* Brand */}
-      <div className="flex items-center gap-sm px-md py-lg shrink-0">
-        <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+      {/* Brand — collapsed: icon only; expanded: icon + text */}
+      <div className={cn(
+        "flex items-center shrink-0 overflow-hidden",
+        sidebarExpanded ? "gap-sm px-md py-lg" : "justify-center py-lg"
+      )}>
+        <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
           <Icon name="school" filled size={22} className="text-on-primary" />
         </div>
-        <div className="ml-2">
+        <div className={cn(
+          "transition-opacity duration-300 overflow-hidden",
+          sidebarExpanded ? "opacity-100 ml-2 w-auto" : "opacity-0 w-0 ml-0"
+        )}>
           {variant === "scholarconnect" ? (
             <>
-              <div className="font-display text-base font-bold text-tertiary scale-125 origin-left leading-none">
+              <div className="font-display text-base font-bold text-tertiary scale-125 origin-left leading-none whitespace-nowrap">
                 Zambian Scholar
               </div>
-              <div className="font-title text-xs text-secondary mt-0.5">Academic Excellence</div>
+              <div className="font-title text-xs text-secondary mt-0.5 whitespace-nowrap">Academic Excellence</div>
             </>
           ) : (
             <>
-              <div className="font-display text-base font-bold text-primary leading-none">
+              <div className="font-display text-base font-bold text-primary leading-none whitespace-nowrap">
                 Zedskillz Hub
               </div>
-              <div className="font-label-caps text-[10px] uppercase tracking-wider text-on-surface-variant mt-0.5">
+              <div className="font-label-caps text-[10px] uppercase tracking-wider text-on-surface-variant mt-0.5 whitespace-nowrap">
                 AI Learning Platform
               </div>
             </>
@@ -102,16 +111,16 @@ export function AppSidebar({
         </div>
       </div>
 
-      {/* Profile card */}
-      {showProfile && (
+      {/* Profile card — hidden when collapsed */}
+      {showProfile && sidebarExpanded && (
         <div className="px-md">
           <div className="bg-surface-container-high rounded-xl p-3 flex items-center gap-3">
             <img
               src={currentUser.avatar}
               alt={currentUser.name}
-              className="w-10 h-10 rounded-full"
+              className="w-10 h-10 rounded-full shrink-0"
             />
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 transition-opacity duration-300">
               <div className="font-title text-sm font-semibold text-on-surface truncate">
                 {variant === "scholarconnect" ? "Zambian Scholar" : currentUser.name}
               </div>
@@ -121,7 +130,7 @@ export function AppSidebar({
             </div>
             <button
               onClick={() => setActivePage("settings")}
-              className="p-1.5 hover:bg-surface-container rounded-lg"
+              className="p-1.5 hover:bg-surface-container rounded-lg shrink-0"
             >
               <Icon name="settings" size={18} className="text-on-surface-variant" />
             </button>
@@ -137,8 +146,10 @@ export function AppSidebar({
             <button
               key={item.label}
               onClick={() => setActivePage(item.page)}
+              title={!sidebarExpanded ? item.label : undefined}
               className={cn(
-                "w-full flex items-center gap-md px-md py-3 rounded-lg font-body-md transition-all active:translate-x-1 duration-150",
+                "w-full flex items-center rounded-lg transition-all active:translate-x-1 duration-150",
+                sidebarExpanded ? "gap-md px-md py-3" : "justify-center py-3 px-0",
                 active
                   ? "bg-secondary-container text-on-secondary-container font-semibold"
                   : "text-on-surface-variant hover:bg-surface-variant"
@@ -148,15 +159,21 @@ export function AppSidebar({
                 name={item.icon}
                 filled={active}
                 size={22}
-                className={active ? "text-primary" : ""}
+                className={cn(
+                  "shrink-0",
+                  active ? "text-primary" : ""
+                )}
               />
-              <span>{item.label}</span>
+              <span className={cn(
+                "font-body-md transition-all duration-300 overflow-hidden",
+                sidebarExpanded ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
+              )}>{item.label}</span>
             </button>
           );
         })}
 
-        {/* Management divider — default variant only */}
-        {variant === "default" && (
+        {/* Management divider — default variant only, hidden when collapsed */}
+        {variant === "default" && sidebarExpanded && (
           <>
             <div className="pt-4 pb-1 px-md">
               <span className="font-label-caps text-[11px] uppercase tracking-widest text-on-surface-variant opacity-60">
@@ -189,8 +206,8 @@ export function AppSidebar({
           </>
         )}
 
-        {/* Secondary items */}
-        {nav.secondary.length > 0 && (
+        {/* Secondary items — hidden when collapsed */}
+        {nav.secondary.length > 0 && sidebarExpanded && (
           <>
             <div className="pt-4 pb-1 px-md">
               <span className="font-label-caps text-[11px] uppercase tracking-widest text-on-surface-variant opacity-60">
@@ -224,31 +241,33 @@ export function AppSidebar({
         )}
       </nav>
 
-      {/* Custom content from pages (Create Post button, etc.) */}
-      {children && (
+      {/* Custom content from pages — hidden when collapsed */}
+      {children && sidebarExpanded && (
         <div className="shrink-0 space-y-2">
           {children}
         </div>
       )}
 
-      {/* Sidebar footer */}
-      <div className="border-t border-outline-variant pt-4 shrink-0">
-        {variant === "scholarconnect" ? (
-          <button
-            onClick={() => setActivePage("ai-tutor")}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-semibold shadow-md hover:bg-primary-container transition-colors"
-          >
-            <Icon name="psychology" filled size={18} />
-            Ask AI Tutor
-          </button>
-        ) : variant !== "community" ? (
-          <div className="text-[10px] text-on-surface-variant opacity-60 text-center pb-2">
-            © 2024 Zedskillz Hub Zambia.
-            <br />
-            Empowering through AI.
-          </div>
-        ) : null}
-      </div>
+      {/* Sidebar footer — hidden when collapsed */}
+      {sidebarExpanded && (
+        <div className="border-t border-outline-variant pt-4 shrink-0">
+          {variant === "scholarconnect" ? (
+            <button
+              onClick={() => setActivePage("ai-tutor")}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-semibold shadow-md hover:bg-primary-container transition-colors"
+            >
+              <Icon name="psychology" filled size={18} />
+              Ask AI Tutor
+            </button>
+          ) : variant !== "community" ? (
+            <div className="text-[10px] text-on-surface-variant opacity-60 text-center pb-2">
+              © 2024 Zedskillz Hub Zambia.
+              <br />
+              Empowering through AI.
+            </div>
+          ) : null}
+        </div>
+      )}
     </aside>
   );
 }

@@ -24,7 +24,7 @@ import { ProfilePage } from "@/components/pages/profile-page";
 import { SettingsPage } from "@/components/pages/settings-page";
 
 export default function Home() {
-  const { activePage, theme, isAuthenticated, user } = useAppStore();
+  const { activePage, theme, isAuthenticated, user, sidebarExpanded } = useAppStore();
   useNavDelegation();
 
   // Apply theme class
@@ -76,6 +76,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {showGlobalTopbar && (
+        <style>{`
+          header { display: none !important; }
+          @media (min-width: 768px) {
+            [data-page-main],
+            .lg\\:ml-72 { margin-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+            .lg\\:ml-64 { margin-left: ${sidebarExpanded ? "256px" : "68px"} !important; }
+            .md\\:pl-72 { padding-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+            .md\\:left-72 { left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+          }
+        `}</style>
+      )}
       {showGlobalTopbar && <GlobalTopbar />}
       {renderPage()}
       <AIOverlay />

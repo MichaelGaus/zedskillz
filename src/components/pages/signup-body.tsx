@@ -53,6 +53,34 @@ export function SignupBody() {
       
       <form className="space-y-md" onsubmit="event.preventDefault();">
       
+      {/* Role selector */}
+      <div className="space-y-xs">
+        <label className="font-label-caps text-label-caps text-on-surface-variant block">I am a</label>
+        <div className="grid grid-cols-2 gap-sm" data-role-selector>
+          {[
+            { role: "student", icon: "school", label: "Student" },
+            { role: "parent", icon: "family_history", label: "Parent" },
+            { role: "tutor", icon: "auto_stories", label: "Tutor" },
+            { role: "school", icon: "business", label: "School" },
+          ].map(({ role, icon, label }) => (
+            <button
+              key={role}
+              type="button"
+              data-role={role}
+              data-selected={role === "student" ? "true" : undefined}
+              className={`flex flex-col items-center gap-xs px-md py-md rounded-xl border-2 transition-all active:scale-95 ${
+                role === "student"
+                  ? "border-primary bg-primary-fixed/20"
+                  : "border-outline-variant bg-white hover:border-primary hover:bg-primary-fixed/10"
+              }`}
+            >
+              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: '"FILL" 1' }}>{icon}</span>
+              <span className="font-body-sm font-semibold text-on-surface">{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      
       <div className="space-y-xs">
       <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="full_name">Full Name</label>
       <div className="relative">

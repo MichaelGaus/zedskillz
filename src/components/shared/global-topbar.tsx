@@ -14,7 +14,7 @@ import { useEffect, useRef } from "react";
  * Does NOT show on auth pages (sign-in, sign-up).
  */
 export function GlobalTopbar() {
-  const { isAuthenticated, user, setActivePage, theme, toggleTheme, activePage } = useAppStore();
+  const { isAuthenticated, user, setActivePage, theme, toggleTheme, activePage, toggleSidebar } = useAppStore();
   const topbarRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -69,16 +69,21 @@ export function GlobalTopbar() {
       <style>
         @media (min-width: 768px) {
           [data-menu-toggle] { display: none !important; }
+          [data-sidebar-toggle] { display: flex !important; }
           [data-desktop-nav] { display: flex !important; }
           [data-mobile-only] { display: none !important; }
         }
         @media (max-width: 767px) {
+          [data-sidebar-toggle] { display: none !important; }
           [data-desktop-only] { display: none !important; }
           [data-center-nav] { display: none !important; }
         }
       </style>
-      <!-- Left: hamburger (mobile) + logo -->
-      <div style="display:flex;align-items:center;gap:12px;flex:1;">
+      <!-- Left: sidebar toggle (desktop) + hamburger (mobile) + logo -->
+      <div style="display:flex;align-items:center;gap:8px;flex:1;">
+        <button data-sidebar-toggle style="display:none;width:40px;height:40px;border-radius:8px;border:none;background:transparent;cursor:pointer;align-items:center;justify-content:center;color:var(--on-surface);flex-shrink:0;" title="Toggle sidebar">
+          <span class="material-symbols-outlined">menu_open</span>
+        </button>
         <button data-menu-toggle style="display:flex;width:40px;height:40px;border-radius:8px;border:none;background:transparent;cursor:pointer;align-items:center;justify-content:center;color:var(--on-surface);flex-shrink:0;" title="Menu">
           <span class="material-symbols-outlined">menu</span>
         </button>
@@ -115,6 +120,10 @@ export function GlobalTopbar() {
           : `<button data-login-button style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--primary);color:var(--on-primary);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:13px;flex-shrink:0;white-space:nowrap;">
               <span class="material-symbols-outlined" style="font-size:18px;">login</span>
               <span>Login</span>
+            </button>
+            <button data-getstarted-button style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--secondary-container);color:var(--on-secondary-container);border-radius:9999px;border:none;cursor:pointer;font-weight:600;font-size:13px;flex-shrink:0;white-space:nowrap;">
+              <span class="material-symbols-outlined" style="font-size:18px;">person_add</span>
+              <span>Get Started</span>
             </button>`}
       </div>
     `;
@@ -222,9 +231,14 @@ export function GlobalTopbar() {
       const loginBtn = target.closest("[data-login-button]");
       const getStartedBtn = target.closest("[data-getstarted-button]");
       const menuToggle = target.closest("[data-menu-toggle]");
+      const sidebarToggle = target.closest("[data-sidebar-toggle]");
       const closeDrawer = target.closest("[data-close-drawer]");
 
-      if (menuToggle) {
+      if (sidebarToggle) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSidebar();
+      } else if (menuToggle) {
         e.preventDefault();
         e.stopPropagation();
         // Open mobile drawer

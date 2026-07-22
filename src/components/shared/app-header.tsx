@@ -26,7 +26,6 @@ export function AppHeader({
     { label: "Home", page: "landing" },
     { label: "Explore", page: "courses" },
     { label: "Ranks", page: "leaderboard" },
-    { label: "Admin", page: "admin-dashboard" },
     { label: "Community", page: "community" },
   ],
   activeNav = "",
