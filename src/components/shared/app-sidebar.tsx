@@ -4,6 +4,7 @@ import { useAppStore } from "@/lib/store";
 import { currentUser, sidebarNav } from "@/lib/mock-data";
 import { Icon } from "@/components/shared/icon";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface AppSidebarProps {
   variant?: "default" | "scholarconnect" | "community";
@@ -15,6 +16,7 @@ interface AppSidebarProps {
 /**
  * NavigationDrawer — left sidebar with logo, profile card, nav groups, footer.
  * Supports expanded (full) and collapsed (icon-only) modes via the store.
+ * When collapsed, hovering over the sidebar temporarily expands it (VSCode-style).
  *
  * Always starts below the GlobalTopbar (top-16) to avoid overlap.
  *
@@ -31,59 +33,31 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { activePage: storePage, setActivePage, sidebarExpanded } = useAppStore();
   const current = activePage ?? storePage;
+  const [hovered, setHovered] = useState(false);
 
-  const getNav = () => {
-    if (variant === "scholarconnect") {
-      return {
-        primary: [
-          { label: "Dashboard", icon: "dashboard", page: "scholarconnect" },
-          { label: "Community", icon: "groups", page: "post" },
-          { label: "Study Partners", icon: "person_search", page: "scholarconnect" },
-          { label: "AI Tutor", icon: "psychology", page: "ai-tutor" },
-          { label: "Resources", icon: "library_books", page: "resources" },
-        ],
-        secondary: [
-          { label: "Settings", icon: "settings", page: "settings" },
-          { label: "Help", icon: "help", page: "help" },
-        ],
-      };
-    }
-    if (variant === "community") {
-      return {
-        primary: [
-          { label: "Community", icon: "public", page: "community" },
-          { label: "Feed", icon: "forum", page: "community" },
-          { label: "Categories", icon: "grid_view", page: "community" },
-          { label: "Members", icon: "group", page: "members" },
-          { label: "Bookmarks", icon: "bookmark", page: "community" },
-          { label: "Settings", icon: "settings", page: "settings" },
-        ],
-        secondary: [],
-      };
-    }
-    return sidebarNav;
-  };
-
-  const nav = getNav();
+  // Collapsed + hover = temporarily expanded; hamburger toggle is persistent
+  const isOpen = sidebarExpanded || hovered;
 
   return (
     <aside
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       className={cn(
         "hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] bg-surface-container-low border-r border-outline-variant p-md z-40 transition-all duration-300 ease-in-out",
-        sidebarExpanded ? "w-72" : "w-[68px]"
+        isOpen ? "w-72" : "w-[68px]"
       )}
     >
       {/* Brand — collapsed: icon only; expanded: icon + text */}
       <div className={cn(
         "flex items-center shrink-0 overflow-hidden",
-        sidebarExpanded ? "gap-sm px-md py-lg" : "justify-center py-lg"
+        isOpen ? "gap-sm px-md py-lg" : "justify-center py-lg"
       )}>
         <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
           <Icon name="school" filled size={22} className="text-on-primary" />
         </div>
         <div className={cn(
           "transition-opacity duration-300 overflow-hidden",
-          sidebarExpanded ? "opacity-100 ml-2 w-auto" : "opacity-0 w-0 ml-0"
+          isOpen ? "opacity-100 ml-2 w-auto" : "opacity-0 w-0 ml-0"
         )}>
           {variant === "scholarconnect" ? (
             <>
@@ -105,8 +79,8 @@ export function AppSidebar({
         </div>
       </div>
 
-      {/* Profile card — hidden when collapsed */}
-      {showProfile && sidebarExpanded && (
+      {/* Profile card — shown when open */}
+      {showProfile && isOpen && (
         <div className="px-md">
           <div className="bg-surface-container-high rounded-xl p-3 flex items-center gap-3">
             <img
@@ -140,10 +114,10 @@ export function AppSidebar({
             <button
               key={item.label}
               onClick={() => setActivePage(item.page)}
-              title={!sidebarExpanded ? item.label : undefined}
+              title={!isOpen ? item.label : undefined}
               className={cn(
                 "w-full flex items-center rounded-lg transition-all active:translate-x-1 duration-150",
-                sidebarExpanded ? "gap-md px-md py-3" : "justify-center py-3 px-0",
+                isOpen ? "gap-md px-md py-3" : "justify-center py-3 px-0",
                 active
                   ? "bg-secondary-container text-on-secondary-container font-semibold"
                   : "text-on-surface-variant hover:bg-surface-variant"
@@ -160,14 +134,14 @@ export function AppSidebar({
               />
               <span className={cn(
                 "font-body-md transition-all duration-300 overflow-hidden",
-                sidebarExpanded ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
+                isOpen ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
               )}>{item.label}</span>
             </button>
           );
         })}
 
         {/* Management divider — default variant only, hidden when collapsed */}
-        {variant === "default" && sidebarExpanded && (
+        {variant === "default" && isOpen && (
           <>
             <div className="pt-4 pb-1 px-md">
               <span className="font-label-caps text-[11px] uppercase tracking-widest text-on-surface-variant opacity-60">
@@ -201,7 +175,7 @@ export function AppSidebar({
         )}
 
         {/* Secondary items — hidden when collapsed */}
-        {nav.secondary.length > 0 && sidebarExpanded && (
+        {nav.secondary.length > 0 && isOpen && (
           <>
             <div className="pt-4 pb-1 px-md">
               <span className="font-label-caps text-[11px] uppercase tracking-widest text-on-surface-variant opacity-60">
@@ -236,14 +210,14 @@ export function AppSidebar({
       </nav>
 
       {/* Custom content from pages — hidden when collapsed */}
-      {children && sidebarExpanded && (
+      {children && isOpen && (
         <div className="shrink-0 space-y-2">
           {children}
         </div>
       )}
 
       {/* Sidebar footer — hidden when collapsed */}
-      {sidebarExpanded && (
+      {isOpen && (
         <div className="border-t border-outline-variant pt-4 shrink-0">
           {variant === "scholarconnect" ? (
             <button
