@@ -13,28 +13,7 @@ export function CoursesBody() {
       
       <main data-page-main className="flex-1 flex flex-col min-h-screen">
       
-      <div className="w-full sticky top-0 z-30 bg-surface/80 backdrop-blur-md shadow-sm h-touch-target flex justify-between items-center px-container-margin md:px-xl">
-      <div className="flex items-center gap-4">
-      <button className="md:hidden p-2 text-primary active:scale-95 duration-200">
-      <span className="material-symbols-outlined">menu</span>
-      </button>
-      <h1 className="text-headline-md font-headline-md text-primary hidden md:block">Explore Courses</h1><nav className="hidden lg:flex items-center gap-md ml-4"><a href="#" className="text-on-surface-variant hover:text-primary font-medium transition-colors">Community</a></nav>
-      </div>
-      <div className="flex-1 max-w-2xl mx-xl">
-      <div className="relative group">
-      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">search</span>
-      <input className="w-full h-11 pl-12 pr-4 bg-surface-container rounded-full border-none focus:ring-2 focus:ring-primary/20 text-body-md transition-all" placeholder="Search for courses, skills, or AI tools..." type="text" />
-      </div>
-      </div>
-      <div className="flex items-center gap-md">
-      <button className="w-10 h-10 rounded-full hover:bg-surface-variant/50 transition-colors flex items-center justify-center"><span className="material-symbols-outlined text-on-surface-variant">language</span></button><button className="w-10 h-10 rounded-full hover:bg-surface-variant/50 transition-colors flex items-center justify-center">
-      <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
-      </button>
-      <div className="w-10 h-10 rounded-full border-2 border-outline-variant overflow-hidden cursor-pointer active:scale-95 duration-200">
-      <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoJlNeJn4daZ7w0YHFa5BgM0hgFpAuwdhobj3GThAv3CXb95ZzRFEbv5NNU0VbR8leaciuUqtdeIhSvE4_MnV_MzCe5DlZgm1AJgEDfe79xLHXD5fzO_vjFMfkQRu8M6EBCGpvPgY4U87N882lqi-VYtpdsxuGyqdlVpfQCXDPIyH0eEdyT_URC0C7KPTn-uoJv9PHAiUJ-aGGO9s0duwVdiH1lSQTzPrbgo9i7rHcsszwmUMP0nIzGg"  alt="" />
-      </div>
-      </div>
-      </div>
+
       <div className="flex-1 p-container-margin md:p-xl space-y-xl">
       
       <section className="relative rounded-3xl overflow-hidden shadow-xl ai-glow">

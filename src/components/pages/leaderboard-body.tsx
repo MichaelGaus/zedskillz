@@ -8,20 +8,7 @@ export function LeaderboardBody() {
     <>
       
       
-      <div className="w-full sticky top-0 z-50 bg-surface/80 backdrop-blur-md shadow-sm flex justify-between items-center px-container-margin h-touch-target">
-      <div className="flex items-center gap-md">
-      <button className="material-symbols-outlined text-primary p-2 active:scale-95 duration-200">menu</button>
-      <h1 className="text-headline-md font-headline-md text-primary">Zedskillz Hub</h1>
-      </div>
-      <div className="flex items-center gap-md">
-      <div className="hidden md:flex gap-lg items-center px-lg">
-      <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Home</a>
-      <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Explore</a>
-      <a className="text-primary font-bold font-label-caps" href="#">Ranks</a>
-      <a className="text-on-surface-variant font-label-caps hover:text-primary transition-colors" href="#">Community</a></div>
-      <button className="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-variant rounded-full transition-colors active:scale-95">language</button><div className="w-12 h-12 flex items-center justify-center scale-125"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPW7FpWglcyl1IRI9MCTggAkgfPnYNLFMwmqTFTsyk4WqTW6vbIYBsuz20u2iZQKT_1sn6LoWdvkDDZVLH-Q6wzlSqDGX4vM_nnlgsfW28LJOoEO4BoHFJUzHqC30VK0zXAkehrOhc3aCxE4xFQmixMlzGJkJhnA8KDNE2nMT_VXkzwIP9WM3lF9mQ_3KmIyh22x3tQpAcTBQ6xPR037X9vj8u7_8vo7P2QgMyfBAX9Am1PYq14qLVhNZthEZdWXHu9C4" alt="Zedskillz Logo" className="w-full h-full object-contain" /></div>
-      </div>
-      </div>
+
       <div className="flex flex-1 overflow-hidden">
       
       <AppSidebar activePage="leaderboard" />
