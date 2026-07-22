@@ -31,9 +31,12 @@ export function AppSidebar({
   showProfile = true,
   children,
 }: AppSidebarProps) {
-  const { activePage: storePage, setActivePage, sidebarExpanded } = useAppStore();
+  const { activePage: storePage, setActivePage, sidebarExpanded, isAuthenticated } = useAppStore();
   const current = activePage ?? storePage;
   const [hovered, setHovered] = useState(false);
+
+  // Don't render sidebar for non-authenticated users
+  if (!isAuthenticated) return null;
 
   // Collapsed + hover = temporarily expanded; hamburger toggle is persistent
   const isOpen = sidebarExpanded || hovered;

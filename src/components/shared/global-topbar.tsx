@@ -133,7 +133,7 @@ export function GlobalTopbar() {
     // Create mobile menu drawer (hidden by default)
     const mobileDrawer = document.createElement("div");
     mobileDrawer.setAttribute("data-mobile-drawer", "true");
-    mobileDrawer.style.cssText = "position:fixed;top:64px;left:0;right:0;bottom:0;z-index:39;background:rgba(0,0,0,0.3);display:none;backdrop-filter:blur(4px);";
+    mobileDrawer.style.cssText = "position:fixed;top:64px;left:0;right:0;bottom:0;z-index:39;background:rgba(0,0,0,0.3);display:none;opacity:0;backdrop-filter:blur(4px);transition:opacity 0.25s ease;";
     mobileDrawer.innerHTML = `
       <div style="position:absolute;top:0;left:0;width:280px;max-width:80vw;height:100%;background:var(--surface-container-lowest);border-right:1px solid var(--outline-variant);padding:16px;overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,0.1);transform:translateX(-100%);transition:transform 0.3s ease;" data-drawer-content>
         ${!isAuthenticated ? `
@@ -245,12 +245,19 @@ export function GlobalTopbar() {
       } else if (menuToggle) {
         e.preventDefault();
         e.stopPropagation();
-        // Open mobile drawer
+        // Open drawer — backdrop fades in, content slides in from left
         mobileDrawer.style.display = "block";
+        // Double rAF ensures the browser has painted at opacity 0 before transitioning
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            mobileDrawer.style.opacity = "1";
+          });
+        });
+        // Slide drawer content in with a slight delay for layered feel
         setTimeout(() => {
           const content = mobileDrawer.querySelector("[data-drawer-content]") as HTMLElement;
           if (content) content.style.transform = "translateX(0)";
-        }, 10);
+        }, 50);
       } else if (closeDrawer) {
         e.preventDefault();
         e.stopPropagation();
@@ -293,9 +300,15 @@ export function GlobalTopbar() {
     };
 
     const closeMobileDrawer = () => {
+      // Slide content out first
       const content = mobileDrawer.querySelector("[data-drawer-content]") as HTMLElement;
       if (content) content.style.transform = "translateX(-100%)";
-      setTimeout(() => { mobileDrawer.style.display = "none"; }, 300);
+      // Fade backdrop out slightly after content starts sliding
+      setTimeout(() => {
+        mobileDrawer.style.opacity = "0";
+      }, 50);
+      // Hide entirely after both transitions complete
+      setTimeout(() => { mobileDrawer.style.display = "none"; }, 350);
     };
 
     // Close drawer when clicking outside the content

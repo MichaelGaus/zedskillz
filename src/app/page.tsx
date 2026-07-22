@@ -81,11 +81,20 @@ export default function Home() {
         <style>{`
           header { display: none !important; }
           @media (min-width: 768px) {
-            [data-page-main],
-            .lg\\:ml-72 { margin-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
-            .lg\\:ml-64 { margin-left: ${sidebarExpanded ? "256px" : "68px"} !important; }
-            .md\\:pl-72 { padding-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
-            .md\\:left-72 { left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+            ${isAuthenticated ? `
+              [data-page-main],
+              .lg\\:ml-72 { margin-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+              .lg\\:ml-64 { margin-left: ${sidebarExpanded ? "256px" : "68px"} !important; }
+              .md\\:pl-72 { padding-left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+              .md\\:left-72 { left: ${sidebarExpanded ? "288px" : "68px"} !important; }
+            ` : `
+              /* Higher-specificity selectors (body prefix) to override page-body sidebar margins */
+              body [data-page-main],
+              body .lg\\:ml-72,
+              body .lg\\:ml-64,
+              body .md\\:pl-72 { margin-left: 0 !important; }
+              body .md\\:left-72 { left: 0 !important; }
+            `}
           }
         `}</style>
       )}
