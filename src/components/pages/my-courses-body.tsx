@@ -10,7 +10,7 @@ export function MyCoursesBody() {
       
       <AppSidebar activePage="my-courses" />
       
-      <main className="flex-1 flex flex-col min-w-0 bg-surface">
+      <main data-page-main className="flex-1 flex flex-col min-w-0 bg-surface">
       
       <header className="w-full sticky top-0 z-50 bg-surface/80 backdrop-blur-md shadow-sm flex justify-between items-center px-container-margin h-touch-target">
       <h1 className="font-headline-md text-headline-md text-primary">My Learning Dashboard</h1>

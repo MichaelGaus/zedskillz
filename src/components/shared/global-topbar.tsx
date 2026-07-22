@@ -42,6 +42,23 @@ export function GlobalTopbar() {
     });
 
     // Build the topbar HTML
+    // Page title helper
+    const getPageTitle = (page: string) => {
+      const titles: Record<string, string> = {
+        "admin-dashboard": "Admin Panel",
+        "tutor-dashboard": "Tutor Panel",
+        "courses": "Explore Courses",
+        "my-courses": "My Courses",
+        "leaderboard": "Leaderboard",
+        "community": "Community",
+        "profile": "Profile",
+        "settings": "Settings",
+        "members": "Members",
+        "post": "ScholarConnect",
+      };
+      return titles[page] || "";
+    };
+
     // Admin users only see Home + Admin; tutors see Home + Tutor Panel; others see all links
     const isAdmin = isAuthenticated && user?.role === "admin";
     const isTutor = isAuthenticated && user?.role === "tutor";
@@ -80,11 +97,13 @@ export function GlobalTopbar() {
           ${isAuthenticated ? `[data-sidebar-toggle] { display: flex !important; }` : `[data-sidebar-toggle] { display: none !important; }`}
           [data-desktop-nav] { display: flex !important; }
           [data-mobile-only] { display: none !important; }
+          ${activePage === "admin-dashboard" || activePage === "tutor-dashboard" ? `[data-page-title] { display: inline !important; }` : `[data-page-title] { display: none !important; }`}
         }
         @media (max-width: 767px) {
           [data-sidebar-toggle] { display: none !important; }
           [data-desktop-only] { display: none !important; }
           [data-center-nav] { display: none !important; }
+          ${activePage === "admin-dashboard" || activePage === "tutor-dashboard" ? `[data-page-title] { display: none !important; }` : `[data-page-title] { display: none !important; }`}
         }
       </style>
       <!-- Left: sidebar toggle (desktop) + hamburger (mobile) + logo -->
@@ -100,6 +119,7 @@ export function GlobalTopbar() {
             <span class="material-symbols-outlined" style="color:var(--on-primary);font-variation-settings:'FILL' 1;font-size:22px;">school</span>
           </div>
           <span data-desktop-only style="font-weight:700;font-size:18px;color:var(--primary);white-space:nowrap;">Zedskillz Hub</span>
+          <span data-page-title style="font-weight:600;font-size:14px;color:var(--on-surface-variant);white-space:nowrap;margin-left:8px;padding-left:8px;border-left:1px solid var(--outline-variant);display:none;">${getPageTitle(activePage)}</span>
         </div>
       </div>
       <!-- Center: nav links (desktop only, centered) -->

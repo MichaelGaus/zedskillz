@@ -73,9 +73,9 @@ export function AdminBody() {
       <div className="flex h-screen overflow-hidden">
         <AppSidebar activePage="admin-dashboard" />
 
-        <main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
-          {/* Top bar */}
-          <header className="w-full sticky top-0 z-40 bg-surface/80 backdrop-blur-md shadow-sm h-16 flex items-center justify-between px-4 md:px-6 border-b border-outline-variant">
+        <main data-page-main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
+          {/* Top bar (uses div instead of header so GlobalTopbar doesn't hide it) */}
+          <div className="w-full bg-surface/80 backdrop-blur-md shadow-sm h-16 flex items-center justify-between px-4 md:px-6 border-b border-outline-variant">
             <div className="flex items-center gap-4">
               <button className="md:hidden material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">menu</button>
               <h2 className="font-headline-md text-headline-md text-primary tracking-tight">Admin Panel</h2>
@@ -96,7 +96,7 @@ export function AdminBody() {
               </button>
               <div className="w-9 h-9 rounded-full bg-cover bg-center border border-outline-variant" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCcOwY5S3gT0TvH3JUfj0hIvLnNTQ_av4UWlUCCTtil9cWD9bJOV4TngwAPhYujZFpx7WgNyKp8C0joIyQ765Ahw0zVSpFOrGyR9Ry71D6TFI9B2H8ASoUIDiSFU8YqI5mn2MmIMbUAPOFmtf_c9pLDTvUq87mQA_Y6dcTnfP2ZK_yccLk2VI4Po_zIajUbvYckJD584_LPMRxezBBntxCba1jO9Sdcb5VNu-zw81RmyieI4V3BX_E1ig')"}}></div>
             </div>
-          </header>
+          </div>
 
           {/* Tab navigation */}
           <div className="flex items-center gap-1 px-4 md:px-6 pt-4 pb-0 border-b border-outline-variant bg-surface">

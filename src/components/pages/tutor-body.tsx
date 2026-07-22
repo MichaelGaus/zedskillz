@@ -5,6 +5,12 @@ import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 
 // ─── Types ───────────────────────────────────────────────────────────
+interface QuizQuestion {
+  question: string;
+  options: string[];
+  answer: string;
+}
+
 interface Lesson {
   id: string;
   title: string;
@@ -12,6 +18,12 @@ interface Lesson {
   duration?: string;
   url?: string;
   status?: "draft" | "published";
+  questions?: QuizQuestion[];
+  // File upload fields
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  fileDataUrl?: string;
 }
 
 interface CourseSection {
@@ -58,7 +70,11 @@ const initialCourses: TutorCourse[] = [
         lessons: [
           { id: "tl1", title: "What is HTML?", type: "video", duration: "12:30", status: "published" },
           { id: "tl2", title: "HTML Tags & Elements", type: "video", duration: "18:45", status: "published" },
-          { id: "tl3", title: "HTML Basics Quiz", type: "quiz", status: "published" },
+          { id: "tl3", title: "HTML Basics Quiz", type: "quiz", status: "published", questions: [
+            { question: "What does HTML stand for?", options: ["Hyper Text Markup Language", "High Tech Modern Language", "Hyper Transfer Markup Language", "Home Tool Markup Language"], answer: "Hyper Text Markup Language" },
+            { question: "Which tag is used for the largest heading?", options: ["<h6>", "<heading>", "<h1>", "<head>"], answer: "<h1>" },
+            { question: "What is the correct HTML for creating a hyperlink?", options: ["<a url=\"...\">", "<a href=\"...\">", "<link>\"...\"</link>", "<href>...<href>"], answer: "<a href=\"...\">" },
+          ] },
         ],
       },
       {
@@ -202,7 +218,6 @@ export function TutorBody() {
       type,
       status: "draft",
     };
-    if (type === "video") lesson.duration = "00:00";
     const updated = {
       ...course,
       sections: course.sections.map((s) =>
@@ -210,6 +225,53 @@ export function TutorBody() {
       ),
     };
     setEditingCourse(updated);
+  };
+
+  // ─── File Upload ────────────────────────────────────────────────
+  const [uploadingLessonId, setUploadingLessonId] = useState<string | null>(null);
+
+  const handleFileUpload = (lessonId: string, sectionId: string, file: File) => {
+    const maxSize = 20 * 1024 * 1024; // 20MB limit for data URLs in state
+    if (file.size > maxSize) {
+      alert(`File "${file.name}" is too large. Maximum supported size is 20MB. For larger files, use a hosting service and add the URL manually.`);
+      return;
+    }
+    setUploadingLessonId(lessonId);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      // Use functional form to avoid stale closure on editingCourse
+      setEditingCourse((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          sections: prev.sections.map((s) =>
+            s.id === sectionId
+              ? {
+                  ...s,
+                  lessons: s.lessons.map((l) =>
+                    l.id === lessonId
+                      ? { ...l, fileName: file.name, fileSize: file.size, fileType: file.type, fileDataUrl: dataUrl }
+                      : l
+                  ),
+                }
+              : s
+          ),
+        };
+      });
+      setUploadingLessonId(null);
+    };
+    reader.onerror = () => {
+      alert("Failed to read file. Please try again.");
+      setUploadingLessonId(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const removeLesson = (course: TutorCourse, sectionId: string, lessonId: string) => {
@@ -260,8 +322,9 @@ export function TutorBody() {
       title: `AI Quiz: ${aiPrompt.slice(0, 50)}`,
       type: "quiz",
       status: "draft",
+      questions: aiGeneratedQuiz.questions,
     };
-    const updated = {
+    const updatedCourse: TutorCourse = {
       ...editingCourse,
       sections: editingCourse.sections.map((s) =>
         s.id === aiGeneratedQuiz.sectionId
@@ -269,7 +332,14 @@ export function TutorBody() {
           : s
       ),
     };
-    setEditingCourse(updated);
+    setEditingCourse(updatedCourse);
+    // Also immediately persist to courses list so the quiz survives navigation
+    setCourses((prev) => {
+      const exists = prev.some((c) => c.id === updatedCourse.id);
+      return exists
+        ? prev.map((c) => (c.id === updatedCourse.id ? updatedCourse : c))
+        : prev;
+    });
     setAiGeneratedQuiz(null);
     setAiPrompt("");
   };
@@ -335,9 +405,9 @@ export function TutorBody() {
       <div className="flex h-screen overflow-hidden">
         <AppSidebar activePage="tutor-dashboard" />
 
-        <main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
-          {/* ── Top Bar ── */}
-          <header className="w-full sticky top-0 z-40 bg-surface/80 backdrop-blur-md shadow-sm h-16 flex items-center justify-between px-4 md:px-6 border-b border-outline-variant">
+        <main data-page-main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
+          {/* ── Top Bar (uses div instead of header so GlobalTopbar doesn't hide it) ── */}
+          <div className="w-full bg-surface/80 backdrop-blur-md shadow-sm h-16 flex items-center justify-between px-4 md:px-6 border-b border-outline-variant">
             <div className="flex items-center gap-4">
               <button className="md:hidden material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">menu</button>
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
@@ -361,7 +431,7 @@ export function TutorBody() {
                 T
               </div>
             </div>
-          </header>
+          </div>
 
           {/* ── Tab Navigation ── */}
           <div className="flex items-center gap-1 px-4 md:px-6 pt-4 pb-0 border-b border-outline-variant bg-surface">
@@ -713,48 +783,288 @@ export function TutorBody() {
                             {/* Lessons List */}
                             <div className="divide-y divide-outline-variant">
                               {section.lessons.map((lesson) => (
-                                <div key={lesson.id} className="flex items-center gap-3 p-3 hover:bg-surface-container/50 transition-colors">
-                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${getLessonColor(lesson.type)}`}>
-                                    <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: '"FILL" 1'}}>
-                                      {getLessonIcon(lesson.type)}
-                                    </span>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <input
-                                      type="text"
-                                      value={lesson.title}
-                                      onChange={(e) => updateLesson(editingCourse, section.id, lesson.id, { title: e.target.value })}
-                                      className="text-body-sm text-on-surface bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-2 py-1 w-full"
-                                      placeholder={`${lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1)} title...`}
-                                    />
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                      <span className="text-[11px] font-medium text-on-surface-variant uppercase tracking-wider">
-                                        {lesson.type}
+                                <div key={lesson.id}>
+                                  <div className="flex items-center gap-3 p-3 hover:bg-surface-container/50 transition-colors">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${getLessonColor(lesson.type)}`}>
+                                      <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: '"FILL" 1'}}>
+                                        {getLessonIcon(lesson.type)}
                                       </span>
-                                      {lesson.type === "video" && (
-                                        <input
-                                          type="text"
-                                          value={lesson.duration || ""}
-                                          onChange={(e) => updateLesson(editingCourse, section.id, lesson.id, { duration: e.target.value })}
-                                          className="text-[11px] text-on-surface-variant bg-surface-container-high max-w-[80px] px-1.5 py-0.5 rounded border-none focus:ring-1 focus:ring-primary/30"
-                                          placeholder="00:00"
-                                        />
-                                      )}
-                                      {lesson.type === "book" && (
-                                        <span className="text-[11px] text-on-surface-variant">PDF / Document</span>
-                                      )}
-                                      {lesson.type === "quiz" && (
-                                        <span className="text-[11px] text-on-surface-variant">Auto-graded</span>
-                                      )}
                                     </div>
+                                    <div className="flex-1 min-w-0">
+                                      <input
+                                        type="text"
+                                        value={lesson.title}
+                                        onChange={(e) => updateLesson(editingCourse, section.id, lesson.id, { title: e.target.value })}
+                                        className="text-body-sm text-on-surface bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-2 py-1 w-full"
+                                        placeholder={`${lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1)} title...`}
+                                      />
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-[11px] font-medium text-on-surface-variant uppercase tracking-wider">
+                                          {lesson.type}
+                                        </span>
+                                        {lesson.type === "video" && (
+                                          <>
+                                            {/* Duration input */}
+                                            <input
+                                              type="text"
+                                              value={lesson.duration || ""}
+                                              onChange={(e) => updateLesson(editingCourse, section.id, lesson.id, { duration: e.target.value })}
+                                              className="text-[11px] text-on-surface-variant bg-surface-container-high max-w-[80px] px-1.5 py-0.5 rounded border-none focus:ring-1 focus:ring-primary/30"
+                                              placeholder="00:00"
+                                            />
+                                            {/* File upload / file info */}
+                                            {uploadingLessonId === lesson.id ? (
+                                              <span className="text-[11px] text-primary font-medium flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+                                                Uploading...
+                                              </span>
+                                            ) : lesson.fileName ? (
+                                              <span className="text-[11px] text-blue-600 font-medium flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                                {lesson.fileName}
+                                              </span>
+                                            ) : (
+                                              <label className="text-[11px] text-primary font-medium cursor-pointer hover:underline flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[14px]">upload_file</span>
+                                                Upload Video
+                                                <input
+                                                  type="file"
+                                                  accept="video/*"
+                                                  className="hidden"
+                                                  onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) handleFileUpload(lesson.id, section.id, file);
+                                                    e.target.value = "";
+                                                  }}
+                                                />
+                                              </label>
+                                            )}
+                                          </>
+                                        )}
+                                        {lesson.type === "book" && (
+                                          <>
+                                            {uploadingLessonId === lesson.id ? (
+                                              <span className="text-[11px] text-primary font-medium flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+                                                Uploading...
+                                              </span>
+                                            ) : lesson.fileName ? (
+                                              <span className="text-[11px] text-purple-600 font-medium flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[14px]">description</span>
+                                                {lesson.fileName}
+                                                {lesson.fileSize && (
+                                                  <span className="text-on-surface-variant font-normal">({formatFileSize(lesson.fileSize)})</span>
+                                                )}
+                                              </span>
+                                            ) : (
+                                              <label className="text-[11px] text-primary font-medium cursor-pointer hover:underline flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[14px]">upload_file</span>
+                                                Upload Document
+                                                <input
+                                                  type="file"
+                                                  accept=".pdf,.doc,.docx,.txt,.epub,.md"
+                                                  className="hidden"
+                                                  onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) handleFileUpload(lesson.id, section.id, file);
+                                                    e.target.value = "";
+                                                  }}
+                                                />
+                                              </label>
+                                            )}
+                                          </>
+                                        )}
+                                        {lesson.type === "quiz" && (
+                                          <>
+                                            <span className="text-[11px] text-on-surface-variant">Auto-graded</span>
+                                            <span className="text-[11px] font-medium text-primary">
+                                              {(lesson.questions?.length || 0)} {(lesson.questions?.length || 0) === 1 ? "question" : "questions"}
+                                            </span>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={() => removeLesson(editingCourse, section.id, lesson.id)}
+                                      className="p-1.5 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                      title="Remove item"
+                                    >
+                                      <span className="material-symbols-outlined text-sm text-on-surface-variant hover:text-red-500">close</span>
+                                    </button>
                                   </div>
-                                  <button
-                                    onClick={() => removeLesson(editingCourse, section.id, lesson.id)}
-                                    className="p-1.5 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                    title="Remove item"
-                                  >
-                                    <span className="material-symbols-outlined text-sm text-on-surface-variant hover:text-red-500">close</span>
-                                  </button>
+                                  {/* Inline video preview */}
+                                  {lesson.type === "video" && lesson.fileDataUrl && (
+                                    <div className="px-3 pb-3">
+                                      <div className="ml-11 rounded-lg overflow-hidden border border-outline-variant bg-black">
+                                        <video
+                                          src={lesson.fileDataUrl}
+                                          controls
+                                          className="w-full max-h-48 object-contain"
+                                          preload="metadata"
+                                        >
+                                          Your browser does not support the video tag.
+                                        </video>
+                                      </div>
+                                      <div className="ml-11 mt-1.5 flex items-center gap-2 text-[11px] text-on-surface-variant">
+                                        <span className="material-symbols-outlined text-[14px]">videocam</span>
+                                        <span>{lesson.fileName}</span>
+                                        {lesson.fileSize && <span>• {formatFileSize(lesson.fileSize)}</span>}
+                                        <label className="ml-auto text-primary font-medium cursor-pointer hover:underline">
+                                          Change file
+                                          <input
+                                            type="file"
+                                            accept="video/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                              const file = e.target.files?.[0];
+                                              if (file) handleFileUpload(lesson.id, section.id, file);
+                                              e.target.value = "";
+                                            }}
+                                          />
+                                        </label>
+                                        <button
+                                          onClick={() => updateLesson(editingCourse, section.id, lesson.id, { fileName: undefined, fileSize: undefined, fileType: undefined, fileDataUrl: undefined })}
+                                          className="text-red-500 hover:underline cursor-pointer"
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* Inline book preview */}
+                                  {lesson.type === "book" && lesson.fileDataUrl && (
+                                    <div className="px-3 pb-3">
+                                      <div className="ml-11 rounded-lg overflow-hidden border border-outline-variant bg-surface-container-high">
+                                        {lesson.fileType === "application/pdf" ? (
+                                          <object
+                                            data={lesson.fileDataUrl}
+                                            type="application/pdf"
+                                            className="w-full h-48"
+                                          >
+                                            <div className="flex items-center gap-4 p-4">
+                                              <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
+                                                <span className="material-symbols-outlined text-3xl text-purple-600">picture_as_pdf</span>
+                                              </div>
+                                              <div className="flex-1 min-w-0">
+                                                <p className="text-body-sm font-semibold text-on-surface truncate">{lesson.fileName}</p>
+                                                <p className="text-xs text-on-surface-variant mt-0.5">PDF preview not available in your browser.</p>
+                                              </div>
+                                              <a
+                                                href={lesson.fileDataUrl}
+                                                download={lesson.fileName}
+                                                className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-all"
+                                              >
+                                                <span className="material-symbols-outlined text-[14px]">download</span>
+                                                Download
+                                              </a>
+                                            </div>
+                                          </object>
+                                        ) : (
+                                          <div className="flex items-center gap-4 p-4">
+                                            <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
+                                              <span className="material-symbols-outlined text-3xl text-purple-600">description</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-body-sm font-semibold text-on-surface truncate">{lesson.fileName}</p>
+                                              <div className="flex items-center gap-2 text-xs text-on-surface-variant mt-0.5">
+                                                <span>{lesson.fileType}</span>
+                                                {lesson.fileSize && <span>• {formatFileSize(lesson.fileSize)}</span>}
+                                              </div>
+                                            </div>
+                                            <a
+                                              href={lesson.fileDataUrl}
+                                              download={lesson.fileName}
+                                              className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-all"
+                                            >
+                                              <span className="material-symbols-outlined text-[14px]">download</span>
+                                              Download
+                                            </a>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="ml-11 mt-1.5 flex items-center gap-2 text-[11px] text-on-surface-variant">
+                                        <label className="text-primary font-medium cursor-pointer hover:underline flex items-center gap-1">
+                                          <span className="material-symbols-outlined text-[14px]">upload_file</span>
+                                          Change file
+                                          <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.txt,.epub,.md"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                              const file = e.target.files?.[0];
+                                              if (file) handleFileUpload(lesson.id, section.id, file);
+                                              e.target.value = "";
+                                            }}
+                                          />
+                                        </label>
+                                        <button
+                                          onClick={() => updateLesson(editingCourse, section.id, lesson.id, { fileName: undefined, fileSize: undefined, fileType: undefined, fileDataUrl: undefined })}
+                                          className="text-red-500 hover:underline cursor-pointer"
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* Inline quiz questions display for quiz lessons */}
+                                  {lesson.type === "quiz" && lesson.questions && lesson.questions.length > 0 && (
+                                    <div className="px-3 pb-3 space-y-2">
+                                      <div className="ml-11 pl-2 border-l-2 border-primary/20 space-y-2">
+                                        {lesson.questions.map((q, qi) => (
+                                          <div key={qi} className="bg-surface-container/50 rounded-lg p-3 border border-outline-variant/50">
+                                            <div className="flex items-start gap-2">
+                                              <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 mt-0.5">
+                                                {qi + 1}
+                                              </span>
+                                              <div className="flex-1 min-w-0">
+                                                <input
+                                                  type="text"
+                                                  value={q.question}
+                                                  onChange={(e) => {
+                                                    const updatedQuestions = [...(lesson.questions || [])];
+                                                    updatedQuestions[qi] = { ...updatedQuestions[qi], question: e.target.value };
+                                                    updateLesson(editingCourse, section.id, lesson.id, { questions: updatedQuestions });
+                                                  }}
+                                                  className="text-body-sm font-semibold text-on-surface bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-1.5 py-0.5 w-full"
+                                                />
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 mt-2">
+                                                  {q.options.map((opt, oi) => (
+                                                    <div key={oi} className="flex items-center gap-2">
+                                                      <input
+                                                        type="radio"
+                                                        name={`q-${lesson.id}-${qi}`}
+                                                        checked={opt === q.answer}
+                                                        onChange={() => {
+                                                          const updatedQuestions = [...(lesson.questions || [])];
+                                                          updatedQuestions[qi] = { ...updatedQuestions[qi], answer: opt };
+                                                          updateLesson(editingCourse, section.id, lesson.id, { questions: updatedQuestions });
+                                                        }}
+                                                        className="text-primary focus:ring-primary h-3.5 w-3.5"
+                                                      />
+                                                      <input
+                                                        type="text"
+                                                        value={opt}
+                                                        onChange={(e) => {
+                                                          const updatedQuestions = [...(lesson.questions || [])];
+                                                          const newOptions = [...updatedQuestions[qi].options];
+                                                          newOptions[oi] = e.target.value;
+                                                          updatedQuestions[qi] = { ...updatedQuestions[qi], options: newOptions };
+                                                          updateLesson(editingCourse, section.id, lesson.id, { questions: updatedQuestions });
+                                                        }}
+                                                        className={`text-xs flex-1 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-1.5 py-0.5 ${
+                                                          opt === q.answer ? "text-green-700 font-semibold" : "text-on-surface-variant"
+                                                        }`}
+                                                      />
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                               {section.lessons.length === 0 && (
