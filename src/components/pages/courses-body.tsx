@@ -13,7 +13,7 @@ export function CoursesBody() {
       
       <main data-page-main className="flex-1 flex flex-col min-h-screen">
       
-      <header className="w-full sticky top-0 z-30 bg-surface/80 backdrop-blur-md shadow-sm h-touch-target flex justify-between items-center px-container-margin md:px-xl">
+      <div className="w-full sticky top-0 z-30 bg-surface/80 backdrop-blur-md shadow-sm h-touch-target flex justify-between items-center px-container-margin md:px-xl">
       <div className="flex items-center gap-4">
       <button className="md:hidden p-2 text-primary active:scale-95 duration-200">
       <span className="material-symbols-outlined">menu</span>
@@ -34,7 +34,7 @@ export function CoursesBody() {
       <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoJlNeJn4daZ7w0YHFa5BgM0hgFpAuwdhobj3GThAv3CXb95ZzRFEbv5NNU0VbR8leaciuUqtdeIhSvE4_MnV_MzCe5DlZgm1AJgEDfe79xLHXD5fzO_vjFMfkQRu8M6EBCGpvPgY4U87N882lqi-VYtpdsxuGyqdlVpfQCXDPIyH0eEdyT_URC0C7KPTn-uoJv9PHAiUJ-aGGO9s0duwVdiH1lSQTzPrbgo9i7rHcsszwmUMP0nIzGg"  alt="" />
       </div>
       </div>
-      </header>
+      </div>
       <div className="flex-1 p-container-margin md:p-xl space-y-xl">
       
       <section className="relative rounded-3xl overflow-hidden shadow-xl ai-glow">

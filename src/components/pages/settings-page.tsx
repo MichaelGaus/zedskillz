@@ -51,7 +51,7 @@ function SettingsContent({ user, theme, toggleTheme, signOut, setActivePage }: {
   return (
     <div className="min-h-screen bg-background">
       {/* ===== TopAppBar ===== */}
-      <header className="bg-surface border-b border-outline-variant sticky top-0 z-40">
+      <div className="bg-surface border-b border-outline-variant sticky top-0 z-40">
         <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -68,7 +68,7 @@ function SettingsContent({ user, theme, toggleTheme, signOut, setActivePage }: {
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">

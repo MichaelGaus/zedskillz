@@ -8,7 +8,7 @@ export function CommunityBody() {
     <>
       
       
-      <header className="bg-surface dark:bg-surface-dim docked full-width top-0 border-b border-outline-variant dark:border-outline shadow-sm sticky z-50">
+      <div className="bg-surface dark:bg-surface-dim docked full-width top-0 border-b border-outline-variant dark:border-outline shadow-sm sticky z-50">
       <div className="flex justify-between items-center px-lg py-md w-full max-w-7xl mx-auto">
       <div className="flex items-center gap-xl">
       <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEYHWSbBWFss50TSceaJIxWuzuiahbKQuC1SkKtCCksAznmNPkkJD6pAmPcAb23TakFxQwfnWHZyXZ1elmYxJ_BNMnViM2yrZtYrig_TLFFOOzG_3l8JUB8k2UXIq73b7Gc-gEynoPkOvkdiKZFSuMpZ4WaI45w8yWgi38qJHOduKySiSkZkAHxH-HvLrXIUY1HHcjuADWeDPDkLWH4RssMDuhoYlPS6d6rS0ZD_oBjzBKvJljMHuL3It59uKJQDBxfM8" alt="Zedskillz Hub" className="h-10 w-auto cursor-pointer" />
@@ -33,7 +33,7 @@ export function CommunityBody() {
       </div>
       </div>
       </div>
-      </header>
+      </div>
       <div className="flex max-w-7xl mx-auto">
       
       <AppSidebar variant="community" showProfile={false}>
@@ -185,7 +185,7 @@ export function CommunityBody() {
       </div>
       <button className="text-on-primary/60 hover:text-on-primary" onClick={() => { /* AI overlay toggle */ }}><span className="material-symbols-outlined">close</span></button>
       </div>
-      <div className="flex-1 p-lg overflow-y-auto custom-scrollbar flex flex-col gap-md">
+      <div className="flex-1 p-lg flex flex-col gap-md">
       <div className="flex gap-sm">
       <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center flex-shrink-0">
       <span className="material-symbols-outlined text-primary text-[20px]">psychology</span>

@@ -7,7 +7,7 @@ export function MembersBody() {
   return (
     <>
       {/* ===== TopAppBar ===== */}
-      <header className="bg-surface dark:bg-surface-dim docked full-width top-0 border-b border-outline-variant dark:border-outline shadow-sm sticky z-50">
+      <div className="bg-surface dark:bg-surface-dim docked full-width top-0 border-b border-outline-variant dark:border-outline shadow-sm sticky z-50">
         <div className="flex justify-between items-center px-lg py-md w-full max-w-7xl mx-auto">
           <div className="flex items-center gap-xl">
             <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEYHWSbBWFss50TSceaJIxWuzuiahbKQuC1SkKtCCksAznmNPkkJD6pAmPcAb23TakFxQwfnWHZyXZ1elmYxJ_BNMnViM2yrZtYrig_TLFFOOzG_3l8JUB8k2UXIq73b7Gc-gEynoPkOvkdiKZFSuMpZ4WaI45w8yWgi38qJHOduKySiSkZkAHxH-HvLrXIUY1HHcjuADWeDPDkLWH4RssMDuhoYlPS6d6rS0ZD_oBjzBKvJljMHuL3It59uKJQDBxfM8" alt="Zedskillz Hub" className="h-10 w-auto cursor-pointer" />
@@ -33,7 +33,7 @@ export function MembersBody() {
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="flex max-w-7xl mx-auto">
         {/* ===== Sidebar ===== */}

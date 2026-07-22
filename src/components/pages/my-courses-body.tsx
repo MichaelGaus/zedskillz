@@ -12,7 +12,7 @@ export function MyCoursesBody() {
       
       <main data-page-main className="flex-1 flex flex-col min-w-0 bg-surface">
       
-      <header className="w-full sticky top-0 z-50 bg-surface/80 backdrop-blur-md shadow-sm flex justify-between items-center px-container-margin h-touch-target">
+      <div className="w-full sticky top-0 z-50 bg-surface/80 backdrop-blur-md shadow-sm flex justify-between items-center px-container-margin h-touch-target">
       <h1 className="font-headline-md text-headline-md text-primary">My Learning Dashboard</h1>
       <div className="flex items-center gap-md">
       <div className="relative hidden lg:block">
@@ -28,8 +28,8 @@ export function MyCoursesBody() {
       <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBL0taS2cl9roWn4hR65TUHUqQWVtI5P_6XGCYbj3xJCbAq8JN_oKIldSxIwpmEq6KgiuwKt7TsJ14As5qrAp1MndC_AlEm3TCFaBafbgcpqZZWrUYaPaunNegsw7tpoAnNZGy3-kqwzveZkBXeahiD1X32ZEJ5nApYmHkvgve43KsD_jiPMPT4nO9sFdEH-eAcz6OE6v1EPlEBDbqOx6J35JU4F2b9SIKVLM-IbDtk7-wwYs-BGNomJw"  alt="" />
       </div>
       </div>
-      </header>
-      <div className="flex-1 p-lg overflow-y-auto custom-scrollbar">
+      </div>
+      <div className="flex-1 p-lg">
       
       <section className="mb-xl relative rounded-3xl overflow-hidden h-64 flex items-center px-xl shadow-lg">
       <div className="absolute inset-0 z-0">

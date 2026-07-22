@@ -10,7 +10,7 @@ export function PostBody() {
       
       <AppSidebar variant="scholarconnect" activePage="post" />
       
-      <header className="fixed top-0 right-0 left-0 md:left-72 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-30">
+      <div className="fixed top-0 right-0 left-0 md:left-72 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-30">
       <div className="flex items-center gap-md">
       <button className="p-sm rounded-full hover:bg-surface-variant/50 transition-colors">
       <span className="material-symbols-outlined">language</span>
@@ -36,7 +36,7 @@ export function PostBody() {
       </div>
       </div>
       </div>
-      </header>
+      </div>
       
       <main className="pt-24 pb-20 md:pb-lg px-container-margin md:pl-72 md:pr-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-lg">
       

@@ -117,7 +117,7 @@ export default function Home() {
       {/* data-page-content wrapper — GlobalBottomNav adds bottom padding here
           to prevent content from being hidden behind the fixed bottom nav,
           without creating empty space below the Footer */}
-      <div data-page-content className="flex flex-col">
+      <div data-page-content className="flex flex-1 flex-col">
         {renderPage()}
       </div>
       {/* Shared footer — mt-auto pushes it below viewport on short pages;
