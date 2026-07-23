@@ -26,8 +26,24 @@ import { ProfilePage } from "@/components/pages/profile-page";
 import { SettingsPage } from "@/components/pages/settings-page";
 
 export default function Home() {
-  const { activePage, theme, isAuthenticated, user, sidebarExpanded } = useAppStore();
+  const { activePage, theme, isAuthenticated, user, sidebarExpanded, _hydrated } = useAppStore();
   useNavDelegation();
+
+  // ── Hydration guard ──────────────────────────────────────────────────
+  // During SSR the store has safe defaults (landing page, not authenticated).
+  // On the client, localStorage is read synchronously and _hydrated is set.
+  // Until hydration completes, we render nothing to avoid the "landing page flash"
+  // that logged-in users would otherwise see on every refresh.
+  if (!_hydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex items-center gap-3 text-on-surface-variant">
+          <span className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="font-body-sm">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   // Apply theme class
   useEffect(() => {

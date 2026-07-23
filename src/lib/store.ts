@@ -23,6 +23,9 @@ export interface UserProfile {
 }
 
 interface AppState {
+  // Hydration guard — prevents rendering until localStorage state is restored
+  _hydrated: boolean;
+
   // Navigation
   activePage: string;
   setActivePage: (page: string) => void;
@@ -115,16 +118,20 @@ function clearPersistedState() {
   } catch { /* noop */ }
 }
 
-// ---- Restore persisted state on load ----
-const persisted = loadPersistedState();
+// ---- SSR-safe defaults (no localStorage access) ----
+// During SSR, localStorage is unavailable so we use safe defaults.
+// On the client, we immediately rehydrate from localStorage.
 
 export const useAppStore = create<AppState>((set, get) => ({
-  activePage: persisted.activePage || "landing",
+  // Start unhydrated — the page will defer rendering until this is true
+  _hydrated: false,
+
+  // Safe defaults for SSR (will be overwritten by rehydrate on client)
+  activePage: "landing",
   setActivePage: (page) => set({ activePage: page }),
 
-  // Auth — attempt restore from localStorage, else unauthenticated
-  isAuthenticated: persisted.isAuthenticated || false,
-  user: persisted.user || null,
+  isAuthenticated: false,
+  user: null,
   signIn: (email, name, selectedRole) => {
     // Derive a display name from the email if not provided
     const derivedName = name || email.split("@")[0].split(/[._-]/).map(
@@ -170,7 +177,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     savePersistedState({ isAuthenticated, user: updatedUser, language, theme: theme as string, activePage });
   },
 
-  theme: (persisted.theme as "light" | "dark") || "light",
+  theme: "light",
   toggleTheme: () => {
     const next = get().theme === "light" ? "dark" : "light";
     set({ theme: next });
@@ -208,7 +215,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   unreadNotifications: 3,
   markAllNotificationsRead: () => set({ unreadNotifications: 0 }),
 
-  language: persisted.language || "English",
+  language: "English",
   setLanguage: (lang) => {
     set({ language: lang });
     // Persist
@@ -218,3 +225,24 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   currentUser,
 }));
+
+// ---- Rehydrate from localStorage on the client ----
+// This runs immediately after the store is created on the client.
+// It overwrites the SSR-safe defaults with the real persisted state,
+// then sets _hydrated = true so the page can render.
+if (typeof window !== "undefined") {
+  const persisted = loadPersistedState();
+  if (persisted.isAuthenticated || persisted.activePage || persisted.theme || persisted.language) {
+    useAppStore.setState({
+      ...(persisted.isAuthenticated ? { isAuthenticated: persisted.isAuthenticated } : {}),
+      ...(persisted.user ? { user: persisted.user } : {}),
+      ...(persisted.activePage ? { activePage: persisted.activePage } : {}),
+      ...(persisted.theme ? { theme: persisted.theme as "light" | "dark" } : {}),
+      ...(persisted.language ? { language: persisted.language } : {}),
+      _hydrated: true,
+    });
+  } else {
+    // No persisted state — mark hydrated immediately with defaults
+    useAppStore.setState({ _hydrated: true });
+  }
+}
