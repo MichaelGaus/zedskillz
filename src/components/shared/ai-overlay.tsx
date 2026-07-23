@@ -4,9 +4,18 @@ import { useAppStore } from "@/lib/store";
 import { Icon } from "@/components/shared/icon";
 import { useState, useRef, useEffect } from "react";
 
+// ─── Types ──────────────────────────────────────────────────────────────
 type Message = { id: string; role: "ai" | "user"; content: string };
+type Conversation = {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: number;
+};
 
-const STORAGE_KEY = "zedskillz_ai_chat_history";
+// ─── Constants ──────────────────────────────────────────────────────────
+const STORAGE_KEY = "zedskillz_ai_conversations";
+const ACTIVE_CONV_KEY = "zedskillz_ai_active_conv";
 
 const GREETING: Message = {
   id: "m1",
@@ -15,37 +24,56 @@ const GREETING: Message = {
     "Hello! I'm your Zedskillz AI Tutor. How can I help you today? I can summarize lessons, explain concepts in Bemba/Nyanja/Tonga, generate quizzes, or recommend next lessons.",
 };
 
-function loadSavedMessages(): Message[] {
+// ─── Storage helpers ────────────────────────────────────────────────────
+function loadConversations(): Conversation[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    const parsed: Message[] = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return [];
-    if (!parsed.every((m) => m.id && m.role && typeof m.content === "string")) return [];
-    return parsed;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (c: Conversation) =>
+        c.id && c.title && Array.isArray(c.messages) && typeof c.createdAt === "number"
+    );
   } catch {
     return [];
   }
 }
 
-function saveMessages(messages: Message[]) {
+function saveConversations(convs: Conversation[]) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(convs));
   } catch { /* quota exceeded */ }
 }
 
-function clearSavedMessages() {
+function loadActiveConvId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(ACTIVE_CONV_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveActiveConvId(id: string | null) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    if (id) localStorage.setItem(ACTIVE_CONV_KEY, id);
+    else localStorage.removeItem(ACTIVE_CONV_KEY);
   } catch { /* noop */ }
 }
 
-/**
- * Combine multiple AbortSignals into one — any signal aborts the combined signal.
- */
+/** Derive a short title from the first user message in a conversation. */
+function deriveTitle(messages: Message[]): string {
+  const firstUserMsg = messages.find((m) => m.role === "user");
+  if (!firstUserMsg) return "New Chat";
+  const text = firstUserMsg.content.trim();
+  return text.length > 30 ? text.slice(0, 30) + "..." : text;
+}
+
+// ─── SSE helpers ────────────────────────────────────────────────────────
 function combineAbortSignals(...signals: AbortSignal[]): AbortSignal {
   const controller = new AbortController();
   for (const signal of signals) {
@@ -58,10 +86,6 @@ function combineAbortSignals(...signals: AbortSignal[]): AbortSignal {
   return controller.signal;
 }
 
-/**
- * Parse an SSE stream line by line, calling onData for each parsed JSON payload.
- * Returns when [DONE] is received or the stream ends.
- */
 async function readSSEStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   onData: (json: Record<string, unknown>) => void,
@@ -72,13 +96,10 @@ async function readSSEStream(
 
   while (true) {
     if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-
     const { done, value } = await reader.read();
     if (done) break;
-
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
-    // Keep the last partial line in the buffer
     buffer = lines.pop() || "";
 
     for (const line of lines) {
@@ -88,54 +109,68 @@ async function readSSEStream(
         try {
           const json = JSON.parse(payload);
           onData(json);
-        } catch {
-          // Skip malformed JSON
-        }
+        } catch { /* skip */ }
       }
     }
   }
 }
 
-/**
- * Global AI overlay — full-screen modal chat surface triggered by AIFab.
- * Supports SSE streaming for real-time AI responses.
- */
+// ─── Component ──────────────────────────────────────────────────────────
 export function AIOverlay() {
   const { aiOverlayOpen, setAiOverlayOpen } = useAppStore();
-  const [messages, setMessages] = useState<Message[]>([GREETING]);
+
+  // Conversation state
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+  const [showConvList, setShowConvList] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+
+  // Streaming refs
   const streamingMessageIdRef = useRef<string | null>(null);
   const streamingContentRef = useRef("");
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load saved messages from localStorage on mount (client-side only)
+  // ── Load conversations from localStorage on mount ──────────────────
   useEffect(() => {
-    const saved = loadSavedMessages();
+    const saved = loadConversations();
+    const savedActiveId = loadActiveConvId();
     if (saved.length > 0) {
-      setMessages(saved);
+      setConversations(saved);
+      // Restore the last active conversation, or the most recent one
+      const targetId = savedActiveId && saved.find((c) => c.id === savedActiveId)
+        ? savedActiveId
+        : saved[saved.length - 1].id;
+      setActiveConvId(targetId);
       setShowSuggestions(false);
     }
   }, []);
 
-  // Auto-scroll to bottom when new messages arrive or content streams in
+  // ── Auto-scroll ────────────────────────────────────────────────────
+  const activeMessages = conversations.find((c) => c.id === activeConvId)?.messages || [];
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [activeMessages]);
 
-  // Persist messages to localStorage whenever they change (skip loading/streaming placeholders)
+  // ── Persist conversations ──────────────────────────────────────────
   useEffect(() => {
-    const realMessages = messages.filter(
-      (m) => !m.id.startsWith("loading-") && !m.id.startsWith("stream-")
-    );
-    // Skip persisting the initial greeting if user hasn't sent anything yet
-    if (realMessages.length === 1 && realMessages[0].id === GREETING.id) return;
-    saveMessages(realMessages);
-  }, [messages]);
+    if (conversations.length > 0) {
+      // Filter out streaming/loading placeholder messages before saving
+      const cleaned = conversations.map((c) => ({
+        ...c,
+        messages: c.messages.filter(
+          (m) => !m.id.startsWith("loading-") && !m.id.startsWith("stream-")
+        ),
+        title: deriveTitle(c.messages),
+      }));
+      saveConversations(cleaned);
+      saveActiveConvId(activeConvId);
+    }
+  }, [conversations, activeConvId]);
 
-  // Abort in-flight requests when the overlay closes
+  // ── Abort on overlay close ─────────────────────────────────────────
   useEffect(() => {
     if (!aiOverlayOpen) {
       abortControllerRef.current?.abort();
@@ -143,40 +178,104 @@ export function AIOverlay() {
       streamingMessageIdRef.current = null;
       streamingContentRef.current = "";
       setIsLoading(false);
+      setShowConvList(false);
     }
   }, [aiOverlayOpen]);
+
+  // ── Helpers ─────────────────────────────────────────────────────────
+  const updateConvMessages = (convId: string, msgs: Message[]) => {
+    setConversations((prev) =>
+      prev.map((c) => c.id === convId ? { ...c, messages: msgs, title: deriveTitle(msgs) } : c)
+    );
+  };
 
   const newConversation = () => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
     streamingMessageIdRef.current = null;
     streamingContentRef.current = "";
-    setMessages([GREETING]);
+    setIsLoading(false);
+
+    const newId = `conv-${Date.now()}`;
+    const newConv: Conversation = {
+      id: newId,
+      title: "New Chat",
+      messages: [{ ...GREETING, id: `m1-${newId}` }],
+      createdAt: Date.now(),
+    };
+    setConversations((prev) => [...prev, newConv]);
+    setActiveConvId(newId);
     setShowSuggestions(true);
-    clearSavedMessages();
+    setShowConvList(false);
+    setInput("");
   };
 
+  const switchConversation = (convId: string) => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    streamingMessageIdRef.current = null;
+    streamingContentRef.current = "";
+    setIsLoading(false);
+    setActiveConvId(convId);
+    setShowConvList(false);
+    setShowSuggestions(false);
+    setInput("");
+  };
+
+  const deleteConversation = (convId: string) => {
+    setConversations((prev) => {
+      const remaining = prev.filter((c) => c.id !== convId);
+      // If we deleted the active conversation, switch to the most recent
+      if (convId === activeConvId) {
+        if (remaining.length > 0) {
+          setActiveConvId(remaining[remaining.length - 1].id);
+          setShowSuggestions(false);
+        } else {
+          // No conversations left — create a fresh one
+          const newId = `conv-${Date.now()}`;
+          const newConv: Conversation = {
+            id: newId,
+            title: "New Chat",
+            messages: [{ ...GREETING, id: `m1-${newId}` }],
+            createdAt: Date.now(),
+          };
+          remaining.push(newConv);
+          setActiveConvId(newId);
+          setShowSuggestions(true);
+        }
+      }
+      return remaining;
+    });
+  };
+
+  const userMessageCount = activeMessages.filter((m) => m.role === "user").length;
+  const hasMultipleConvs = conversations.length > 1;
+
+  // ── Send message ───────────────────────────────────────────────────
   const send = async (text?: string) => {
     const msg = text || input;
-    if (!msg.trim() || isLoading) return;
+    if (!msg.trim() || isLoading || !activeConvId) return;
     setShowSuggestions(false);
 
+    const currentConvId = activeConvId;
     const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: msg };
     const streamId = `stream-${Date.now()}`;
     streamingMessageIdRef.current = streamId;
     streamingContentRef.current = "";
     const streamMsg: Message = { id: streamId, role: "ai", content: "" };
 
-    // Abort any previous in-flight request
     abortControllerRef.current?.abort();
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    setMessages((prev) => [...prev, userMsg, streamMsg]);
+    // Get current messages for this conversation (from state)
+    const currentConv = conversations.find((c) => c.id === currentConvId);
+    const currentMsgs = currentConv?.messages || [];
+    const updatedMsgs = [...currentMsgs, userMsg, streamMsg];
+    updateConvMessages(currentConvId, updatedMsgs);
     setInput("");
     setIsLoading(true);
 
-    // Combine the abort controller signal with a 30-second timeout (generous for streaming)
     const timeoutSignal = AbortSignal.timeout(30000);
     const combinedSignal = combineAbortSignals(abortController.signal, timeoutSignal);
 
@@ -186,7 +285,7 @@ export function AIOverlay() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({
+          messages: [...currentMsgs, userMsg].map((m) => ({
             role: m.role,
             content: m.content,
           })),
@@ -204,11 +303,16 @@ export function AIOverlay() {
           if (data.content && typeof data.content === "string") {
             streamingContentRef.current += data.content;
             const currentContent = streamingContentRef.current;
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === streamId
-                  ? { ...m, content: currentContent }
-                  : m
+            setConversations((prev) =>
+              prev.map((c) =>
+                c.id === currentConvId
+                  ? {
+                      ...c,
+                      messages: c.messages.map((m) =>
+                        m.id === streamId ? { ...m, content: currentContent } : m
+                      ),
+                    }
+                  : c
               )
             );
           }
@@ -216,61 +320,63 @@ export function AIOverlay() {
         abortController.signal
       );
 
-      // Stream finished successfully — capture content BEFORE the finally block clears the ref
       const finalContent = streamingContentRef.current;
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === streamId
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === currentConvId
             ? {
-                id: `a-${Date.now()}`,
-                role: "ai",
-                content: finalContent || "Sorry, I couldn't process that.",
+                ...c,
+                title: deriveTitle(c.messages),
+                messages: c.messages.map((m) =>
+                  m.id === streamId
+                    ? {
+                        id: `a-${Date.now()}`,
+                        role: "ai",
+                        content: finalContent || "Sorry, I couldn't process that.",
+                      }
+                    : m
+                ),
               }
-            : m
+            : c
         )
       );
     } catch (err: any) {
-      // Ignore aborted requests (overlay closed or superceded by new send)
       if (err?.name === "AbortError") return;
 
       const streamingSoFar = streamingContentRef.current;
 
-      // If we already have some streamed content, keep it instead of showing an error
       if (streamingSoFar.trim().length > 0) {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === streamId
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === currentConvId
               ? {
-                  id: `a-${Date.now()}`,
-                  role: "ai",
-                  content: streamingSoFar,
+                  ...c,
+                  messages: c.messages.map((m) =>
+                    m.id === streamId
+                      ? { id: `a-${Date.now()}`, role: "ai", content: streamingSoFar }
+                      : m
+                  ),
                 }
-              : m
-          )
-        );
-      } else if (err?.name === "TimeoutError") {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === streamId
-              ? {
-                  id: `a-${Date.now()}`,
-                  role: "ai",
-                  content: "The response is taking longer than expected. Please try again.",
-                }
-              : m
+              : c
           )
         );
       } else {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === streamId
+        const errorMsg =
+          err?.name === "TimeoutError"
+            ? "The response is taking longer than expected. Please try again."
+            : "I'm having trouble connecting right now. Please check your internet and try again.";
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === currentConvId
               ? {
-                  id: `a-${Date.now()}`,
-                  role: "ai",
-                  content:
-                    "I'm having trouble connecting right now. Please check your internet and try again.",
+                  ...c,
+                  messages: c.messages.map((m) =>
+                    m.id === streamId
+                      ? { id: `a-${Date.now()}`, role: "ai", content: errorMsg }
+                      : m
+                  ),
                 }
-              : m
+              : c
           )
         );
       }
@@ -281,10 +387,10 @@ export function AIOverlay() {
     }
   };
 
+  // ── Don't render if overlay is closed ───────────────────────────────
   if (!aiOverlayOpen) return null;
 
-  const userMessageCount = messages.filter((m) => m.role === "user").length;
-
+  // ── Render ──────────────────────────────────────────────────────────
   return (
     <div
       className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm flex items-center justify-center p-4"
@@ -294,122 +400,193 @@ export function AIOverlay() {
         className="bg-surface-container-lowest rounded-3xl shadow-2xl w-full max-w-lg h-[560px] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-primary text-on-primary p-4 flex items-center gap-3 shrink-0">
-          <div className="w-10 h-10 rounded-full bg-on-primary/20 flex items-center justify-center">
-            <Icon name="psychology" filled size={22} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-title text-sm font-semibold">ZedAI Assistant</div>
-            <div className="text-xs opacity-80 flex items-center gap-1.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${isLoading ? "bg-yellow-300 animate-pulse" : "bg-green-300"}`} />
-              {isLoading ? "Thinking..." : `Online • ${userMessageCount} message${userMessageCount !== 1 ? "s" : ""}`}
-            </div>
-          </div>
-          {/* New Chat button */}
-          {userMessageCount > 0 && (
+        {/* ─── Header ─────────────────────────────────────────────── */}
+        <div className="bg-primary text-on-primary p-3 flex items-center gap-2 shrink-0">
+          {/* Conversation list toggle (shows when there are multiple conversations) */}
+          {hasMultipleConvs && (
             <button
-              onClick={newConversation}
+              onClick={() => setShowConvList(!showConvList)}
               className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
-              title="New conversation"
+              title="Chat history"
             >
-              <Icon name="add" size={20} />
+              <Icon name={showConvList ? "chat" : "history"} size={20} />
             </button>
           )}
+
+          <div className="w-9 h-9 rounded-full bg-on-primary/20 flex items-center justify-center shrink-0">
+            <Icon name="psychology" filled size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-title text-sm font-semibold">
+              {showConvList ? "Chat History" : "ZedAI Assistant"}
+            </div>
+            {!showConvList && (
+              <div className="text-xs opacity-80 flex items-center gap-1.5">
+                <span className={`w-1.5 h-1.5 rounded-full ${isLoading ? "bg-yellow-300 animate-pulse" : "bg-green-300"}`} />
+                {isLoading ? "Thinking..." : `Online • ${userMessageCount} msg${userMessageCount !== 1 ? "s" : ""}`}
+              </div>
+            )}
+          </div>
+
+          {/* New Chat button */}
+          <button
+            onClick={newConversation}
+            className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
+            title="New conversation"
+          >
+            <Icon name="add" size={20} />
+          </button>
           <button
             onClick={() => setAiOverlayOpen(false)}
             className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
+            title="Close"
           >
             <Icon name="close" size={20} />
           </button>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface">
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`flex gap-2 ${m.role === "user" ? "flex-row-reverse" : ""}`}
-            >
-              {m.role === "ai" && (
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
-                  <Icon name="smart_toy" filled size={18} className="text-on-primary" />
+        {/* ─── Conversation List Panel ───────────────────────────── */}
+        {showConvList ? (
+          <div className="flex-1 overflow-y-auto bg-surface">
+            <div className="p-3 space-y-2">
+              {conversations
+                .sort((a, b) => b.createdAt - a.createdAt)
+                .map((conv) => {
+                  const msgCount = conv.messages.filter((m) => m.role === "user").length;
+                  const isActive = conv.id === activeConvId;
+                  const preview = conv.messages.find((m) => m.role === "user")?.content || "New Chat";
+                  const previewShort = preview.length > 40 ? preview.slice(0, 40) + "..." : preview;
+                  const timeStr = new Date(conv.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+
+                  return (
+                    <div
+                      key={conv.id}
+                      className={`flex items-start gap-2 p-3 rounded-xl cursor-pointer transition-colors ${
+                        isActive
+                          ? "bg-primary/10 border border-primary/30"
+                          : "bg-surface-container hover:bg-surface-container-high"
+                      }`}
+                      onClick={() => switchConversation(conv.id)}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                        isActive ? "bg-primary" : "bg-surface-container-high"
+                      }`}>
+                        <Icon name="chat" filled size={16} className={isActive ? "text-on-primary" : "text-on-surface-variant"} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-body-sm font-semibold truncate ${isActive ? "text-primary" : "text-on-surface"}`}>
+                          {conv.title || previewShort}
+                        </div>
+                        <div className="text-xs text-on-surface-variant flex items-center gap-2">
+                          <span>{timeStr}</span>
+                          <span>{msgCount} msg{msgCount !== 1 ? "s" : ""}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id); }}
+                        className="p-1.5 hover:bg-error/10 rounded-full transition-colors shrink-0 text-on-surface-variant hover:text-error"
+                        title="Delete conversation"
+                      >
+                        <Icon name="delete" size={16} />
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* ─── Messages ──────────────────────────────────────── */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface">
+              {activeMessages.map((m) => (
+                <div
+                  key={m.id}
+                  className={`flex gap-2 ${m.role === "user" ? "flex-row-reverse" : ""}`}
+                >
+                  {m.role === "ai" && (
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
+                      <Icon name="smart_toy" filled size={18} className="text-on-primary" />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[80%] rounded-2xl p-3 text-sm whitespace-pre-wrap ${
+                      m.role === "user"
+                        ? "bg-primary text-on-primary rounded-tr-sm"
+                        : "bg-surface-container-lowest border border-outline-variant rounded-tl-sm"
+                    }`}
+                  >
+                    {m.id === streamingMessageIdRef.current ? (
+                      m.content.trim() ? (
+                        <span>
+                          {m.content}
+                          <span className="inline-flex items-center gap-0.5 ml-0.5">
+                            <span className="w-1 h-1 bg-on-surface-variant rounded-full animate-pulse" />
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-sm font-medium text-on-surface-variant">Thinking</span>
+                          <span className="flex items-center gap-0.5">
+                            <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                            <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                            <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                          </span>
+                        </span>
+                      )
+                    ) : (
+                      m.content
+                    )}
+                  </div>
                 </div>
-              )}
-              <div
-                className={`max-w-[80%] rounded-2xl p-3 text-sm whitespace-pre-wrap ${
-                  m.role === "user"
-                    ? "bg-primary text-on-primary rounded-tr-sm"
-                    : "bg-surface-container-lowest border border-outline-variant rounded-tl-sm"
-                }`}
-              >
-                {m.id === streamingMessageIdRef.current ? (
-                  m.content.trim() ? (
-                    <span>
-                      {m.content}
-                      <span className="inline-flex items-center gap-0.5 ml-0.5">
-                        <span className="w-1 h-1 bg-on-surface-variant rounded-full animate-pulse" />
-                      </span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-sm font-medium text-on-surface-variant">Thinking</span>
-                      <span className="flex items-center gap-0.5">
-                        <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </span>
-                    </span>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* ─── Suggestions ───────────────────────────────────── */}
+            {showSuggestions && !isLoading && activeMessages.length <= 1 && (
+              <div className="px-3 py-2 border-t border-outline-variant flex flex-wrap gap-1.5 shrink-0">
+                {["Explain concept", "Generate quiz", "Translate to Bemba", "Summarize lesson"].map(
+                  (s) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="text-xs px-2.5 py-1 rounded-full border border-outline-variant hover:bg-surface-container transition-colors"
+                    >
+                      {s}
+                    </button>
                   )
-                ) : (
-                  m.content
                 )}
               </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Suggestions (only when not loading and no messages sent yet) */}
-        {showSuggestions && !isLoading && messages.length <= 1 && (
-          <div className="px-3 py-2 border-t border-outline-variant flex flex-wrap gap-1.5 shrink-0">
-            {["Explain concept", "Generate quiz", "Translate to Bemba", "Summarize lesson"].map(
-              (s) => (
-                <button
-                  key={s}
-                  onClick={() => send(s)}
-                  className="text-xs px-2.5 py-1 rounded-full border border-outline-variant hover:bg-surface-container transition-colors"
-                >
-                  {s}
-                </button>
-              )
             )}
-          </div>
-        )}
 
-        {/* Input */}
-        <div className="p-3 border-t border-outline-variant flex items-center gap-2 shrink-0">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            placeholder="Ask anything..."
-            disabled={isLoading}
-            className="flex-1 h-10 px-4 text-sm bg-surface-container-high rounded-full outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
-          />
-          <button
-            onClick={() => send()}
-            disabled={isLoading || !input.trim()}
-            className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Icon name="send" filled size={18} />
-          </button>
-        </div>
+            {/* ─── Input ─────────────────────────────────────────── */}
+            <div className="p-3 border-t border-outline-variant flex items-center gap-2 shrink-0">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                placeholder="Ask anything..."
+                disabled={isLoading}
+                className="flex-1 h-10 px-4 text-sm bg-surface-container-high rounded-full outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+              />
+              <button
+                onClick={() => send()}
+                disabled={isLoading || !input.trim()}
+                className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Icon name="send" filled size={18} />
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
