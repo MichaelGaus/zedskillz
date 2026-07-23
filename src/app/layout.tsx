@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Inter, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { AutoLogoutProvider } from "@/components/shared/auto-logout-provider";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -64,7 +65,9 @@ export default function RootLayout({
       <body
         className={`${plusJakarta.variable} ${inter.variable} ${hankenGrotesk.variable} font-sans antialiased bg-background text-on-surface`}
       >
-        {children}
+        <AutoLogoutProvider>
+          {children}
+        </AutoLogoutProvider>
         <Toaster />
         <SonnerToaster richColors position="top-right" />
       </body>
