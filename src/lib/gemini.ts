@@ -10,8 +10,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  */
 const apiKey = process.env.GEMINI_API_KEY;
 
-// Only instantiate if the key looks valid (Google AI Studio keys start with "AIzaSy")
-export const gemini = apiKey && apiKey.startsWith("AIzaSy")
+// Instantiate if a key is provided — the API route will fall back to mock if it fails
+export const gemini = apiKey
   ? new GoogleGenerativeAI(apiKey)
   : null;
 
