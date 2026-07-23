@@ -21,7 +21,7 @@ export function SignupBody() {
       <div className="w-full max-w-[1200px] grid lg:grid-cols-2 gap-xl items-center">
       
       <div className="hidden lg:flex flex-col space-y-lg pr-xl">
-      <img alt="Zedskillz Hub Logo" className="h-16 w-auto object-contain self-start" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrx1EohzQGhzgU5UdjEiheRiIU1yDN2DrY-suv2tSW11inhwhM2c2-Grjmb5djcsOoZ8ys6DLvhwDqelZZWJ6kw4-1hvMeJS1mWWqdmjGukoO4U8GS5P056JlfnujP0tIE8kD2rieAbqaN97ZiGQE5uEwDDsrfunlfL7RH_EX2BWDACDEzm7KAVvJpMd9YdvLRxmfD22shE_p7ACfDLDLzLRbBzRrNYYOFpgquOWuWrGFgvTMmDLhcT3CK57nQ_XEk68s" />
+      <img alt="Zedskillz Hub Logo" className="h-16 w-auto object-contain self-start" src="/logo.png" />
       <h1 className="font-display-lg text-display-lg text-primary max-w-md">
                           Empower your future with AI-assisted learning.
                       </h1>
@@ -44,7 +44,7 @@ export function SignupBody() {
       
       <div className="flex flex-col items-center justify-center w-full">
       
-      <img alt="Zedskillz Hub Logo" className="lg:hidden h-12 w-auto mb-lg object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF-80Lfd5mQQA4s1O5B13Fq91EDV7-WdTs80ULfYFcir0EJTreM2ZvJsRMNVdBHtPC--FmmhXg7L_Jk6c1ZttDAtCAh9zdGparpUN5AtvNMqTLDn83HwYjKrzoAyupUqw1VH7gMFgvKh2c1RuPVU-k-8nhMYTYFJ_qKwom4uP4TO7grPIbaKS98TuYSMspEmdedZMSK7VxhpE1z4PturQ2OudZ6lgxGLrIcpY36twJVoPlNPCAk_st9xcFqTwG6kqi5s8" />
+      <img alt="Zedskillz Hub Logo" className="lg:hidden h-12 w-auto mb-lg object-contain" src="/logo.png" />
       <div className="glass-panel w-full max-w-lg p-lg lg:p-xl rounded-xl shadow-lg">
       <div className="mb-lg">
       <h2 className="font-headline-md text-headline-md text-on-surface">Create an Account</h2>

@@ -25,7 +25,7 @@ export function SigninBody() {
       <div className="glass-panel p-xl md:p-12 rounded-xl shadow-lg border border-outline-variant/30">
       
       <div className="flex flex-col items-center mb-10">
-      <img alt="Zedskillz Hub Logo" className="h-16 w-auto mb-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKkuyLFN1zxSgvJrD_lXBE6SDBj4mK-vE9qZuxizNlfrPHESO2HxJBWUhe8mvWvQn2ScDNUpbzt_eCky4qUmScH9S0F19wo1TKauuMyLSQm7_dPIEd9uGXoAC13os-3fm9ks_fhVHRq8l8M-fXDdDGjSq70chwCbJdmDdyHMyr3JQQ0z0NSxlbtgrVlDp0vGn91BC50UtQ-lmehw_waThPOaXZvflj-JKrxmN7rxxbr43t-21J3zNIORRJNuoWGc9y6qw" />
+      <img alt="Zedskillz Hub Logo" className="h-16 w-auto mb-6" src="/logo.png" />
       <h1 className="font-display-lg text-display-lg text-primary text-center">Welcome Back</h1>
       <p className="font-body-md text-on-surface-variant text-center mt-2">Empowering your learning journey with AI.</p>
       </div>

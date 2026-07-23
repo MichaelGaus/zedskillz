@@ -368,7 +368,7 @@ export function CourseDetailBody() {
             <div className="flex flex-col md:flex-row justify-between items-center gap-md text-center">
               <div className="flex flex-col items-center md:items-start gap-1">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUXCw-tnC1Xz_cE3KlgB4tzqZcYIt9sY0T1l2GDKC-D53C9J3RMJREa_LVNp5Im5apNaQQoOh1pg8bunusWtDtEyyO8dTfJgpZERq-w5v6RUWenK5qgOdykhI0-pmaVMlo8dgDu9AZT2964nif7_rRx-AP-0IluyPgV-6-0uoe1hfUYT6e3ZPi7uv-dtG1SKTKkde4xRqR9MLVBG_1AQAlwmtysalCC-ZmTC7owq5qGn2ozG8p7qbUUVPiGbSfM747Aw0"
+                  src="/logo.png"
                   alt="Zedskillz Hub"
                   className="w-auto object-contain h-10"
                 />

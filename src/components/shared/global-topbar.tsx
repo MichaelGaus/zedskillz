@@ -116,7 +116,7 @@ export function GlobalTopbar() {
         </button>
         <div data-nav-link data-page="landing" style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
           <div style="width:36px;height:36px;border-radius:8px;overflow:hidden;flex-shrink:0;">
-            <img src="/logo.svg" alt="Zedskillz Hub" style="width:100%;height:100%;object-fit:cover;display:block;" />
+            <img src="/logo.png" alt="Zedskillz Hub" style="width:100%;height:100%;object-fit:contain;display:block;" />
           </div>
           <span data-desktop-only style="font-weight:700;font-size:18px;color:var(--primary);white-space:nowrap;">Zedskillz Hub</span>
           <span data-page-title style="font-weight:600;font-size:14px;color:var(--on-surface-variant);white-space:nowrap;margin-left:8px;padding-left:8px;border-left:1px solid var(--outline-variant);display:none;">${getPageTitle(activePage)}</span>

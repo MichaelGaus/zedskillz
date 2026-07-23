@@ -16,7 +16,7 @@ export function LandingBody() {
       <nav className="flex justify-between items-center px-container-margin md:px-xl h-touch-target lg:h-20 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-md">
       <span className="material-symbols-outlined text-primary">menu</span>
-      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjzWd25i7DgD8P9PZDbRbdpeVZ8VnmeUBa7fVbJALJ2DmYl7Y_mUi6deWBrqjGm8Mx4jhr9hZO3PGqgf0CFVaSXP2b__iXHd5JVcgWdN90FIDFYkGEaBWZIfYZqxt12C9RHg3uRt2T1T-fy5zRKUfsHIduX8Mxy590p94SEb9o-iNgb-OuCxT2Q98U50PrXC39L9P3vdyIbI3_uYplMZD9XArSgGg5yGaWmwu7EzbCGzFhJ_N96FbpO3qxR4OKEr2a_Ek" alt="Zedskillz Hub" className="w-auto object-contain h-10" />
+      <img src="/logo.png" alt="Zedskillz Hub" className="w-auto object-contain h-10" />
       </div>
       
       <div className="hidden md:flex items-center gap-xl">
