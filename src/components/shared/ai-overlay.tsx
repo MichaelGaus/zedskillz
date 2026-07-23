@@ -6,29 +6,133 @@ import { useState, useRef, useEffect } from "react";
 
 type Message = { id: string; role: "ai" | "user"; content: string };
 
+const STORAGE_KEY = "zedskillz_ai_chat_history";
+
+const GREETING: Message = {
+  id: "m1",
+  role: "ai",
+  content:
+    "Hello! I'm your Zedskillz AI Tutor. How can I help you today? I can summarize lessons, explain concepts in Bemba/Nyanja/Tonga, generate quizzes, or recommend next lessons.",
+};
+
+function loadSavedMessages(): Message[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed: Message[] = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return [];
+    if (!parsed.every((m) => m.id && m.role && typeof m.content === "string")) return [];
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
+function saveMessages(messages: Message[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  } catch { /* quota exceeded */ }
+}
+
+function clearSavedMessages() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch { /* noop */ }
+}
+
+/**
+ * Combine multiple AbortSignals into one — any signal aborts the combined signal.
+ */
+function combineAbortSignals(...signals: AbortSignal[]): AbortSignal {
+  const controller = new AbortController();
+  for (const signal of signals) {
+    if (signal.aborted) {
+      controller.abort(signal.reason);
+      return controller.signal;
+    }
+    signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
+  }
+  return controller.signal;
+}
+
+/**
+ * Parse an SSE stream line by line, calling onData for each parsed JSON payload.
+ * Returns when [DONE] is received or the stream ends.
+ */
+async function readSSEStream(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  onData: (json: Record<string, unknown>) => void,
+  signal: AbortSignal
+): Promise<void> {
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    // Keep the last partial line in the buffer
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const payload = line.slice(6).trim();
+        if (payload === "[DONE]") return;
+        try {
+          const json = JSON.parse(payload);
+          onData(json);
+        } catch {
+          // Skip malformed JSON
+        }
+      }
+    }
+  }
+}
+
 /**
  * Global AI overlay — full-screen modal chat surface triggered by AIFab.
- * Now powered by real OpenAI responses via /api/ai/chat.
+ * Supports SSE streaming for real-time AI responses.
  */
 export function AIOverlay() {
   const { aiOverlayOpen, setAiOverlayOpen } = useAppStore();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "m1",
-      role: "ai",
-      content:
-        "Hello! I'm your Zedskillz AI Tutor. How can I help you today? I can summarize lessons, explain concepts in Bemba/Nyanja/Tonga, generate quizzes, or recommend next lessons.",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const loadingMessageIdRef = useRef<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+  const streamingMessageIdRef = useRef<string | null>(null);
+  const streamingContentRef = useRef("");
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Load saved messages from localStorage on mount (client-side only)
+  useEffect(() => {
+    const saved = loadSavedMessages();
+    if (saved.length > 0) {
+      setMessages(saved);
+      setShowSuggestions(false);
+    }
+  }, []);
+
+  // Auto-scroll to bottom when new messages arrive or content streams in
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Persist messages to localStorage whenever they change (skip loading/streaming placeholders)
+  useEffect(() => {
+    const realMessages = messages.filter(
+      (m) => !m.id.startsWith("loading-") && !m.id.startsWith("stream-")
+    );
+    // Skip persisting the initial greeting if user hasn't sent anything yet
+    if (realMessages.length === 1 && realMessages[0].id === GREETING.id) return;
+    saveMessages(realMessages);
   }, [messages]);
 
   // Abort in-flight requests when the overlay closes
@@ -36,32 +140,49 @@ export function AIOverlay() {
     if (!aiOverlayOpen) {
       abortControllerRef.current?.abort();
       abortControllerRef.current = null;
-      loadingMessageIdRef.current = null;
+      streamingMessageIdRef.current = null;
+      streamingContentRef.current = "";
       setIsLoading(false);
     }
   }, [aiOverlayOpen]);
 
+  const newConversation = () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    streamingMessageIdRef.current = null;
+    streamingContentRef.current = "";
+    setMessages([GREETING]);
+    setShowSuggestions(true);
+    clearSavedMessages();
+  };
+
   const send = async (text?: string) => {
     const msg = text || input;
     if (!msg.trim() || isLoading) return;
+    setShowSuggestions(false);
 
     const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: msg };
-    const loadingId = `loading-${Date.now()}`;
-    loadingMessageIdRef.current = loadingId;
-    const loadingMsg: Message = { id: loadingId, role: "ai", content: "" };
+    const streamId = `stream-${Date.now()}`;
+    streamingMessageIdRef.current = streamId;
+    streamingContentRef.current = "";
+    const streamMsg: Message = { id: streamId, role: "ai", content: "" };
 
     // Abort any previous in-flight request
     abortControllerRef.current?.abort();
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    setMessages((prev) => [...prev, userMsg, loadingMsg]);
+    setMessages((prev) => [...prev, userMsg, streamMsg]);
     setInput("");
     setIsLoading(true);
 
+    // Combine the abort controller signal with a 30-second timeout (generous for streaming)
+    const timeoutSignal = AbortSignal.timeout(30000);
+    const combinedSignal = combineAbortSignals(abortController.signal, timeoutSignal);
+
     try {
       const response = await fetch("/api/ai/chat", {
-        signal: abortController.signal,
+        signal: combinedSignal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -74,44 +195,93 @@ export function AIOverlay() {
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-      const data = await response.json();
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response body");
 
-      // Replace the loading message with the real response
+      await readSSEStream(
+        reader,
+        (data) => {
+          if (data.content && typeof data.content === "string") {
+            streamingContentRef.current += data.content;
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === streamId
+                  ? { ...m, content: streamingContentRef.current }
+                  : m
+              )
+            );
+          }
+        },
+        abortController.signal
+      );
+
+      // Stream finished successfully — replace with a finalized message
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === loadingId
+          m.id === streamId
             ? {
                 id: `a-${Date.now()}`,
                 role: "ai",
-                content: data.content || "Sorry, I couldn't process that.",
+                content: streamingContentRef.current || "Sorry, I couldn't process that.",
               }
             : m
         )
       );
     } catch (err: any) {
-      // Ignore aborted requests
+      // Ignore aborted requests (overlay closed or superceded by new send)
       if (err?.name === "AbortError") return;
 
-      // Replace loading with error message
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === loadingId
-            ? {
-                id: `a-${Date.now()}`,
-                role: "ai",
-                content:
-                  "I'm having trouble connecting right now. Please check your internet and try again.",
-              }
-            : m
-        )
-      );
+      const streamingSoFar = streamingContentRef.current;
+
+      // If we already have some streamed content, keep it instead of showing an error
+      if (streamingSoFar.trim().length > 0) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === streamId
+              ? {
+                  id: `a-${Date.now()}`,
+                  role: "ai",
+                  content: streamingSoFar,
+                }
+              : m
+          )
+        );
+      } else if (err?.name === "TimeoutError") {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === streamId
+              ? {
+                  id: `a-${Date.now()}`,
+                  role: "ai",
+                  content: "The response is taking longer than expected. Please try again.",
+                }
+              : m
+          )
+        );
+      } else {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === streamId
+              ? {
+                  id: `a-${Date.now()}`,
+                  role: "ai",
+                  content:
+                    "I'm having trouble connecting right now. Please check your internet and try again.",
+                }
+              : m
+          )
+        );
+      }
     } finally {
-      loadingMessageIdRef.current = null;
+      streamingMessageIdRef.current = null;
+      streamingContentRef.current = "";
       setIsLoading(false);
     }
   };
 
   if (!aiOverlayOpen) return null;
+
+  const userMessageCount = messages.filter((m) => m.role === "user").length;
 
   return (
     <div
@@ -131,9 +301,19 @@ export function AIOverlay() {
             <div className="font-title text-sm font-semibold">ZedAI Assistant</div>
             <div className="text-xs opacity-80 flex items-center gap-1.5">
               <span className={`w-1.5 h-1.5 rounded-full ${isLoading ? "bg-yellow-300 animate-pulse" : "bg-green-300"}`} />
-              {isLoading ? "Thinking..." : "Online • Ready to help in Bemba, Nyanja & English"}
+              {isLoading ? "Thinking..." : `Online • ${userMessageCount} message${userMessageCount !== 1 ? "s" : ""}`}
             </div>
           </div>
+          {/* New Chat button */}
+          {userMessageCount > 0 && (
+            <button
+              onClick={newConversation}
+              className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
+              title="New conversation"
+            >
+              <Icon name="add" size={20} />
+            </button>
+          )}
           <button
             onClick={() => setAiOverlayOpen(false)}
             className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
@@ -161,12 +341,24 @@ export function AIOverlay() {
                     : "bg-surface-container-lowest border border-outline-variant rounded-tl-sm"
                 }`}
               >
-                {m.id === loadingMessageIdRef.current ? (
-                  <span className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </span>
+                {m.id === streamingMessageIdRef.current ? (
+                  m.content.trim() ? (
+                    <span>
+                      {m.content}
+                      <span className="inline-flex items-center gap-0.5 ml-0.5">
+                        <span className="w-1 h-1 bg-on-surface-variant rounded-full animate-pulse" />
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium text-on-surface-variant">Thinking</span>
+                      <span className="flex items-center gap-0.5">
+                        <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </span>
+                    </span>
+                  )
                 ) : (
                   m.content
                 )}
@@ -176,8 +368,8 @@ export function AIOverlay() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggestions (only when not loading and no user messages yet) */}
-        {messages.length <= 1 && !isLoading && (
+        {/* Suggestions (only when not loading and no messages sent yet) */}
+        {showSuggestions && !isLoading && messages.length <= 1 && (
           <div className="px-3 py-2 border-t border-outline-variant flex flex-wrap gap-1.5 shrink-0">
             {["Explain concept", "Generate quiz", "Translate to Bemba", "Summarize lesson"].map(
               (s) => (

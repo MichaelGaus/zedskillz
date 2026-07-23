@@ -1,40 +1,55 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { openai } from "@/lib/openai";
 import { APIError } from "openai";
+
+/**
+ * Helper: send an SSE event in the stream.
+ */
+function sseEvent(data: string): string {
+  return `data: ${data}\n\n`;
+}
 
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json(
-        { error: "Messages array is required" },
-        { status: 400 }
-      );
+      return new Response(sseEvent(JSON.stringify({ error: "Messages array is required" })), {
+        status: 400,
+        headers: { "Content-Type": "text/event-stream" },
+      });
     }
 
-    // Validate each message has role and content
     for (const msg of messages) {
       if (!msg.role || typeof msg.content !== "string") {
-        return NextResponse.json(
-          { error: "Each message must have a 'role' and 'content' string" },
-          { status: 400 }
+        return new Response(
+          sseEvent(JSON.stringify({ error: "Each message must have a 'role' and 'content' string" })),
+          { status: 400, headers: { "Content-Type": "text/event-stream" } }
         );
       }
     }
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === "YOUR_OPENAI_API_KEY") {
-      return NextResponse.json(
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey || apiKey === "YOUR_OPENAI_API_KEY") {
+      return new Response(
+        sseEvent(
+          JSON.stringify({
+            content:
+              "I'm not fully configured yet! The admin needs to set up an OpenAI API key in the `.env` file.",
+          })
+        ) + sseEvent("[DONE]"),
         {
-          role: "assistant",
-          content:
-            "I'm not fully configured yet! The admin needs to set up an OpenAI API key in the `.env` file. Until then, I can still help with general questions — just know I'm running in demo mode.",
-        },
-        { status: 200 }
+          status: 200,
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+          },
+        }
       );
     }
 
-    const completion = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -54,51 +69,73 @@ export async function POST(req: NextRequest) {
       ],
       max_tokens: 2000,
       temperature: 0.7,
+      stream: true,
     });
 
-    const reply = completion.choices[0]?.message?.content || "Sorry, I couldn't generate a response.";
+    const encoder = new TextEncoder();
 
-    return NextResponse.json({
-      role: "assistant",
-      content: reply,
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            const delta = chunk.choices?.[0]?.delta?.content;
+            if (delta) {
+              controller.enqueue(encoder.encode(sseEvent(JSON.stringify({ content: delta }))));
+            }
+          }
+          controller.enqueue(encoder.encode(sseEvent("[DONE]")));
+          controller.close();
+        } catch (err) {
+          console.error("Stream error:", err);
+          try {
+            controller.enqueue(
+              encoder.encode(
+                sseEvent(
+                  JSON.stringify({
+                    error: "Sorry, I ran into a technical hiccup. Please try again.",
+                  })
+                )
+              )
+            );
+            controller.enqueue(encoder.encode(sseEvent("[DONE]")));
+          } catch {}
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(readableStream, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
     });
   } catch (error: unknown) {
     console.error("AI Chat API Error:", error);
 
     const apiError = error instanceof APIError ? error : null;
 
-    // Handle rate limiting
+    let message: string;
     if (apiError?.status === 429) {
-      return NextResponse.json(
-        {
-          role: "assistant",
-          content:
-            "I'm a bit overwhelmed with requests right now! Please try again in a moment.",
-        },
-        { status: 200 }
-      );
+      message = "I'm a bit overwhelmed with requests right now! Please try again in a moment.";
+    } else if (apiError?.status === 401) {
+      message = "My AI brain needs a fresh API key. Please let the admin know to update the configuration.";
+    } else {
+      message = "Sorry, I ran into a technical hiccup. Could you please try asking your question again?";
     }
 
-    // Handle authentication errors
-    if (apiError?.status === 401) {
-      return NextResponse.json(
-        {
-          role: "assistant",
-          content:
-            "My AI brain needs a fresh API key. Please let the admin know to update the configuration.",
-        },
-        { status: 200 }
-      );
-    }
-
-    // Generic fallback
-    return NextResponse.json(
+    return new Response(
+      sseEvent(JSON.stringify({ content: message })) + sseEvent("[DONE]"),
       {
-        role: "assistant",
-        content:
-          "Sorry, I ran into a technical hiccup. Could you please try asking your question again?",
-      },
-      { status: 200 }
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      }
     );
   }
 }
