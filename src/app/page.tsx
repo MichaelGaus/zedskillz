@@ -29,11 +29,41 @@ export default function Home() {
   const { activePage, theme, isAuthenticated, user, sidebarExpanded, _hydrated } = useAppStore();
   useNavDelegation();
 
+  // ── Rehydrate from localStorage AFTER React hydration ──────────────
+  // This useEffect runs only on the client, after the DOM is hydrated.
+  // We restore persisted state from localStorage and set _hydrated = true.
+  // Both SSR and the initial client render produce the same loading spinner,
+  // so React hydration succeeds without a DOM mismatch.
+  useEffect(() => {
+    if (_hydrated) return; // Already hydrated, skip
+
+    // Read persisted state from localStorage
+    const STORAGE_KEY = "zedskillz_store";
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const persisted = JSON.parse(raw);
+        useAppStore.setState({
+          ...(persisted.isAuthenticated ? { isAuthenticated: persisted.isAuthenticated } : {}),
+          ...(persisted.user ? { user: persisted.user } : {}),
+          ...(persisted.activePage ? { activePage: persisted.activePage } : {}),
+          ...(persisted.theme ? { theme: persisted.theme } : {}),
+          ...(persisted.language ? { language: persisted.language } : {}),
+          _hydrated: true,
+        });
+      } else {
+        // No persisted state — mark hydrated with defaults
+        useAppStore.setState({ _hydrated: true });
+      }
+    } catch {
+      useAppStore.setState({ _hydrated: true });
+    }
+  }, [_hydrated]);
+
   // ── Hydration guard ──────────────────────────────────────────────────
-  // During SSR the store has safe defaults (landing page, not authenticated).
-  // On the client, localStorage is read synchronously and _hydrated is set.
-  // Until hydration completes, we render nothing to avoid the "landing page flash"
-  // that logged-in users would otherwise see on every refresh.
+  // Both SSR and the initial client render show this loading spinner.
+  // After the useEffect above sets _hydrated=true, React re-renders
+  // with the real page — no hydration mismatch, no flash.
   if (!_hydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

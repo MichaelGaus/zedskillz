@@ -227,22 +227,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 }));
 
 // ---- Rehydrate from localStorage on the client ----
-// This runs immediately after the store is created on the client.
-// It overwrites the SSR-safe defaults with the real persisted state,
-// then sets _hydrated = true so the page can render.
-if (typeof window !== "undefined") {
-  const persisted = loadPersistedState();
-  if (persisted.isAuthenticated || persisted.activePage || persisted.theme || persisted.language) {
-    useAppStore.setState({
-      ...(persisted.isAuthenticated ? { isAuthenticated: persisted.isAuthenticated } : {}),
-      ...(persisted.user ? { user: persisted.user } : {}),
-      ...(persisted.activePage ? { activePage: persisted.activePage } : {}),
-      ...(persisted.theme ? { theme: persisted.theme as "light" | "dark" } : {}),
-      ...(persisted.language ? { language: persisted.language } : {}),
-      _hydrated: true,
-    });
-  } else {
-    // No persisted state — mark hydrated immediately with defaults
-    useAppStore.setState({ _hydrated: true });
-  }
-}
+// NOTE: We do NOT set _hydrated = true here during module init.
+// Doing so causes a hydration mismatch because SSR renders the loading
+// spinner (_hydrated=false) while the client would render the real page
+// (_hydrated=true) — React hydration fails when DOM doesn't match.
+//
+// Instead, the page component handles rehydration in a useEffect
+// (which runs AFTER hydration completes), setting _hydrated=true there.
+// This ensures both SSR and client first-render produce identical output
+// (the loading spinner), then the useEffect swaps in the real state.
