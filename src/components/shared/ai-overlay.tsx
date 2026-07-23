@@ -203,10 +203,11 @@ export function AIOverlay() {
         (data) => {
           if (data.content && typeof data.content === "string") {
             streamingContentRef.current += data.content;
+            const currentContent = streamingContentRef.current;
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === streamId
-                  ? { ...m, content: streamingContentRef.current }
+                  ? { ...m, content: currentContent }
                   : m
               )
             );
@@ -215,14 +216,15 @@ export function AIOverlay() {
         abortController.signal
       );
 
-      // Stream finished successfully — replace with a finalized message
+      // Stream finished successfully — capture content BEFORE the finally block clears the ref
+      const finalContent = streamingContentRef.current;
       setMessages((prev) =>
         prev.map((m) =>
           m.id === streamId
             ? {
                 id: `a-${Date.now()}`,
                 role: "ai",
-                content: streamingContentRef.current || "Sorry, I couldn't process that.",
+                content: finalContent || "Sorry, I couldn't process that.",
               }
             : m
         )
