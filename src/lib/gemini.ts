@@ -3,11 +3,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 /**
  * Gemini client for Zedskillz AI Tutor.
  * Uses the free-tier gemini-2.0-flash model.
- * Requires GEMINI_API_KEY in .env — falls back to a placeholder message if missing.
+ * Requires GEMINI_API_KEY in .env — falls back to a mock response if missing or invalid.
+ *
+ * IMPORTANT: Get a valid API key at https://aistudio.google.com/apikey
+ * Valid keys start with "AIzaSy..." (about 39 characters).
  */
 const apiKey = process.env.GEMINI_API_KEY;
 
-export const gemini = apiKey
+// Only instantiate if the key looks valid (Google AI Studio keys start with "AIzaSy")
+export const gemini = apiKey && apiKey.startsWith("AIzaSy")
   ? new GoogleGenerativeAI(apiKey)
   : null;
 
