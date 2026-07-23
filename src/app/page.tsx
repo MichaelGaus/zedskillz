@@ -60,6 +60,17 @@ export default function Home() {
     }
   }, [_hydrated]);
 
+  // ── Apply theme class ──────────────────────────────────────────────
+  // Must be BEFORE the hydration guard to satisfy React's Rules of Hooks.
+  // Hooks must always be called in the same order on every render —
+  // placing this after the conditional return would change the hook count
+  // when _hydrated flips from false to true, causing a crash.
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", theme === "dark");
+    }
+  }, [theme]);
+
   // ── Hydration guard ──────────────────────────────────────────────────
   // Both SSR and the initial client render show this loading spinner.
   // After the useEffect above sets _hydrated=true, React re-renders
@@ -74,13 +85,6 @@ export default function Home() {
       </div>
     );
   }
-
-  // Apply theme class
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.classList.toggle("dark", theme === "dark");
-    }
-  }, [theme]);
 
   const renderPage = () => {
     switch (activePage) {
