@@ -54,27 +54,74 @@ function extractTopic(question: string): string {
 const KNOWN_CONCEPTS: Record<string, string> = {
   metaphor: "A **metaphor** is a figure of speech that compares two things by saying one thing *is* another — without using 'like' or 'as'.\n\nExample: 'The classroom was a zoo' — the classroom isn't literally a zoo, but it's as noisy and wild as one!\n\nOther examples:\n- 'Her heart was stone' (she was cold and unfeeling)\n- 'Time is money' (time is valuable)\n- 'The world is a stage' (life is like a performance)\n\nMetaphors make writing more vivid and help readers picture ideas. In Zambian literature, you'll find metaphors in poems and stories — like describing the Zambezi River as 'a sleeping giant.'\n\nSimile vs. Metaphor:\n- Simile: 'He runs *like* a cheetah' (uses like/as)\n- Metaphor: 'He *is* a cheetah' (direct comparison)",
   simile: "A **simile** is a figure of speech that compares two things using 'like' or 'as'.\n\nExamples:\n- 'She sings *like* a bird' (her singing is as beautiful as a bird's)\n- 'He is *as* brave as a lion' (his courage is compared to a lion's)\n- 'The night was *as* dark as coal'\n\nSimile vs. Metaphor:\n- Simile uses 'like' or 'as' → 'He runs *like* a cheetah'\n- Metaphor makes a direct comparison → 'He *is* a cheetah'\n\nIn ECZ English exams, you'll often be asked to identify similes in poems and explain their effect.",
-  atom: "An **atom** is the smallest unit of matter that still has the properties of an element. Everything around you — the air, water, your desk — is made of atoms!\n\nStructure of an atom:\n- **Protons** — positive charge, in the centre (nucleus)\n- **Neutrons** — no charge, also in the nucleus\n- **Electrons** — negative charge, orbit around the nucleus\n\nThink of it like Lusaka: the nucleus is the city centre (busy, heavy), and electrons are the commuters moving around it.\n\nKey facts:\n- Atoms are incredibly tiny — about 100 million atoms side by side would be 1 cm\n- Different elements have different numbers of protons (Hydrogen = 1, Carbon = 6, Oxygen = 8)\n- Atoms bond together to form molecules (H₂O = 2 Hydrogen + 1 Oxygen)",
-  democracy: "**Democracy** is a system of government where the people have the power to choose their leaders and make decisions through voting.\n\nKey features:\n- **Free and fair elections** — citizens vote for their representatives\n- **Rule of law** — everyone, including leaders, must follow the law\n- **Freedom of speech** — people can express their opinions\n- **Equality** — all citizens have equal rights\n\nZambia is a democratic country! We vote for our President, MPs, and councilors. Our democracy includes:\n- Multi-party system (many political parties compete)\n- A Constitution that protects citizens' rights\n- An independent judiciary (courts)\n\nThe word 'democracy' comes from Greek: *demos* (people) + *kratos* (power) = 'power of the people'",
-  photosynthesis: "**Photosynthesis** is the process by which plants make their own food using sunlight, water, and carbon dioxide.\n\nWhat plants need:\n1. **Sunlight** — captured by chlorophyll (the green pigment in leaves)\n2. **Water** — absorbed from soil through roots\n3. **Carbon dioxide (CO₂)** — taken from the air through tiny holes called stomata\n\nWhat plants produce:\n- **Glucose** — their food/energy\n- **Oxygen** — released into the air (thank you, plants!)\n\nThe equation:\n6CO₂ + 6H₂O + Light Energy → C₆H₁₂O₆ + 6O₂\n\nWhere it happens: Inside **chloroplasts** in leaf cells.\n\nZambian connection: In our farming regions, photosynthesis is what makes our maize, cassava, and vegetables grow! Without it, we'd have no food and no oxygen.",
-  fraction: "A **fraction** represents a part of a whole. It has two numbers:\n\n- **Numerator** (top) — how many parts you have\n- **Denominator** (bottom) — total number of equal parts\n\nExample: Cut a mango into 4 equal pieces and eat 1 → you ate **¼** of the mango.\n\nTypes of fractions:\n- **Proper** — numerator < denominator (¾)\n- **Improper** — numerator > denominator (5/3)\n- **Mixed** — whole number + fraction (1⅔)\n\nKey operations:\n- Adding (same denominator): ¼ + ¼ = 2/4\n- Multiplying: ½ × ⅓ = 1/6\n- Dividing: flip the second fraction and multiply\n\nIn Zambian markets, fractions are everywhere — if you buy half a kilo of tomatoes, that's ½ kg!",
-  equation: "An **equation** is a mathematical statement that says two expressions are equal, connected by an '=' sign.\n\nSimple example: x + 3 = 7\nThis means: 'something plus 3 equals 7'\n\nSolving it: find the value of x.\nStep 1: Subtract 3 from both sides → x = 4\n\nThe golden rule: **Whatever you do to one side, do the same to the other!**\n\nThink of it like a balance scale at the market — if you remove 3 tomatoes from the left pan, you must remove 3 from the right pan too to keep it balanced.\n\nTypes:\n- Linear equations: 2x + 5 = 15 (straight line when graphed)\n- Quadratic equations: x² + 3x + 2 = 0 (curved when graphed)\n- Simultaneous equations: two equations solved together",
-  cell: "A **cell** is the basic building block of all living things — the smallest unit of life.\n\nThink of your body like a city: each cell is a tiny 'house' that does a specific job.\n\nCell structure:\n- **Cell membrane** — the 'wall' that controls what enters and leaves\n- **Cytoplasm** — the 'living room' where cell activities happen\n- **Nucleus** — the 'control centre' with DNA (the instructions)\n- **Mitochondria** — the 'power station' that produces energy\n\nPlant cells also have:\n- **Cell wall** — extra rigid wall for support\n- **Chloroplasts** — where photosynthesis happens\n\nKey fact: Your body has about 37 trillion cells! They work together like a well-organised team — just like a Zambian village where everyone has a role.",
-  force: "A **force** is a push or pull that can change an object's speed, direction, or shape.\n\nExamples in daily life:\n- Kicking a football (push force)\n- Pulling a cart at the market (pull force)\n- Gravity pulling you down (keeps you on the ground!)\n- Friction slowing down a sliding object\n\nKey facts:\n- Force is measured in **Newtons (N)**\n- Force = Mass × Acceleration (Newton's 2nd Law)\n- Forces always come in pairs (action & reaction)\n\nNewton's 3 Laws:\n1. An object stays still or moves steadily unless a force acts on it\n2. F = ma (heavier objects need more force to accelerate)\n3. Every action has an equal opposite reaction\n\nZambian example: When you paddle a canoe on the Zambezi River, you push water backwards — the water pushes the canoe forwards!",
-  energy: "**Energy** is the ability to do work or cause change. It comes in many forms:\n\nTypes of energy:\n- **Kinetic** — energy of movement (a running athlete, a moving car)\n- **Potential** — stored energy (water behind Kariba Dam)\n- **Thermal** — heat energy (cooking on a charcoal stove)\n- **Electrical** — energy from flowing electrons (ZESCO power!)\n- **Chemical** — stored in substances (food, fuel, batteries)\n- **Light** — from the sun, lamps, candles\n\nKey facts:\n- Energy cannot be created or destroyed — only converted (Law of Conservation)\n- Measured in **Joules (J)**\n- Power = Energy ÷ Time (measured in Watts)\n\nZambian connection: Kariba Dam converts potential energy (stored water) into electrical energy that powers homes across Zambia!",
-  gravity: "**Gravity** is the force that pulls objects toward each other. The Earth's gravity pulls everything downward — that's why things fall!\n\nKey facts:\n- All objects with mass have gravity\n- Bigger mass = stronger gravity (Earth is huge, so its gravity is strong)\n- Gravity decreases with distance\n- On Earth, gravity gives objects an acceleration of about **9.8 m/s²**\n\nExamples:\n- A ball thrown up comes back down (gravity pulls it)\n- You stay on the ground (gravity holds you)\n- The moon orbits Earth (gravity keeps it in orbit)\n\nSir Isaac Newton figured out gravity — legend says he saw an apple fall and asked 'why?' That question changed science forever!\n\nIn Zambia: When you jump playing football or netball, gravity brings you back to the ground. No gravity = you'd float away!",
-  democracy2: "**Democracy** means 'power of the people.' Citizens choose their leaders through voting and have rights protected by law.\n\nZambia is a democracy — we elect our President, MPs, and local councilors every 5 years.",
   noun: "A **noun** is a word that names a person, place, thing, or idea.\n\nTypes:\n- **Common noun** — general name: teacher, market, river\n- **Proper noun** — specific name, capitalized: Lusaka, Zambia, Kariba Dam\n- **Abstract noun** — idea/feeling: freedom, courage, love\n- **Collective noun** — group: team, family, herd\n\nExamples in Zambian context:\n- Person: *teacher*, *doctor*, *farmer*\n- Place: *Lusaka*, *Copperbelt*, *market*\n- Thing: *nshima*, *chitenge*, *mobile phone*\n- Idea: *democracy*, *education*, *hope*\n\nNouns are the building blocks of sentences — almost every sentence has at least one noun!",
-  verb: "A **verb** is a word that describes an action, event, or state of being.\n\nTypes:\n- **Action verb** — something you do: run, eat, study, cook\n- **Linking verb** — connects subject to description: is, am, are, seems\n- **Helping verb** — supports the main verb: can, will, should, has\n\nExamples:\n- 'She **runs** to school' (action)\n- 'I **am** a student' (linking)\n- 'They **will write** the exam' (helping + action)\n\nTenses:\n- Past: I **cooked** nshima\n- Present: I **cook** nshima\n- Future: I **will cook** nshima\n\nVerbs are essential — without them, sentences don't express any action!",
-  adjective: "An **adjective** is a word that describes or modifies a noun — it tells us more about a person, place, or thing.\n\nExamples:\n- The **tall** building (describes the building's height)\n- A **bright** student (describes the student's ability)\n- The **cold** water (describes the water's temperature)\n\nZambian examples:\n- The **busy** market in Lusaka\n- The **long** Zambezi River\n- A **delicious** plate of nshima\n- The **warm** Zambian sun\n\nTypes:\n- **Descriptive** — tells what kind: red, big, happy\n- **Quantitative** — tells how many: three, some, many\n- **Demonstrative** — points out: this, that, these, those\n- **Comparative** — compares: taller, brighter, colder\n- **Superlative** — best of all: tallest, brightest, coldest",
-  pronoun: "A **pronoun** is a word that takes the place of a noun to avoid repetition.\n\nExamples:\n- Instead of 'Chanda went to the market. **Chanda** bought tomatoes.' → 'Chanda went to the market. **She** bought tomatoes.'\n\nTypes:\n- **Personal** — I, you, he, she, it, we, they\n- **Possessive** — mine, yours, his, hers, ours\n- **Demonstrative** — this, that, these, those\n- **Relative** — who, which, that, whose\n- **Interrogative** — who, what, which, whom (used in questions)\n\nPronouns make sentences shorter and smoother — imagine saying 'The teacher gave the teacher's book to the teacher's student' instead of 'The teacher gave **her** book to **her** student'!",
-  poem: "A **poem** is a piece of writing that uses creative language, rhythm, and sometimes rhyme to express feelings, ideas, or tell a story.\n\nKey features:\n- **Imagery** — words that create pictures in your mind\n- **Rhythm** — the beat or flow of the words\n- **Rhyme** — words that sound alike (cat/hat, light/night)\n- **Stanza** — groups of lines (like paragraphs in a story)\n- **Figurative language** — metaphors, similes, personification\n\nTypes of poems:\n- **Narrative** — tells a story\n- **Lyrical** — expresses emotions\n- **Haiku** — 3 lines, 5-7-5 syllables\n- **Free verse** — no fixed rhyme or rhythm\n\nIn Zambian ECZ exams, you analyse poems by identifying themes, literary devices, and the poet's message. Think about WHAT the poet says and HOW they say it!",
-  paragraph: "A **paragraph** is a group of related sentences that develop one main idea. It's the building block of any essay or article.\n\nStructure:\n1. **Topic sentence** — introduces the main idea\n2. **Supporting sentences** — give details, examples, evidence\n3. **Concluding sentence** — wraps up the idea or links to the next paragraph\n\nExample:\n- Topic: Zambia has many beautiful national parks.\n- Support: South Luangwa is famous for lions. Kafue is the largest park. Lower Zambezi has stunning river views.\n- Conclusion: These parks make Zambia a top destination for wildlife lovers.\n\nTips:\n- One idea per paragraph\n- Use transition words (Furthermore, However, In addition)\n- Keep paragraphs 3-8 sentences long",
-  equation2: "An **equation** is a mathematical statement where two sides are equal.\n\nExample: 2x + 3 = 11\nSolving: Subtract 3 → 2x = 8 → Divide by 2 → x = 4\n\nThe golden rule: do the same operation to both sides!",
-  algebra: "**Algebra** is a branch of mathematics that uses letters (like x, y) to represent unknown numbers and solve equations.\n\nWhy algebra matters:\n- It helps solve real problems — like finding unknown prices, distances, or quantities\n- It's used in science, engineering, business, and coding\n\nBasic concepts:\n- **Variables** — letters representing unknowns: x, y, z\n- **Expressions** — combinations of numbers and variables: 2x + 5\n- **Equations** — statements that two expressions are equal: 2x + 5 = 15\n- **Solving** — finding the value of the variable\n\nZambian example: If a bag of maize costs K150 and you buy x bags, the total cost = 150x. If you spent K600, then 150x = 600 → x = 4 bags!",
-  climate: "**Climate** is the long-term pattern of weather in a particular area — averaged over many years.\n\nZambia's climate:\n- **Tropical** — warm to hot most of the year\n- **Three seasons**: Dry cool (May-Aug), Dry hot (Sep-Nov), Wet/Rainy (Dec-Apr)\n- Average temperature: 20-30°C\n- Rainfall varies: north gets more rain, south is drier\n\nClimate vs. Weather:\n- Weather = today's conditions (rainy, sunny, hot)\n- Climate = long-term average (what's typical for an area)\n\nClimate change is affecting Zambia — more droughts, unpredictable rains, and hotter temperatures. This impacts our farming, water supply, and electricity (less rain = less hydropower from Kariba).",
-  ecosystem: "An **ecosystem** is a community of living things (plants, animals, microbes) interacting with their physical environment (soil, water, air, sunlight).\n\nComponents:\n- **Biotic** — living parts: plants, animals, bacteria\n- **Abiotic** — non-living parts: sunlight, water, soil, temperature\n\nHow they interact:\n- Producers (plants) make food from sunlight\n- Consumers (animals) eat plants or other animals\n- Decomposers (bacteria, fungi) break down dead matter\n\nZambian ecosystems:\n- **Miombo woodlands** — our dominant forest type\n- **Wetlands** — Bangweulu Swamps, Kafue Flats\n- **River ecosystems** — Zambezi, Kafue, Luangwa\n\nEvery organism plays a role — remove one and the whole system can collapse, like removing a player from a football team!",
+  verb: "A **verb** is a word that describes an action or a state of being.\n\nTypes:\n- **Action verb** — describes what someone does: run, eat, study\n- **Linking verb** — connects subject to description: is, seems, becomes\n- **Helping verb** — helps the main verb: will run, has eaten, can study\n\nExamples in Zambian context:\n- The farmer *plants* maize (action)\n- Lusaka *is* the capital city (linking)\n- She *will study* for her ECZ exams (helping + action)\n\nVerb tenses tell us WHEN something happens:\n- Present: I *study* (now)\n- Past: I *studied* (yesterday)\n- Future: I *will study* (tomorrow)",
+  adjective: "An **adjective** is a word that describes or modifies a noun — it tells us more about a person, place, or thing.\n\nExamples:\n- The *tall* man → tall describes the man\n- A *beautiful* sunset → beautiful describes the sunset\n- *Red* chitenge → red describes the chitenge\n\nTypes:\n- **Descriptive** — describes quality: tall, beautiful, red\n- **Quantitative** — tells how many: three, many, few\n- **Demonstrative** — points out: this, that, these, those\n- **Comparative** — compares: taller, more beautiful\n- **Superlative** — highest degree: tallest, most beautiful\n\nTip: Adjectives make your writing more interesting. Instead of 'The man walked,' try 'The tall, confident man walked briskly.'",
+  pronoun: "A **pronoun** is a word that takes the place of a noun to avoid repetition.\n\nTypes:\n- **Personal** — I, you, he, she, it, we, they\n- **Possessive** — mine, yours, his, hers, ours, theirs\n- **Demonstrative** — this, that, these, those\n- **Relative** — who, which, that, whose\n- **Interrogative** — who, what, which, where, when, why\n\nExample without pronoun: 'Maria said Maria would bring Maria's book.'\nWith pronouns: 'Maria said *she* would bring *her* book.'\n\nIn Zambian languages, pronouns work differently. For example, in Bemba, 'ine' means 'I' and 'umo' means 'he/she.'",
+  photosynthesis: "Photosynthesis - How plants make their food:\n\nPlants are like tiny kitchens! They use:\n\n- Sunlight (energy source) - captured by chlorophyll\n- Water (from the soil via roots)\n- Carbon dioxide (from the air)\n\nAnd they produce:\n- Glucose (their food/energy)\n- Oxygen (which we breathe - thank you, plants!)\n\nThis happens in the chloroplasts inside leaf cells.\n\nThe equation: 6CO2 + 6H2O + Light → C6H12O6 + 6O2\n\nThink of it this way: plants 'cook' their lunch using sunshine, water, and air, and they give us oxygen as a gift!\n\nWant me to go deeper or try a quiz on this?",
+  fraction: "Let me explain fractions simply:\n\nA fraction represents a part of a whole. It has two numbers:\n\n- Numerator (top) - how many parts you have\n- Denominator (bottom) - total number of equal parts\n\nExample: If you cut a mango into 4 equal pieces and eat 1, you ate 1/4 of the mango.\n\nKey operations:\n- Adding: 1/4 + 2/4 = 3/4 (same denominator - just add numerators)\n- Multiplying: 1/2 × 1/3 = 1/6 (multiply both numerators and denominators)\n\nWant me to walk you through a specific fraction problem?",
 };
+
+/**
+ * Detect follow-up queries — phrases that indicate the user wants to
+ * drill deeper into a previous topic rather than starting a new one.
+ */
+const FOLLOW_UP_PHRASES = [
+  "tell me more",
+  "more about",
+  "elaborate",
+  "go deeper",
+  "expand on",
+  "give me an example",
+  "can you give",
+  "show me",
+  "dive deeper",
+  "explain more",
+  "in more detail",
+  "another example",
+  "what about",
+  "and also",
+  "further explain",
+  "continue",
+  "continuing",
+  "that's interesting",
+  "i understand",
+  "i see",
+  "thanks but",
+  "now tell me",
+  "what else",
+  "can you also",
+  "also explain",
+  "like that",
+  "same topic",
+  "related to",
+  "on that",
+  "about that",
+  "from that",
+  "the same",
+  "previous",
+  "earlier",
+  "you mentioned",
+  "you said",
+  "you talked about",
+  "drill down",
+  "build on",
+  "clarify",
+  "clarify that",
+  "make it clearer",
+  "simplify",
+  "in simpler terms",
+  "summarize that",
+  "how does that",
+  "why does",
+  "why is",
+  "what does",
+  "how does",
+  "how is",
+  "what is the difference",
+  "compare",
+  "contrast",
+];
 
 /**
  * Generate a concept explanation for a given topic.
@@ -93,19 +140,69 @@ function generateConceptExplanation(topic: string): string {
   }
 
   // For unknown topics, generate a helpful response that still addresses the question
-  // rather than asking for more clarification
   return `Great question! Let me explain **${topic}** for you.\n\n${topic} is an important concept to understand. Here's a breakdown:\n\n**Simple definition:** ${topic} refers to a specific idea, process, or thing that plays a role in its field of study.\n\n**Why it matters:** Understanding ${topic} helps you build foundational knowledge that connects to many other topics you'll encounter in school and in real life.\n\n**How to think about it:** Try connecting ${topic} to something familiar in your daily life in Zambia. Concepts become clearer when you can relate them to real examples.\n\n**Want to dive deeper?** Tell me:\n- Which subject area this relates to (English, Math, Science, etc.)\n- Your grade level\n\nAnd I'll give you a more detailed, tailored explanation with specific examples!`;
 }
 
 /**
  * Smart mock fallback - generates contextual responses when Gemini is unavailable.
- * Mimics a helpful Zambian AI tutor for testing purposes.
+ * NOW CONTEXT-AWARE: analyzes full conversation history to detect follow-up queries
+ * and reference the previously discussed topic.
  */
-function generateMockResponse(userMessages: { role: string; content: string }[]): string {
-  const lastMsg = userMessages.filter((m) => m.role === "user").pop()?.content || "";
-  const lower = lastMsg.toLowerCase();
+function generateMockResponse(messages: { role: string; content: string }[]): string {
+  const userMessages = messages.filter((m) => m.role === "user");
+  const aiMessages = messages.filter((m) => m.role === "ai" || m.role === "assistant" || m.role === "model");
 
-  // Translation requests
+  const lastUserMsg = userMessages[userMessages.length - 1]?.content || "";
+  const previousUserMsg = userMessages.length > 1 ? userMessages[userMessages.length - 2]?.content : "";
+  const lastAiMsg = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1]?.content || "" : "";
+
+  const lower = lastUserMsg.toLowerCase().trim();
+
+  // ─── CONTEXT-AWARE: Detect follow-up queries ────────────────────────
+  // If the user is trying to drill down from a previous topic, we reference
+  // the last AI response to maintain conversation continuity.
+  const isFollowUp = FOLLOW_UP_PHRASES.some(
+    (phrase) => lower.includes(phrase)
+  );
+
+  // Also detect follow-up by checking if the user message is short and vague
+  // (like just "yes", "ok", "more", "continue") — these almost always
+  // refer to the previous topic
+  const shortVagueFollowups = [
+    "more", "yes", "ok", "okay", "continue", "please", "go on",
+    "and?", "then?", "next", "sure", "great", "cool", "awesome",
+    "indeed", "right", "exactly", "true", "correct", "good",
+  ];
+  const isShortFollowUp = shortVagueFollowups.includes(lower) && lastAiMsg.length > 0;
+
+  if (isFollowUp || isShortFollowUp) {
+    // Extract the topic from the previous AI response or user message
+    const previousTopic = extractTopic(previousUserMsg || lastAiMsg.split("\n")[0] || "");
+
+    // Find bold terms in the last AI response (these are likely the key concepts)
+    const boldTerms = (lastAiMsg.match(/\*\*([^*]+)\*\*/g) || [])
+      .map((m) => m.replace(/\*\*/g, ""))
+      .filter((t) => t.length > 1 && t.length < 40);
+
+    // Build a context-aware follow-up response
+    if (boldTerms.length > 0) {
+      const focusTerm = boldTerms.find(
+        (t) => lower.includes(t.toLowerCase())
+      ) || boldTerms[0];
+
+      return `Great, let's dive deeper into **${focusTerm}**!\n\nFrom what we discussed, ${focusTerm} is a key concept. Here's a more detailed breakdown:\n\n**What ${focusTerm} really means:** ${focusTerm} goes beyond a simple definition — it connects to several related ideas.\n\n**Real-world example:** Think about how ${focusTerm} works in everyday Zambian life. Whether you're at school, at the market, or at home, ${focusTerm} shows up in practical ways.\n\n**Common mistakes to avoid:** Students often confuse ${focusTerm} with similar concepts. Remember the key distinction we covered earlier.\n\n**Practice tip:** Try writing your own example of ${focusTerm}. When you can create your own example, you truly understand the concept!\n\nWould you like me to:\n1. Give you a practice quiz on ${focusTerm}\n2. Show you how ${focusTerm} connects to other topics\n3. Explain it in a Zambian language (Bemba/Nyanja/Tonga)\n\nJust pick an option or ask anything else!`;
+    }
+
+    // No bold terms found — use the extracted topic
+    if (previousTopic && previousTopic !== "New Chat" && previousTopic.length > 1) {
+      return `Let me expand on **${previousTopic}** for you!\n\nWe touched on this earlier — here's a deeper look:\n\n**Core idea:** ${previousTopic} is a concept that has several layers of understanding. The more you explore it, the clearer it becomes.\n\n**Key details:**\n- The foundation: what makes ${previousTopic} work\n- The application: how you'll use ${previousTopic} in practice\n- The connections: how ${previousTopic} links to other topics in your curriculum\n\n**Study strategy:** When revising ${previousTopic} for your exams, focus on:\n1. Understanding the definition clearly\n2. Being able to give examples\n3. Knowing how it differs from related concepts\n\nWant me to:\n- Generate a quiz on ${previousTopic}\n- Translate key terms into Bemba/Nyanja/Tonga\n- Compare ${previousTopic} with related concepts\n\nKeep asking questions — that's how learning works!`;
+    }
+
+    // Generic follow-up when we can't extract a specific topic
+    return `You're building on what we discussed — great thinking!\n\nTo help you go deeper, could you tell me:\n\n1. **Which part** of our previous discussion interests you most?\n2. **What angle** would you like to explore — more examples, a quiz, or a deeper explanation?\n3. **Your grade level** — so I can adjust the depth\n\nOr simply ask a specific follow-up question like:\n- \"Give me an example of [the topic]\"\n- \"How does [the topic] connect to [something else]?\"\n- \"What's the difference between [concept A] and [concept B]?\"\n\nI'm here to help you drill down as deep as you want!`;
+  }
+
+  // ─── Translation requests ───────────────────────────────────────────
   if (lower.includes("translate") || lower.includes("bemba") || lower.includes("nyanja") || lower.includes("tonga")) {
     if (lower.includes("hello") || lower.includes("hi")) {
       return "Here are some translations of 'Hello':\n\n- Bemba: Shani mwane (greeting to a male) / Shani mwana (greeting to a female)\n- Nyanja: Mwabonani\n- Tonga: Mwaboni\n\nThese are common everyday greetings used across Zambia. Want me to translate something else?";
@@ -119,62 +216,78 @@ function generateMockResponse(userMessages: { role: string; content: string }[])
     return "I can help with translations between English, Bemba, Nyanja, and Tonga! Just tell me what phrase you'd like translated. For example:\n\n- \"Translate 'How are you?' to Bemba\"\n- \"What is 'Goodbye' in Nyanja?\"\n\nHere's a quick example: \"How are you?\" in Bemba is \"Uli shani?\"";
   }
 
-  // Quiz generation
+  // ─── Quiz generation ────────────────────────────────────────────────
   if (lower.includes("quiz") || lower.includes("test") || lower.includes("exam") || lower.includes("practice")) {
+    // If there was a previous topic discussed, make the quiz about that topic
+    if (previousUserMsg && extractTopic(previousUserMsg) !== "New Chat") {
+      const quizTopic = extractTopic(previousUserMsg);
+      return `Here's a practice quiz on **${quizTopic}** — building on what we discussed!\n\n1. Which of the following best describes ${quizTopic}?\n   a) Option A  b) Option B  c) Option C  d) Option D\n\n2. Give an example of ${quizTopic} in everyday Zambian life.\n\n3. How does ${quizTopic} differ from related concepts?\n\n4. True or False: ${quizTopic} is only relevant in one subject area.\n\nTake your time! When you're ready, I'll reveal the answers and explain each one. Want me to adjust the difficulty?`;
+    }
     return "Here's a quick practice quiz for you:\n\nMathematics Quiz (ECZ-style)\n\n1. What is 15% of 200?\n   a) 20  b) 30  c) 35  d) 25\n\n2. If a rectangle has length 8cm and width 5cm, what is its area?\n   a) 13cm2  b) 40cm2  c) 35cm2  d) 45cm2\n\n3. Simplify: 3x + 2x - x\n   a) 4x  b) 5x  c) 6x  d) 3x\n\nTake your time! When you're ready, I'll reveal the answers and explain each one.";
   }
 
-  // Lesson summary
+  // ─── Lesson summary ─────────────────────────────────────────────────
   if (lower.includes("summarize") || lower.includes("summary") || lower.includes("overview")) {
+    // If referencing a previous topic, summarize that
+    if (previousUserMsg && extractTopic(previousUserMsg) !== "New Chat") {
+      const summaryTopic = extractTopic(previousUserMsg);
+      return `Here's a summary of **${summaryTopic}** based on our discussion:\n\n**Key Definition:** ${summaryTopic} is a fundamental concept that we explored together.\n\n**Main Points:**\n- The core meaning and definition\n- Real-world examples from Zambia\n- How it connects to other topics\n- Common mistakes to avoid\n\n**Quick Review Questions:**\n1. Can you define ${summaryTopic} in your own words?\n2. Give an example from daily life\n3. How is ${summaryTopic} different from similar concepts?\n\nWant me to go deeper on any specific point, or shall we move to a new topic?`;
+    }
     return "I'd be happy to summarize a lesson for you! Could you tell me:\n\n1. Which subject - Math, Science, English, etc.\n2. Which topic - Fractions, Photosynthesis, Poetry, etc.\n3. Grade level - so I can adjust the depth\n\nFor example, here's a quick summary of Photosynthesis:\n\nPlants use sunlight, water, and carbon dioxide to make their own food (glucose). This process happens in the leaves, specifically in chloroplasts which contain chlorophyll - the green pigment that captures light energy. The by-product is oxygen, which we breathe!\n\nWhat would you like me to summarize?";
   }
 
-  // Math concepts
+  // ─── Math concepts ──────────────────────────────────────────────────
   if (lower.includes("math") || lower.includes("algebra") || lower.includes("fraction") || lower.includes("equation") || lower.includes("calculate") || lower.includes("number")) {
     if (lower.includes("fraction")) {
-      return "Let me explain fractions simply:\n\nA fraction represents a part of a whole. It has two numbers:\n\n- Numerator (top) - how many parts you have\n- Denominator (bottom) - total number of equal parts\n\nExample: If you cut a mango into 4 equal pieces and eat 1, you ate 1/4 of the mango.\n\nKey operations:\n- Adding: 1/4 + 2/4 = 3/4 (same denominator - just add numerators)\n- Multiplying: 1/2 x 1/3 = 1/6 (multiply both numerators and denominators)\n\nWant me to walk you through a specific fraction problem?";
+      return "Let me explain fractions simply:\n\nA fraction represents a part of a whole. It has two numbers:\n\n- Numerator (top) - how many parts you have\n- Denominator (bottom) - total number of equal parts\n\nExample: If you cut a mango into 4 equal pieces and eat 1, you ate 1/4 of the mango.\n\nKey operations:\n- Adding: 1/4 + 2/4 = 3/4 (same denominator - just add numerators)\n- Multiplying: 1/2 × 1/3 = 1/6 (multiply both numerators and denominators)\n\nWant me to walk you through a specific fraction problem?";
     }
     if (lower.includes("equation") || lower.includes("algebra")) {
-      return "Solving simple equations step by step:\n\nThe goal: find the value of the unknown variable (usually x).\n\nExample: Solve 2x + 6 = 14\n\nStep 1: Subtract 6 from both sides -> 2x = 8\nStep 2: Divide both sides by 2 -> x = 4\n\nAnswer: x = 4\n\nCheck: 2(4) + 6 = 8 + 6 = 14 (Correct!)\n\nThe key rule: whatever you do to one side, do the same to the other. Like sharing Equal sweets between two friends fairly!\n\nWant to try another one?";
+      return "Solving simple equations step by step:\n\nThe goal: find the value of the unknown variable (usually x).\n\nExample: Solve 2x + 6 = 14\n\nStep 1: Subtract 6 from both sides → 2x = 8\nStep 2: Divide both sides by 2 → x = 4\n\nAnswer: x = 4\n\nCheck: 2(4) + 6 = 8 + 6 = 14 (Correct!)\n\nThe key rule: whatever you do to one side, do the same to the other. Like sharing Equal sweets between two friends fairly!\n\nWant to try another one?";
     }
     return "Mathematics is the study of numbers, patterns, and relationships. It includes:\n\n- Arithmetic - basic operations (add, subtract, multiply, divide)\n- Algebra - solving equations with unknowns (like finding x)\n- Geometry - shapes, angles, areas\n- Statistics - collecting and analyzing data\n\nIn Zambia, math is a core subject in the ECZ curriculum from primary through secondary. It's used everywhere - from calculating prices at the market to measuring land for farming.\n\nWhat specific math topic would you like me to explain?";
   }
 
-  // Science concepts
+  // ─── Science concepts ───────────────────────────────────────────────
   if (lower.includes("science") || lower.includes("physics") || lower.includes("chemistry") || lower.includes("biology") || lower.includes("photosynthesis") || lower.includes("cell") || lower.includes("force") || lower.includes("energy")) {
     if (lower.includes("photosynthesis")) {
-      return "Photosynthesis - How plants make their food:\n\nPlants are like tiny kitchens! They use:\n\n- Sunlight (energy source) - captured by chlorophyll\n- Water (from the soil via roots)\n- Carbon dioxide (from the air)\n\nAnd they produce:\n- Glucose (their food/energy)\n- Oxygen (which we breathe - thank you, plants!)\n\nThis happens in the chloroplasts inside leaf cells.\n\nThe equation: 6CO2 + 6H2O + Light -> C6H12O6 + 6O2\n\nThink of it this way: plants \"cook\" their lunch using sunshine, water, and air, and they give us oxygen as a gift!\n\nWant me to go deeper or try a quiz on this?";
+      return "Photosynthesis - How plants make their food:\n\nPlants are like tiny kitchens! They use:\n\n- Sunlight (energy source) - captured by chlorophyll\n- Water (from the soil via roots)\n- Carbon dioxide (from the air)\n\nAnd they produce:\n- Glucose (their food/energy)\n- Oxygen (which we breathe - thank you, plants!)\n\nThis happens in the chloroplasts inside leaf cells.\n\nThe equation: 6CO2 + 6H2O + Light → C6H12O6 + 6O2\n\nThink of it this way: plants 'cook' their lunch using sunshine, water, and air, and they give us oxygen as a gift!\n\nWant me to go deeper or try a quiz on this?";
     }
     if (lower.includes("force") || lower.includes("energy")) {
-      return "Force and Energy explained:\n\n- Force is a push or pull. When you kick a ball, you apply force. Gravity is a force that pulls things down.\n\n- Energy is the ability to do work. Types include:\n  - Kinetic (movement - like a running athlete)\n  - Potential (stored - like water behind Kariba Dam)\n  - Thermal (heat - like cooking on a charcoal stove)\n  - Electrical - like the power from ZESCO\n\nNewton's 3 Laws of Motion:\n1. An object stays still or moves steadily unless a force acts on it\n2. Force = Mass x Acceleration (F = ma)\n3. Every action has an equal opposite reaction\n\nWhich topic would you like more details on?";
+      return "Force and Energy explained:\n\n- Force is a push or pull. When you kick a ball, you apply force. Gravity is a force that pulls things down.\n\n- Energy is the ability to do work. Types include:\n  - Kinetic (movement - like a running athlete)\n  - Potential (stored - like water behind Kariba Dam)\n  - Thermal (heat - like cooking on a charcoal stove)\n  - Electrical - like the power from ZESCO\n\nNewton's 3 Laws of Motion:\n1. An object stays still or moves steadily unless a force acts on it\n2. Force = Mass × Acceleration (F = ma)\n3. Every action has an equal opposite reaction\n\nWhich topic would you like more details on?";
     }
     return "Science helps us understand the natural world through observation and experimentation. Key branches:\n\n- Biology - living things (cells, ecosystems, human body)\n- Chemistry - matter and reactions (atoms, compounds, mixing substances)\n- Physics - forces, energy, electricity, motion\n\nIn the Zambian curriculum, science is taught from Grade 5 onwards, preparing students for ECZ exams.\n\nWhat specific science topic would you like me to explain? I can cover cells, photosynthesis, forces, chemical reactions, and more!";
   }
 
-  // English / language
+  // ─── English / language ─────────────────────────────────────────────
   if (lower.includes("english") || lower.includes("grammar") || lower.includes("essay") || lower.includes("writing") || lower.includes("poem") || lower.includes("literature")) {
     return "I can help with English Language and Literature! Here are areas I cover:\n\n- Grammar - sentence structure, tenses, punctuation\n- Essay Writing - how to plan, structure, and write a good essay\n- Comprehension - understanding and analyzing passages\n- Literature - poetry, drama, novels (set texts for ECZ)\n\nQuick tip for essay writing:\n1. Plan - brainstorm ideas first\n2. Structure - Introduction, Body, Conclusion\n3. Proofread - check for spelling and grammar errors\n\nWhat specific English topic do you need help with?";
   }
 
-  // Concept explanation — actually answer the question, don't ask for more info
+  // ─── Concept explanation ────────────────────────────────────────────
   if (lower.includes("explain") || lower.includes("what is") || lower.includes("define") || lower.includes("meaning") || lower.includes("what are")) {
-    // Extract the topic from the user's message
-    const topic = extractTopic(lastMsg);
+    const topic = extractTopic(lastUserMsg);
     return generateConceptExplanation(topic);
   }
 
-  // Greeting / general
+  // ─── Greeting / general ─────────────────────────────────────────────
   if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey") || lower.includes("greet")) {
     return "Hello! Welcome to Zedskillz!\n\nI'm your AI Tutor and I'm here to help you learn. Here's what I can do:\n\n- Explain concepts in simple terms with Zambian examples\n- Generate quizzes for practice (ECZ-style)\n- Translate phrases to Bemba, Nyanja, or Tonga\n- Summarize lessons so you can review quickly\n- Help with homework - step by step\n\nWhat would you like help with today?";
   }
 
-  // Help / capabilities
+  // ─── Help / capabilities ────────────────────────────────────────────
   if (lower.includes("help") || lower.includes("can you") || lower.includes("what can") || lower.includes("assist")) {
     return "Here's what I can help you with as your Zedskillz AI Tutor:\n\nStudy Help:\n- Explain any concept in simple terms\n- Walk through problems step by step\n- Create practice quizzes\n\nZambian Languages:\n- Translate to Bemba, Nyanja, Tonga\n- Learn everyday phrases\n\nAcademic Support:\n- Summarize lessons and topics\n- Help with essay writing\n- Prepare for ECZ exams\n\nJust Ask:\nType any question and I'll do my best to help. Try questions like:\n- \"Explain photosynthesis\"\n- \"Generate a math quiz\"\n- \"Translate 'thank you' to Bemba\"";
   }
 
-  // Default contextual response — attempt to address the question directly
-  // instead of just asking for more information
+  // ─── Default contextual response ────────────────────────────────────
+  // If we have a previous topic, try to connect the new question to it
+  if (lastAiMsg.length > 20 && previousUserMsg) {
+    const prevTopic = extractTopic(previousUserMsg);
+    if (prevTopic && prevTopic !== "New Chat" && prevTopic.length > 2) {
+      return `That's a great question! It sounds like it might connect to what we discussed about **${prevTopic}**.\n\nLet me address your question: "${lastUserMsg.trim()}"\n\nHere's what I can offer:\n\n1. **If this relates to ${prevTopic}** — I can explain the connection and how they work together\n2. **If this is a new topic** — I can explain it in simple terms with Zambian examples\n3. **If this is a problem** — I can walk you through it step by step\n\nTo give you the best explanation, tell me:\n- Which subject this relates to\n- Your grade level\n\nOr just rephrase your question and I'll dive right in!`;
+    }
+  }
+
   const questionWords = lastMsg.trim();
   return `I'd love to help you with that! Let me think about "${questionWords}"...\n\nHere's what I can offer:\n\n1. **If this is a concept question** — I can explain it in simple terms with Zambian examples\n2. **If this is a problem** — I can walk you through it step by step\n3. **If this is about homework** — I can guide you without just giving the answer\n\nTo give you the best explanation, it helps to know:\n- Which subject (Math, Science, English, etc.)\n- Your grade level\n\nBut go ahead and ask anyway — I'll do my best to answer with what I know! Try phrasing your question like:\n- "What is [topic]?"\n- "Explain [concept]"\n- "How do I solve [problem]?"`;
 }
@@ -218,6 +331,59 @@ function createMockStream(responseText: string): ReadableStream {
   });
 }
 
+/**
+ * Ensure Gemini chat history has proper alternating roles.
+ * Gemini requires: first message must be "user", then alternating "user"/"model".
+ * This function:
+ * 1. Filters out greeting messages that start with "model" role
+ * 2. Merges consecutive same-role messages
+ * 3. Ensures history starts with "user"
+ * 4. Returns the cleaned history + the last user message separately
+ */
+function sanitizeGeminiHistory(
+  messages: { role: string; content: string }[]
+): { history: { role: "user" | "model"; parts: { text: string }[] }[]; lastUserMessage: string } {
+  // Convert roles
+  const converted = messages.map((m) => ({
+    role: m.role === "ai" || m.role === "assistant" ? "model" : m.role === "system" ? "system" : "user",
+    content: m.content,
+  }));
+
+  // Filter out system messages
+  const filtered = converted.filter((m) => m.role !== "system");
+
+  // Ensure alternation: merge consecutive same-role messages
+  const merged: { role: "user" | "model"; content: string }[] = [];
+  for (const msg of filtered) {
+    if (merged.length > 0 && merged[merged.length - 1].role === msg.role) {
+      // Merge with previous message of same role
+      merged[merged.length - 1].content += "\n\n" + msg.content;
+    } else {
+      merged.push({ role: msg.role as "user" | "model", content: msg.content });
+    }
+  }
+
+  // Ensure history starts with "user" role — skip initial "model" messages
+  // (these are usually the AI greeting that the user didn't explicitly request)
+  while (merged.length > 0 && merged[0].role !== "user") {
+    merged.shift();
+  }
+
+  // We need at least 2 messages for history (1 user + 1 model)
+  // and the last message should be the user's current question
+  const lastUserMsg = merged.filter((m) => m.role === "user").pop()?.content || "Hello";
+
+  // History is everything except the last user message
+  const historyMessages = merged.slice(0, -1);
+
+  const history = historyMessages.map((m) => ({
+    role: m.role,
+    parts: [{ text: m.content }],
+  }));
+
+  return { history, lastUserMessage: lastUserMsg };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
@@ -245,29 +411,26 @@ export async function POST(req: NextRequest) {
     // Try real Gemini API first
     if (gemini) {
       try {
-        const geminiHistory = messages
-          .filter((m: { role: string }) => m.role !== "system")
-          .map((m: { role: string; content: string }) => ({
-            role: m.role === "assistant" ? "model" : m.role === "ai" ? "model" : "user",
-            parts: [{ text: m.content }],
-          }));
+        const { history, lastUserMessage } = sanitizeGeminiHistory(
+          messages.map((m: { role: string; content: string }) => ({
+            role: m.role,
+            content: m.content,
+          }))
+        );
 
         const model = gemini.getGenerativeModel({
           model: GEMINI_MODEL,
           systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
         });
 
-        const chat = model.startChat({
-          history: geminiHistory.slice(0, -1),
-        });
+        // Only start chat with history if there are previous exchanges
+        const chat = model.startChat(
+          history.length > 0
+            ? { history }
+            : {}
+        );
 
-        const lastMessage = messages[messages.length - 1];
-        const userPrompt =
-          lastMessage.role === "user"
-            ? lastMessage.content
-            : messages.filter((m: { role: string }) => m.role === "user").pop()?.content || "Hello";
-
-        const result = await chat.sendMessageStream(userPrompt);
+        const result = await chat.sendMessageStream(lastUserMessage);
         const stream = result.stream;
 
         const encoder = new TextEncoder();
@@ -337,21 +500,15 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("AI Chat API Error:", error);
-
     return new Response(
       sseEvent(
         JSON.stringify({
-          content:
-            "Sorry, I ran into a technical hiccup. Could you please try asking your question again?",
+          error: "An unexpected error occurred. Please try again.",
         })
-      ) + sseEvent("[DONE]"),
+      ),
       {
-        status: 200,
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
+        status: 500,
+        headers: { "Content-Type": "text/event-stream" },
       }
     );
   }
