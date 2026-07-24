@@ -51,12 +51,17 @@ export function LandingBody() {
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState("");
   const abortRef = useRef<AbortController | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const streamingContentRef = useRef("");
 
-  // Auto-scroll to bottom on new messages or streaming content
+  // Auto-scroll to bottom on new messages or streaming content.
+  // Uses scrollTop on the container ref directly instead of scrollIntoView,
+  // because scrollIntoView({ behavior: "smooth" }) called on every token
+  // during streaming causes the entire page to scroll down.
   const scrollToBottom = useCallback(() => {
-    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, []);
 
   // ── Send message with SSE streaming ─────────────────────────────────
@@ -235,10 +240,8 @@ export function LandingBody() {
       </p>
       </div>
       </div>
-      </div>
-
-      {/* Chat messages — scrollable area */}
-      <div className="space-y-md max-h-[320px] overflow-y-auto pr-sm" style={{ scrollbarWidth: "thin" }}>
+      </div>            {/* Chat messages — scrollable area */}
+            <div ref={chatContainerRef} className="space-y-md max-h-[320px] overflow-y-auto pr-sm" style={{ scrollbarWidth: "thin" }}>
       {messages.map((m) => (
         <div key={m.id} className={`flex gap-md ${m.role === "user" ? "flex-row-reverse" : ""}`}>
           {m.role === "ai" && (
@@ -279,9 +282,7 @@ export function LandingBody() {
             )}
           </div>
         </div>
-      ))}
-      <div ref={chatEndRef} />
-      </div>
+      ))}      </div>
 
       {/* Suggestion chips */}
       {messages.length <= 1 && !isLoading && (

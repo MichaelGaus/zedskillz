@@ -161,6 +161,7 @@ export function AIOverlay() {
   const streamingContentRef = useRef("");
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // ── Responsive detection ────────────────────────────────────────────
@@ -238,9 +239,10 @@ export function AIOverlay() {
   }, []);
 
   // ── Auto-scroll ────────────────────────────────────────────────────
-  // During streaming, tokens arrive every ~50-200ms. Using "smooth" scroll
-  // on every token creates overlapping scroll animations that shake the screen.
-  // Instead: use "auto" (instant) during streaming, "smooth" for normal messages.
+  // During streaming, tokens arrive every ~50-200ms. Using scrollIntoView
+  // on every token creates overlapping scroll animations that shake the
+  // screen and can scroll the parent page. Use scrollTop on the container
+  // ref directly — it's instant and contained within the messages area.
   const activeMessages = conversations.find((c) => c.id === activeConvId)?.messages || [];
   const prevMsgLengthRef = useRef(0);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -255,13 +257,19 @@ export function AIOverlay() {
       scrollTimerRef.current = null;
     }
 
+    const scrollToBottom = () => {
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
+    };
+
     if (newMsgAdded) {
-      // New message appeared — scroll immediately (instant during stream, smooth otherwise)
-      messagesEndRef.current?.scrollIntoView({ behavior: isStreaming ? "auto" : "smooth" });
+      // New message appeared — scroll immediately
+      scrollToBottom();
     } else if (isStreaming) {
-      // Streaming content grew — throttle to max once per 80ms, always instant
+      // Streaming content grew — throttle to max once per 80ms
       scrollTimerRef.current = setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+        scrollToBottom();
         scrollTimerRef.current = null;
       }, 80);
     }
@@ -654,7 +662,7 @@ export function AIOverlay() {
         ) : (
         <>
             {/* ─── Messages ──────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface">
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface">
             {activeMessages.map((m) => (
               <div
                 key={m.id}
@@ -736,9 +744,8 @@ export function AIOverlay() {
                   const vv = window.visualViewport;
                   if (vv.height < window.innerHeight - 100) {
                     setTimeout(() => {
-                      const msgContainer = messagesEndRef.current?.parentElement;
-                      if (msgContainer) {
-                        msgContainer.scrollTop = msgContainer.scrollHeight;
+                      if (chatContainerRef.current) {
+                        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
                       }
                     }, 100);
                   }
