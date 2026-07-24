@@ -110,7 +110,7 @@ function loadPersistedState(): Partial<AppState> {
   }
 }
 
-function savePersistedState(state: { isAuthenticated: boolean; user: UserProfile | null; language: string; theme: string; activePage: string }) {
+function savePersistedState(state: { isAuthenticated: boolean; user: UserProfile | null; language: string; theme: string; activePage: string; intendedPage?: string | null; intendedAiOverlay?: boolean }) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -186,9 +186,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       intendedAiOverlay: false,  // Will be handled separately below
     });
 
-    // Persist to localStorage
+    // Persist to localStorage (intendedPage/intendedAiOverlay are cleared on successful login)
     const { language, theme } = get();
-    savePersistedState({ isAuthenticated: true, user, language, theme: theme as string, activePage });
+    savePersistedState({ isAuthenticated: true, user, language, theme: theme as string, activePage, intendedPage: null, intendedAiOverlay: false });
 
     // If user was trying to open the AI overlay, open it after successful login
     if (intendedAiOverlay) {
@@ -233,9 +233,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   setAiOverlayOpen: (open) => set({ aiOverlayOpen: open }),
 
   intendedPage: null,
-  setIntendedPage: (page) => set({ intendedPage: page }),
+  setIntendedPage: (page) => {
+    set({ intendedPage: page });
+    // Persist intendedPage so it survives page refreshes during the auth flow
+    const { isAuthenticated, user, language, theme, activePage, intendedAiOverlay } = get();
+    savePersistedState({ isAuthenticated, user, language, theme: theme as string, activePage, intendedPage: page, intendedAiOverlay });
+  },
   intendedAiOverlay: false,
-  setIntendedAiOverlay: (open) => set({ intendedAiOverlay: open }),
+  setIntendedAiOverlay: (open) => {
+    set({ intendedAiOverlay: open });
+    const { isAuthenticated, user, language, theme, activePage, intendedPage } = get();
+    savePersistedState({ isAuthenticated, user, language, theme: theme as string, activePage, intendedPage, intendedAiOverlay: open });
+  },
 
   userMenuOpen: false,
   setUserMenuOpen: (open) => set({ userMenuOpen: open }),

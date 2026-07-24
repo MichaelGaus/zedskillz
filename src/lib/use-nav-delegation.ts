@@ -203,10 +203,18 @@ export function useNavDelegation() {
             }
           } else if (route.page) {
             // If user explicitly navigates to auth/signup page (not an auth-redirect),
-            // clear any stale intendedPage so they go to the default page after login
+            // clear any stale intendedPage so they go to the default page after login.
+            // BUT: if an intendedPage is already set (user was redirected from a protected
+            // page and is now switching between sign-in/sign-up), preserve it so they
+            // are still redirected back to their intended destination after login.
             if (route.page === "auth" || route.page === "signup") {
-              setIntendedPage(null);
-              setIntendedAiOverlay(false);
+              const { intendedPage } = useAppStore.getState();
+              if (!intendedPage) {
+                // No prior intended destination — this is a fresh/explicit auth navigation
+                setIntendedPage(null);
+                setIntendedAiOverlay(false);
+              }
+              // If intendedPage exists, preserve it (don't clear)
               setActivePage(route.page);
             } else if (isAuthRequired(route.page) && !isAuthenticated) {
               // Auth-gated pages: store the intended destination so we can redirect back after login

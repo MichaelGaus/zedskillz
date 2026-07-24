@@ -146,9 +146,13 @@ export function SignupBody() {
                                   Already have an account? 
                                   <a className="text-primary font-bold hover:underline ml-1" href="#" onClick={(event) => {
                                     event.preventDefault();
-                                    // Explicit login intent — clear stale intendedPage
-                                    useAppStore.getState().setIntendedPage(null);
-                                    useAppStore.getState().setIntendedAiOverlay(false);
+                                    // Preserve existing intendedPage if set (user was redirected from a protected page)
+                                    // Only clear if there's no intended destination (explicit navigation to sign-in)
+                                    const { intendedPage } = useAppStore.getState();
+                                    if (!intendedPage) {
+                                      useAppStore.getState().setIntendedPage(null);
+                                      useAppStore.getState().setIntendedAiOverlay(false);
+                                    }
                                     setActivePage("auth");
                                   }}>Sign In</a>
       </p>

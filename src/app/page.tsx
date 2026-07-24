@@ -49,6 +49,8 @@ export default function Home() {
           ...(persisted.activePage ? { activePage: persisted.activePage } : {}),
           ...(persisted.theme ? { theme: persisted.theme } : {}),
           ...(persisted.language ? { language: persisted.language } : {}),
+          ...(persisted.intendedPage ? { intendedPage: persisted.intendedPage } : {}),
+          ...(persisted.intendedAiOverlay ? { intendedAiOverlay: persisted.intendedAiOverlay } : {}),
           _hydrated: true,
         });
       } else {
@@ -70,6 +72,20 @@ export default function Home() {
       document.documentElement.classList.toggle("dark", theme === "dark");
     }
   }, [theme]);
+
+  // ── Auth guard: redirect unauthenticated users on protected pages ────
+  // If activePage is a protected page but user is not authenticated,
+  // redirect to the auth page with intendedPage set so the user is
+  // redirected back after login. This is a safety net — the nav
+  // delegation handler is the primary auth gate, but this catches
+  // edge cases (e.g., state persisted to localStorage after sign-out).
+  useEffect(() => {
+    const authRequiredPages = ["my-courses", "members", "post", "scholarconnect"];
+    if (!isAuthenticated && authRequiredPages.includes(activePage)) {
+      useAppStore.getState().setIntendedPage(activePage);
+      useAppStore.getState().setActivePage("auth");
+    }
+  }, [isAuthenticated, activePage]);
 
   // ── Hydration guard ──────────────────────────────────────────────────
   // Both SSR and the initial client render show this loading spinner.
@@ -118,19 +134,22 @@ export default function Home() {
         }
         return <CoursesBody />;
       case "my-courses":
+        if (!isAuthenticated) return null; // Auth guard will redirect via useEffect
         return <MyCoursesBody />;
       case "leaderboard":
         return <LeaderboardBody />;
       case "community":
         return <CommunityBody />;
       case "members":
+        if (!isAuthenticated) return null; // Auth guard will redirect via useEffect
         return <MembersBody />;
       case "profile":
-        return <ProfilePage />;
+        return <ProfilePage />; // Has its own auth guard
       case "settings":
-        return <SettingsPage />;
+        return <SettingsPage />; // Has its own auth guard
       case "post":
       case "scholarconnect":
+        if (!isAuthenticated) return null; // Auth guard will redirect via useEffect
         return <PostBody />;
       default:
         return <LandingBody />;

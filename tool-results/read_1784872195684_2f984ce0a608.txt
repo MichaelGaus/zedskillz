@@ -1,0 +1,690 @@
+     1→"use client";
+     2→
+     3→import { useAppStore } from "@/lib/store";
+     4→import { useState, useEffect } from "react";
+     5→import { toast } from "sonner";
+     6→
+     7→/**
+     8→ * SettingsPage — full settings management page.
+     9→ *
+    10→ * Sections:
+    11→ * 1. Appearance — theme (light/dark), accent color, font size, reduce motion
+    12→ * 2. Language & Region — interface language, currency, timezone, date format
+    13→ * 3. Notifications — email, push, SMS, in-app notification toggles
+    14→ * 4. Privacy & Security — profile visibility, 2FA, login history, session management
+    15→ * 5. Account — update email, change password, export data, delete account
+    16→ * 6. About — platform info, version, links
+    17→ */
+    18→export function SettingsPage() {
+    19→  const { user, theme, toggleTheme, signOut, setActivePage } = useAppStore();
+    20→
+    21→  // Redirect to sign-in if not authenticated
+    22→  useEffect(() => {
+    23→    if (!user) {
+    24→      // Store the intended page so user is redirected back after login
+    25→      useAppStore.getState().setIntendedPage("settings");
+    26→      setActivePage("auth");
+    27→    }
+    28→  }, [user, setActivePage]);
+    29→
+    30→  if (!user) return null;
+    31→
+    32→  return <SettingsContent user={user} theme={theme} toggleTheme={toggleTheme} signOut={signOut} setActivePage={setActivePage} />;
+    33→}
+    34→
+    35→function SettingsContent({ user, theme, toggleTheme, signOut, setActivePage }: {
+    36→  user: NonNullable<ReturnType<typeof useAppStore.getState>["user"]>;
+    37→  theme: "light" | "dark";
+    38→  toggleTheme: () => void;
+    39→  signOut: () => void;
+    40→  setActivePage: (page: string) => void;
+    41→}) {
+    42→  const [activeSection, setActiveSection] = useState("appearance");
+    43→
+    44→  const sections = [
+    45→    { id: "appearance", label: "Appearance", icon: "palette" },
+    46→    { id: "language", label: "Language & Region", icon: "language" },
+    47→    { id: "notifications", label: "Notifications", icon: "notifications" },
+    48→    { id: "privacy", label: "Privacy & Security", icon: "shield" },
+    49→    { id: "account", label: "Account", icon: "manage_accounts" },
+    50→    { id: "about", label: "About", icon: "info" },
+    51→  ];
+    52→
+    53→  return (
+    54→    <div className="min-h-screen bg-background">
+    55→      {/* ===== TopAppBar ===== */}
+    56→      <div className="bg-surface border-b border-outline-variant sticky top-0 z-40">
+    57→        <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+    58→          <div className="flex items-center gap-3">
+    59→            <button
+    60→              onClick={() => setActivePage("my-courses")}
+    61→              className="p-2 hover:bg-surface-container rounded-lg"
+    62→            >
+    63→              <span className="material-symbols-outlined">arrow_back</span>
+    64→            </button>
+    65→            <div className="flex items-center gap-2">
+    66→              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+    67→                <span className="material-symbols-outlined text-on-primary">settings</span>
+    68→              </div>
+    69→              <span className="font-display text-lg font-bold text-primary hidden sm:block">Settings</span>
+    70→            </div>
+    71→          </div>
+    72→        </div>
+    73→      </div>
+    74→
+    75→      <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-8">
+    76→        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+    77→          {/* ===== Sidebar navigation ===== */}
+    78→          <aside className="lg:sticky lg:top-24 lg:self-start">
+    79→            <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-3">
+    80→              <nav className="space-y-1">
+    81→                {sections.map((s) => (
+    82→                  <button
+    83→                    key={s.id}
+    84→                    onClick={() => setActiveSection(s.id)}
+    85→                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+    86→                      activeSection === s.id
+    87→                        ? "bg-secondary-container text-on-secondary-container font-semibold"
+    88→                        : "text-on-surface-variant hover:bg-surface-container"
+    89→                    }`}
+    90→                  >
+    91→                    <span className="material-symbols-outlined text-[20px]">{s.icon}</span>
+    92→                    {s.label}
+    93→                  </button>
+    94→                ))}
+    95→              </nav>
+    96→            </div>
+    97→          </aside>
+    98→
+    99→          {/* ===== Main content ===== */}
+   100→          <div className="space-y-6">
+   101→            {activeSection === "appearance" && <AppearanceSection theme={theme} toggleTheme={toggleTheme} />}
+   102→            {activeSection === "language" && <LanguageSection />}
+   103→            {activeSection === "notifications" && <NotificationsSection />}
+   104→            {activeSection === "privacy" && <PrivacySection />}
+   105→            {activeSection === "account" && <AccountSection user={user} signOut={signOut} />}
+   106→            {activeSection === "about" && <AboutSection />}
+   107→          </div>
+   108→        </div>
+   109→      </div>
+   110→    </div>
+   111→  );
+   112→}
+   113→
+   114→// ============================================================================
+   115→// APPEARANCE SECTION
+   116→// ============================================================================
+   117→function AppearanceSection({ theme, toggleTheme }: { theme: "light" | "dark"; toggleTheme: () => void }) {
+   118→  const [accentColor, setAccentColor] = useState("primary");
+   119→  const [fontSize, setFontSize] = useState("medium");
+   120→  const [reduceMotion, setReduceMotion] = useState(false);
+   121→  const [highContrast, setHighContrast] = useState(false);
+   122→
+   123→  const themeOptions = [
+   124→    { value: "light", label: "Light", icon: "light_mode", desc: "Bright background with dark text" },
+   125→    { value: "dark", label: "Dark", icon: "dark_mode", desc: "Dark background with light text" },
+   126→  ];
+   127→
+   128→  const accentColors = [
+   129→    { id: "primary", label: "Burgundy", color: "#480008" },
+   130→    { id: "emerald", label: "Emerald", color: "#10b981" },
+   131→    { id: "amber", label: "Amber", color: "#f59e0b" },
+   132→    { id: "violet", label: "Violet", color: "#8b5cf6" },
+   133→    { id: "sky", label: "Sky", color: "#0ea5e9" },
+   134→    { id: "rose", label: "Rose", color: "#e11d48" },
+   135→  ];
+   136→
+   137→  const fontSizes = [
+   138→    { value: "small", label: "Small", sample: "14px" },
+   139→    { value: "medium", label: "Medium", sample: "16px" },
+   140→    { value: "large", label: "Large", sample: "18px" },
+   141→  ];
+   142→
+   143→  return (
+   144→    <>
+   145→      <SettingsCard title="Theme" icon="contrast" description="Choose how Zedskillz looks to you.">
+   146→        <div className="grid grid-cols-2 gap-4">
+   147→          {themeOptions.map((opt) => (
+   148→            <button
+   149→              key={opt.value}
+   150→              onClick={() => {
+   151→                if ((opt.value === "dark") !== (theme === "dark")) {
+   152→                  toggleTheme();
+   153→                }
+   154→                toast.success(`Switched to ${opt.label} mode`);
+   155→              }}
+   156→              className={`p-4 rounded-xl border-2 text-left transition-all ${
+   157→                (opt.value === "dark") === (theme === "dark")
+   158→                  ? "border-primary bg-primary/5"
+   159→                  : "border-outline-variant hover:border-outline"
+   160→              }`}
+   161→            >
+   162→              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${opt.value === "dark" ? "bg-slate-900" : "bg-white border"}`}>
+   163→                <span className="material-symbols-outlined" style={{ color: opt.value === "dark" ? "#ffb3b0" : "#480008" }}>{opt.icon}</span>
+   164→              </div>
+   165→              <div className="font-title-sm text-title-sm text-on-surface mb-1">{opt.label}</div>
+   166→              <div className="text-xs text-on-surface-variant">{opt.desc}</div>
+   167→              {(opt.value === "dark") === (theme === "dark") && (
+   168→                <div className="mt-2 flex items-center gap-1 text-xs text-primary font-medium">
+   169→                  <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: '"FILL" 1' }}>check_circle</span>
+   170→                  Active
+   171→                </div>
+   172→              )}
+   173→            </button>
+   174→          ))}
+   175→        </div>
+   176→      </SettingsCard>
+   177→
+   178→      <SettingsCard title="Accent Color" icon="palette" description="Personalize your interface with a brand accent.">
+   179→        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+   180→          {accentColors.map((c) => (
+   181→            <button
+   182→              key={c.id}
+   183→              onClick={() => {
+   184→                setAccentColor(c.id);
+   185→                toast.info(`${c.label} accent selected (applies on next reload)`);
+   186→              }}
+   187→              className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+   188→                accentColor === c.id ? "border-primary" : "border-transparent hover:border-outline-variant"
+   189→              }`}
+   190→            >
+   191→              <div className="w-10 h-10 rounded-full ring-2 ring-offset-2 ring-offset-surface-container-lowest" style={{ backgroundColor: c.color, boxShadow: accentColor === c.id ? `0 0 0 2px ${c.color}` : "none" }} />
+   192→              <span className="text-xs font-medium">{c.label}</span>
+   193→            </button>
+   194→          ))}
+   195→        </div>
+   196→      </SettingsCard>
+   197→
+   198→      <SettingsCard title="Display" icon="text_fields" description="Adjust text size and visual effects.">
+   199→        <div className="space-y-4">
+   200→          <div>
+   201→            <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-2 block">Font Size</label>
+   202→            <div className="grid grid-cols-3 gap-2">
+   203→              {fontSizes.map((f) => (
+   204→                <button
+   205→                  key={f.value}
+   206→                  onClick={() => { setFontSize(f.value); toast.info(`Font size: ${f.label}`); }}
+   207→                  className={`p-3 rounded-lg border-2 text-center transition-all ${
+   208→                    fontSize === f.value ? "border-primary bg-primary/5" : "border-outline-variant hover:border-outline"
+   209→                  }`}
+   210→                >
+   211→                  <div className="font-medium" style={{ fontSize: f.sample }}>Aa</div>
+   212→                  <div className="text-xs text-on-surface-variant mt-1">{f.label}</div>
+   213→                </button>
+   214→              ))}
+   215→            </div>
+   216→          </div>
+   217→
+   218→          <ToggleRow
+   219→            icon="animation"
+   220→            label="Reduce Motion"
+   221→            description="Minimize animations and transitions."
+   222→            checked={reduceMotion}
+   223→            onChange={(v) => { setReduceMotion(v); toast.info(v ? "Motion reduced" : "Motion enabled"); }}
+   224→          />
+   225→          <ToggleRow
+   226→            icon="contrast"
+   227→            label="High Contrast Mode"
+   228→            description="Increase contrast for better readability."
+   229→            checked={highContrast}
+   230→            onChange={(v) => { setHighContrast(v); toast.info(v ? "High contrast on" : "High contrast off"); }}
+   231→          />
+   232→        </div>
+   233→      </SettingsCard>
+   234→    </>
+   235→  );
+   236→}
+   237→
+   238→// ============================================================================
+   239→// LANGUAGE & REGION SECTION
+   240→// ============================================================================
+   241→function LanguageSection() {
+   242→  const [language, setLanguage] = useState("English");
+   243→  const [currency, setCurrency] = useState("USD");
+   244→  const [timezone, setTimezone] = useState("Africa/Lusaka");
+   245→  const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
+   246→
+   247→  const languages = ["English", "Bemba", "Nyanja", "Tonga", "Lozi", "Kaonde", "Lunda", "Luvale", "French", "Portuguese"];
+   248→  const currencies = [
+   249→    { code: "USD", symbol: "$", name: "US Dollar" },
+   250→    { code: "ZMW", symbol: "K", name: "Zambian Kwacha" },
+   251→    { code: "ZAR", symbol: "R", name: "South African Rand" },
+   252→    { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
+   253→    { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
+   254→    { code: "GHS", symbol: "₵", name: "Ghanaian Cedi" },
+   255→  ];
+   256→  const timezones = ["Africa/Lusaka (GMT+2)", "Africa/Harare (GMT+2)", "Africa/Nairobi (GMT+3)", "Africa/Lagos (GMT+1)", "UTC"];
+   257→
+   258→  return (
+   259→    <>
+   260→      <SettingsCard title="Interface Language" icon="translate" description="Select your preferred language for the Zedskillz interface.">
+   261→        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+   262→          {languages.map((lang) => (
+   263→            <button
+   264→              key={lang}
+   265→              onClick={() => { setLanguage(lang); toast.success(`Language: ${lang}`); }}
+   266→              className={`p-3 rounded-lg border-2 text-left transition-all ${
+   267→                language === lang ? "border-primary bg-primary/5" : "border-outline-variant hover:border-outline"
+   268→              }`}
+   269→            >
+   270→              <div className="flex items-center justify-between">
+   271→                <span className="text-sm font-medium">{lang}</span>
+   272→                {language === lang && (
+   273→                  <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: '"FILL" 1' }}>check_circle</span>
+   274→                )}
+   275→              </div>
+   276→            </button>
+   277→          ))}
+   278→        </div>
+   279→      </SettingsCard>
+   280→
+   281→      <SettingsCard title="Currency" icon="payments" description="Choose your preferred currency for course prices.">
+   282→        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+   283→          {currencies.map((c) => (
+   284→            <button
+   285→              key={c.code}
+   286→              onClick={() => { setCurrency(c.code); toast.success(`Currency: ${c.name}`); }}
+   287→              className={`p-3 rounded-lg border-2 text-left transition-all ${
+   288→                currency === c.code ? "border-primary bg-primary/5" : "border-outline-variant hover:border-outline"
+   289→              }`}
+   290→            >
+   291→              <div className="flex items-center gap-2">
+   292→                <span className="text-lg font-bold text-primary">{c.symbol}</span>
+   293→                <div>
+   294→                  <div className="text-sm font-medium">{c.code}</div>
+   295→                  <div className="text-xs text-on-surface-variant">{c.name}</div>
+   296→                </div>
+   297→              </div>
+   298→            </button>
+   299→          ))}
+   300→        </div>
+   301→      </SettingsCard>
+   302→
+   303→      <SettingsCard title="Time Zone" icon="schedule" description="Set your local time zone for accurate timestamps.">
+   304→        <select
+   305→          value={timezone}
+   306→          onChange={(e) => { setTimezone(e.target.value); toast.success("Time zone updated"); }}
+   307→          className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+   308→        >
+   309→          {timezones.map((tz) => <option key={tz} value={tz.split(" ")[0]}>{tz}</option>)}
+   310→        </select>
+   311→      </SettingsCard>
+   312→
+   313→      <SettingsCard title="Date Format" icon="calendar_today" description="How dates should be displayed.">
+   314→        <div className="grid grid-cols-3 gap-2">
+   315→          {["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"].map((f) => (
+   316→            <button
+   317→              key={f}
+   318→              onClick={() => { setDateFormat(f); toast.success(`Date format: ${f}`); }}
+   319→              className={`p-3 rounded-lg border-2 text-center text-sm font-medium transition-all ${
+   320→                dateFormat === f ? "border-primary bg-primary/5 text-primary" : "border-outline-variant hover:border-outline"
+   321→              }`}
+   322→            >
+   323→              {f}
+   324→            </button>
+   325→          ))}
+   326→        </div>
+   327→      </SettingsCard>
+   328→    </>
+   329→  );
+   330→}
+   331→
+   332→// ============================================================================
+   333→// NOTIFICATIONS SECTION
+   334→// ============================================================================
+   335→function NotificationsSection() {
+   336→  const [settings, setSettings] = useState({
+   337→    emailCourseUpdates: true,
+   338→    emailLiveClass: true,
+   339→    emailAssignments: true,
+   340→    emailWeekly: true,
+   341→    pushMessages: true,
+   342→    pushAchievements: true,
+   343→    pushReminders: true,
+   344→    smsUrgent: false,
+   345→    smsClassStart: true,
+   346→    inAppSound: true,
+   347→    inAppDesktop: true,
+   348→  });
+   349→
+   350→  const update = (key: keyof typeof settings) => {
+   351→    setSettings({ ...settings, [key]: !settings[key] });
+   352→    toast.success("Notification preference updated");
+   353→  };
+   354→
+   355→  return (
+   356→    <>
+   357→      <SettingsCard title="Email Notifications" icon="mail" description="Manage what we send to your inbox.">
+   358→        <div className="space-y-1">
+   359→          <ToggleRow icon="school" label="Course Updates" description="New lessons, assignments, announcements." checked={settings.emailCourseUpdates} onChange={() => update("emailCourseUpdates")} />
+   360→          <ToggleRow icon="video_call" label="Live Class Reminders" description="15 minutes before class starts." checked={settings.emailLiveClass} onChange={() => update("emailLiveClass")} />
+   361→          <ToggleRow icon="assignment" label="Assignment Due Dates" description="24 hours before deadline." checked={settings.emailAssignments} onChange={() => update("emailAssignments")} />
+   362→          <ToggleRow icon="summarize" label="Weekly Progress Report" description="Summary every Sunday." checked={settings.emailWeekly} onChange={() => update("emailWeekly")} />
+   363→        </div>
+   364→      </SettingsCard>
+   365→
+   366→      <SettingsCard title="Push Notifications" icon="notifications_active" description="Real-time alerts on your device.">
+   367→        <div className="space-y-1">
+   368→          <ToggleRow icon="chat" label="Messages" description="Direct messages from instructors and peers." checked={settings.pushMessages} onChange={() => update("pushMessages")} />
+   369→          <ToggleRow icon="military_tech" label="Achievements" description="Badges, XP, and streak milestones." checked={settings.pushAchievements} onChange={() => update("pushAchievements")} />
+   370→          <ToggleRow icon="alarm" label="Study Reminders" description="Daily learning goal reminders." checked={settings.pushReminders} onChange={() => update("pushReminders")} />
+   371→        </div>
+   372→      </SettingsCard>
+   373→
+   374→      <SettingsCard title="SMS Alerts" icon="sms" description="Text messages for critical updates (carrier charges may apply).">
+   375→        <div className="space-y-1">
+   376→          <ToggleRow icon="priority_high" label="Urgent Alerts" description="Payment issues, account security." checked={settings.smsUrgent} onChange={() => update("smsUrgent")} />
+   377→          <ToggleRow icon="live_tv" label="Live Class Starting" description="SMS when class is about to begin." checked={settings.smsClassStart} onChange={() => update("smsClassStart")} />
+   378→        </div>
+   379→      </SettingsCard>
+   380→
+   381→      <SettingsCard title="In-App Notifications" icon="desktop_windows" description="Notifications while using Zedskillz.">
+   382→        <div className="space-y-1">
+   383→          <ToggleRow icon="volume_up" label="Sound Effects" description="Play a sound for new notifications." checked={settings.inAppSound} onChange={() => update("inAppSound")} />
+   384→          <ToggleRow icon="desktop_access_disabled" label="Desktop Notifications" description="Browser desktop notifications." checked={settings.inAppDesktop} onChange={() => update("inAppDesktop")} />
+   385→        </div>
+   386→      </SettingsCard>
+   387→    </>
+   388→  );
+   389→}
+   390→
+   391→// ============================================================================
+   392→// PRIVACY & SECURITY SECTION
+   393→// ============================================================================
+   394→function PrivacySection() {
+   395→  const [privacy, setPrivacy] = useState({
+   396→    publicProfile: true,
+   397→    showProgress: true,
+   398→    showLeaderboard: true,
+   399→    allowMessages: true,
+   400→    showOnline: true,
+   401→    twoFactor: false,
+   402→    biometric: false,
+   403→  });
+   404→
+   405→  const update = (key: keyof typeof privacy) => {
+   406→    setPrivacy({ ...privacy, [key]: !privacy[key] });
+   407→    toast.success("Privacy setting updated");
+   408→  };
+   409→
+   410→  return (
+   411→    <>
+   412→      <SettingsCard title="Profile Visibility" icon="visibility" description="Control who can see your information.">
+   413→        <div className="space-y-1">
+   414→          <ToggleRow icon="public" label="Public Profile" description="Anyone can view your profile page." checked={privacy.publicProfile} onChange={() => update("publicProfile")} />
+   415→          <ToggleRow icon="trending_up" label="Show Learning Progress" description="Display course progress publicly." checked={privacy.showProgress} onChange={() => update("showProgress")} />
+   416→          <ToggleRow icon="leaderboard" label="Show on Leaderboard" description="Appear in national rankings." checked={privacy.showLeaderboard} onChange={() => update("showLeaderboard")} />
+   417→          <ToggleRow icon="chat" label="Allow Direct Messages" description="Let other users message you." checked={privacy.allowMessages} onChange={() => update("allowMessages")} />
+   418→          <ToggleRow icon="circle" label="Show Online Status" description="Display when you're online." checked={privacy.showOnline} onChange={() => update("showOnline")} />
+   419→        </div>
+   420→      </SettingsCard>
+   421→
+   422→      <SettingsCard title="Security" icon="lock" description="Protect your account with extra layers of security.">
+   423→        <div className="space-y-1">
+   424→          <ToggleRow icon="phonelink_lock" label="Two-Factor Authentication" description="Require a code from your phone to sign in." checked={privacy.twoFactor} onChange={() => update("twoFactor")} />
+   425→          <ToggleRow icon="fingerprint" label="Biometric Login (Mobile)" description="Face ID / Fingerprint on mobile app." checked={privacy.biometric} onChange={() => update("biometric")} />
+   426→        </div>
+   427→        <div className="mt-4 pt-4 border-t border-outline-variant">
+   428→          <button onClick={() => toast.info("Login history feature coming soon!")} className="w-full flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+   429→            <div className="flex items-center gap-3">
+   430→              <span className="material-symbols-outlined text-[20px] text-on-surface-variant">history</span>
+   431→              <div className="text-left">
+   432→                <div className="text-sm font-medium">Login History</div>
+   433→                <div className="text-xs text-on-surface-variant">See recent sign-in activity</div>
+   434→              </div>
+   435→            </div>
+   436→            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_right</span>
+   437→          </button>
+   438→          <button onClick={() => toast.info("Session management coming soon!")} className="w-full flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors mt-2">
+   439→            <div className="flex items-center gap-3">
+   440→              <span className="material-symbols-outlined text-[20px] text-on-surface-variant">devices</span>
+   441→              <div className="text-left">
+   442→                <div className="text-sm font-medium">Manage Devices</div>
+   443→                <div className="text-xs text-on-surface-variant">Sign out of other sessions</div>
+   444→              </div>
+   445→            </div>
+   446→            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_right</span>
+   447→          </button>
+   448→        </div>
+   449→      </SettingsCard>
+   450→    </>
+   451→  );
+   452→}
+   453→
+   454→// ============================================================================
+   455→// ACCOUNT SECTION
+   456→// ============================================================================
+   457→function AccountSection({ user, signOut }: { user: any; signOut: () => void }) {
+   458→  const [currentPassword, setCurrentPassword] = useState("");
+   459→  const [newPassword, setNewPassword] = useState("");
+   460→  const [confirmPassword, setConfirmPassword] = useState("");
+   461→
+   462→  const handleChangePassword = () => {
+   463→    if (!currentPassword || !newPassword || !confirmPassword) {
+   464→      toast.error("Please fill in all password fields");
+   465→      return;
+   466→    }
+   467→    if (newPassword !== confirmPassword) {
+   468→      toast.error("New passwords don't match");
+   469→      return;
+   470→    }
+   471→    if (newPassword.length < 8) {
+   472→      toast.error("Password must be at least 8 characters");
+   473→      return;
+   474→    }
+   475→    toast.success("Password updated successfully! 🔒");
+   476→    setCurrentPassword("");
+   477→    setNewPassword("");
+   478→    setConfirmPassword("");
+   479→  };
+   480→
+   481→  return (
+   482→    <>
+   483→      <SettingsCard title="Email Address" icon="mail" description="Your email is used for sign-in and notifications.">
+   484→        <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg">
+   485→          <span className="material-symbols-outlined text-[20px] text-on-surface-variant">mail</span>
+   486→          <div className="flex-1">
+   487→            <div className="text-sm font-medium text-on-surface">{user.email}</div>
+   488→            <div className="text-xs text-on-surface-variant">Email cannot be changed</div>
+   489→          </div>
+   490→          <span className="material-symbols-outlined text-[18px] text-emerald-600" style={{ fontVariationSettings: '"FILL" 1' }}>verified</span>
+   491→        </div>
+   492→      </SettingsCard>
+   493→
+   494→      <SettingsCard title="Change Password" icon="lock" description="Update your password regularly for security.">
+   495→        <div className="space-y-4">
+   496→          <div>
+   497→            <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-1.5 block">Current Password</label>
+   498→            <div className="relative">
+   499→              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span>
+   500→              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••••"
+   501→                className="w-full pl-10 pr-4 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+   502→            </div>
+   503→          </div>
+   504→          <div className="grid sm:grid-cols-2 gap-4">
+   505→            <div>
+   506→              <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-1.5 block">New Password</label>
+   507→              <div className="relative">
+   508→                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span>
+   509→                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••"
+   510→                  className="w-full pl-10 pr-4 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+   511→              </div>
+   512→            </div>
+   513→            <div>
+   514→              <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-1.5 block">Confirm Password</label>
+   515→              <div className="relative">
+   516→                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span>
+   517→                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••"
+   518→                  className="w-full pl-10 pr-4 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+   519→              </div>
+   520→            </div>
+   521→          </div>
+   522→          <div className="text-xs text-on-surface-variant space-y-1">
+   523→            <div className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">check_circle</span>At least 8 characters</div>
+   524→            <div className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">check_circle</span>Mix of upper & lower case</div>
+   525→            <div className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">check_circle</span>At least one number & symbol</div>
+   526→          </div>
+   527→          <button onClick={handleChangePassword} className="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:bg-primary-container transition-colors">
+   528→            Update Password
+   529→          </button>
+   530→        </div>
+   531→      </SettingsCard>
+   532→
+   533→      <SettingsCard title="Data & Privacy" icon="download" description="Export or delete your data.">
+   534→        <div className="space-y-2">
+   535→          <button onClick={() => toast.info("Data export feature coming soon!")} className="w-full flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+   536→            <div className="flex items-center gap-3">
+   537→              <span className="material-symbols-outlined text-[20px] text-on-surface-variant">download</span>
+   538→              <div className="text-left">
+   539→                <div className="text-sm font-medium">Download My Data</div>
+   540→                <div className="text-xs text-on-surface-variant">Export all account data (GDPR)</div>
+   541→              </div>
+   542→            </div>
+   543→            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_right</span>
+   544→          </button>
+   545→        </div>
+   546→      </SettingsCard>
+   547→
+   548→      <SettingsCard title="Sign Out" icon="logout" description="Sign out of your account on this device.">
+   549→        <button onClick={() => { signOut(); toast.success("Signed out successfully"); }} className="w-full flex items-center gap-3 p-3 rounded-lg border border-error/30 bg-error/5 hover:bg-error/10 transition-colors">
+   550→          <span className="material-symbols-outlined text-[20px] text-error">logout</span>
+   551→          <div className="text-left">
+   552→            <div className="text-sm font-medium text-error">Sign Out</div>
+   553→            <div className="text-xs text-on-surface-variant">You'll need to sign in again</div>
+   554→          </div>
+   555→        </button>
+   556→      </SettingsCard>
+   557→
+   558→      <SettingsCard title="Delete Account" icon="dangerous" description="Permanently remove your account and all data." danger>
+   559→        <button onClick={() => { if (confirm("Are you sure? This cannot be undone.")) toast.error("Contact support@zedskillz.com to delete your account."); }} className="w-full flex items-center gap-3 p-3 rounded-lg border border-error/30 bg-error/5 hover:bg-error/10 transition-colors">
+   560→          <span className="material-symbols-outlined text-[20px] text-error">delete_forever</span>
+   561→          <div className="text-left">
+   562→            <div className="text-sm font-medium text-error">Delete Account</div>
+   563→            <div className="text-xs text-on-surface-variant">This action is permanent and cannot be undone</div>
+   564→          </div>
+   565→        </button>
+   566→      </SettingsCard>
+   567→    </>
+   568→  );
+   569→}
+   570→
+   571→// ============================================================================
+   572→// ABOUT SECTION
+   573→// ============================================================================
+   574→function AboutSection() {
+   575→  return (
+   576→    <>
+   577→      <SettingsCard title="About Zedskillz Hub" icon="info" description="Learn more about the platform.">
+   578→        <div className="space-y-4">
+   579→          <div className="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg">
+   580→            <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center">
+   581→              <span className="material-symbols-outlined text-on-primary" style={{ fontVariationSettings: '"FILL" 1', fontSize: "32px" }}>school</span>
+   582→            </div>
+   583→            <div>
+   584→              <div className="font-display-lg text-primary">Zedskillz Hub</div>
+   585→              <div className="text-sm text-on-surface-variant">AI-Powered Learning Platform for Zambia</div>
+   586→              <div className="text-xs text-on-surface-variant mt-1">Version 1.0.0</div>
+   587→            </div>
+   588→          </div>
+   589→
+   590→          <div className="grid grid-cols-2 gap-3">
+   591→            {[
+   592→              { icon: "people", label: "Active Learners", value: "124K+" },
+   593→              { icon: "school", label: "Courses", value: "1,800+" },
+   594→              { icon: "language", label: "Languages", value: "8+" },
+   595→              { icon: "public", label: "Countries", value: "12" },
+   596→            ].map((stat) => (
+   597→              <div key={stat.label} className="p-3 bg-surface-container-low rounded-lg flex items-center gap-3">
+   598→                <span className="material-symbols-outlined text-[24px] text-primary">{stat.icon}</span>
+   599→                <div>
+   600→                  <div className="font-bold text-on-surface">{stat.value}</div>
+   601→                  <div className="text-xs text-on-surface-variant">{stat.label}</div>
+   602→                </div>
+   603→              </div>
+   604→            ))}
+   605→          </div>
+   606→        </div>
+   607→      </SettingsCard>
+   608→
+   609→      <SettingsCard title="Legal" icon="gavel" description="Read our policies and terms.">
+   610→        <div className="space-y-2">
+   611→          {["Privacy Policy", "Terms of Service", "Cookie Policy", "Accessibility Statement", "Refund Policy"].map((item) => (
+   612→            <button key={item} onClick={() => toast.info(`${item} — coming soon!`)} className="w-full flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+   613→              <span className="text-sm font-medium">{item}</span>
+   614→              <span className="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_right</span>
+   615→            </button>
+   616→          ))}
+   617→        </div>
+   618→      </SettingsCard>
+   619→
+   620→      <SettingsCard title="Help & Support" icon="help" description="Get assistance when you need it.">
+   621→        <div className="space-y-2">
+   622→          <button onClick={() => toast.info("Help Center coming soon!")} className="w-full flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+   623→            <div className="flex items-center gap-3">
+   624→              <span className="material-symbols-outlined text-[20px] text-on-surface-variant">help_center</span>
+   625→              <span className="text-sm font-medium">Help Center</span>
+   626→            </div>
+   627→            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_right</span>
+   628→          </button>
+   629→          <button onClick={() => toast.info("Contact support: support@zedskillz.com")} className="w-full flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+   630→            <div className="flex items-center gap-3">
+   631→              <span className="material-symbols-outlined text-[20px] text-on-surface-variant">support_agent</span>
+   632→              <span className="text-sm font-medium">Contact Support</span>
+   633→            </div>
+   634→            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_right</span>
+   635→          </button>
+   636→          <button onClick={() => toast.info("Feedback feature coming soon!")} className="w-full flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+   637→            <div className="flex items-center gap-3">
+   638→              <span className="material-symbols-outlined text-[20px] text-on-surface-variant">feedback</span>
+   639→              <span className="text-sm font-medium">Send Feedback</span>
+   640→            </div>
+   641→            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_right</span>
+   642→          </button>
+   643→        </div>
+   644→      </SettingsCard>
+   645→
+   646→      <div className="text-center text-xs text-on-surface-variant py-4">
+   647→        © 2024 Zedskillz Hub Zambia. Empowering through AI.
+   648→      </div>
+   649→    </>
+   650→  );
+   651→}
+   652→
+   653→// ============================================================================
+   654→// SHARED COMPONENTS
+   655→// ============================================================================
+   656→function SettingsCard({ title, icon, description, children, danger }: { title: string; icon: string; description?: string; children: React.ReactNode; danger?: boolean }) {
+   657→  return (
+   658→    <div className={`bg-surface-container-lowest border rounded-2xl p-5 md:p-6 ${danger ? "border-error/20" : "border-outline-variant"}`}>
+   659→      <div className="mb-4">
+   660→        <h3 className="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+   661→          <span className={`material-symbols-outlined text-[20px] ${danger ? "text-error" : "text-primary"}`}>{icon}</span>
+   662→          {title}
+   663→        </h3>
+   664→        {description && <p className="text-xs text-on-surface-variant mt-1">{description}</p>}
+   665→      </div>
+   666→      {children}
+   667→    </div>
+   668→  );
+   669→}
+   670→
+   671→function ToggleRow({ icon, label, description, checked, onChange }: { icon: string; label: string; description: string; checked: boolean; onChange: (v: boolean) => void }) {
+   672→  return (
+   673→    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container transition-colors">
+   674→      <div className="flex items-center gap-3 flex-1 min-w-0">
+   675→        <span className="material-symbols-outlined text-[20px] text-on-surface-variant shrink-0">{icon}</span>
+   676→        <div className="min-w-0">
+   677→          <div className="text-sm font-medium text-on-surface">{label}</div>
+   678→          <div className="text-xs text-on-surface-variant truncate">{description}</div>
+   679→        </div>
+   680→      </div>
+   681→      <button
+   682→        onClick={() => onChange(!checked)}
+   683→        className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ml-3 ${checked ? "bg-primary" : "bg-outline"}`}
+   684→      >
+   685→        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-5" : ""}`} />
+   686→      </button>
+   687→    </div>
+   688→  );
+   689→}
+   690→
