@@ -2,7 +2,7 @@
 
 import { useAppStore } from "@/lib/store";
 import { Icon } from "@/components/shared/icon";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 // ─── Types ──────────────────────────────────────────────────────────────
@@ -160,7 +160,6 @@ export function AIOverlay() {
   const streamingMessageIdRef = useRef<string | null>(null);
   const streamingContentRef = useRef("");
   const abortControllerRef = useRef<AbortController | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -510,6 +509,13 @@ export function AIOverlay() {
   // The expand/collapse transition uses smooth CSS transition on
   // positioning/sizing properties (300ms ease).
   const expandedClasses = "fixed inset-4 z-[60] w-auto h-auto max-w-none max-h-none rounded-2xl";
+  // Panel needs a definite height so the flex children (content layer,
+  // messages container) get a proper scroll height. Using inline style
+  // to bypass any tailwind-merge / JIT detection issues.
+  const panelHeight = isSmallScreen
+    ? hasBottomNav ? "calc(100vh - 140px)" : "calc(100vh - 60px)"
+    : hasBottomNav ? "calc(100vh - 80px)" : "calc(100vh - 60px)";
+
   const collapsedClasses = cn(
     isSmallScreen
       ? cn("right-3 w-[calc(100vw-24px)]", hasBottomNav ? "bottom-20" : "bottom-4")
@@ -533,6 +539,7 @@ export function AIOverlay() {
         // Border only (background is handled by separate glass-bg div below)
         "border border-outline-variant/50",
       )}
+      style={!isExpanded ? { height: panelHeight } : undefined}
       ref={(el) => {
         // After smoke-rise animation ends, clear persisted filter property
         // so it doesn't block <input> focus (Safari/Chrome bug)
@@ -553,7 +560,7 @@ export function AIOverlay() {
           The content (header, messages, input) sits above this layer. */}
       <div className="absolute inset-0 glass-panel rounded-inherit pointer-events-none" aria-hidden="true" />
       {/* ─── Content layer (sits above glass background) ─── */}
-      <div className="relative z-[1] flex flex-col h-full">
+      <div className="relative z-[1] flex flex-col flex-1 min-h-0">
       {/* ─── Header ─────────────────────────────────────────────── */}
       <div className="bg-primary text-on-primary p-3 flex items-center gap-2 shrink-0 rounded-t-2xl">
         {/* Conversation list toggle */}
@@ -609,7 +616,7 @@ export function AIOverlay() {
 
         {/* ─── Conversation List Panel ───────────────────────────── */}
       {showConvList ? (
-        <div className="flex-1 overflow-y-auto bg-surface">
+        <div className="flex-1 overflow-y-auto min-h-0 bg-surface">
           <div className="p-3 space-y-2">
             {conversations
               .sort((a, b) => b.createdAt - a.createdAt)
@@ -662,7 +669,7 @@ export function AIOverlay() {
         ) : (
         <>
             {/* ─── Messages ──────────────────────────────────────── */}
-          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface">
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto min-h-0 p-4 space-y-3 bg-surface">
             {activeMessages.map((m) => (
               <div
                 key={m.id}
@@ -704,7 +711,6 @@ export function AIOverlay() {
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
 
             {/* ─── Suggestions ───────────────────────────────────── */}

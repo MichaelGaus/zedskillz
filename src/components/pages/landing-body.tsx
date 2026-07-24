@@ -241,7 +241,7 @@ export function LandingBody() {
       </div>
       </div>
       </div>            {/* Chat messages — scrollable area */}
-            <div ref={chatContainerRef} className="space-y-md max-h-[320px] overflow-y-auto pr-sm" style={{ scrollbarWidth: "thin" }}>
+            <div ref={chatContainerRef} className="space-y-md max-h-[320px] overflow-y-auto pr-sm" style={{ scrollbarWidth: "thin", height: "320px" }}>
       {messages.map((m) => (
         <div key={m.id} className={`flex gap-md ${m.role === "user" ? "flex-row-reverse" : ""}`}>
           {m.role === "ai" && (
