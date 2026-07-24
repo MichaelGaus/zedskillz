@@ -1,0 +1,2002 @@
+     1→import { NextRequest } from "next/server";
+     2→import { gemini, GEMINI_MODEL, SYSTEM_PROMPT } from "@/lib/gemini";
+     3→
+     4→/**
+     5→ * Helper: send an SSE event in the stream.
+     6→ */
+     7→function sseEvent(data: string): string {
+     8→  return `data: ${data}\n\n`;
+     9→}
+    10→
+    11→/**
+    12→ * Extract the topic from a user question like "what is a metaphor" or "explain photosynthesis".
+    13→ * Strips common question prefixes and returns the core topic.
+    14→ */
+    15→function extractTopic(question: string): string {
+    16→  const lower = question.toLowerCase().trim();
+    17→  // Remove common prefixes
+    18→  const prefixes = [
+    19→    "what is the meaning of ",
+    20→    "what is the definition of ",
+    21→    "what is the definition ",
+    22→    "what is meant by ",
+    23→    "what is ",
+    24→    "what are ",
+    25→    "what's ",
+    26→    "define ",
+    27→    "explain ",
+    28→    "meaning of ",
+    29→    "meaning ",
+    30→    "can you explain ",
+    31→    "please explain ",
+    32→    "could you explain ",
+    33→    "help me understand ",
+    34→    "tell me about ",
+    35→    "describe ",
+    36→  ];
+    37→  let topic = lower;
+    38→  for (const prefix of prefixes) {
+    39→    if (topic.startsWith(prefix)) {
+    40→      topic = topic.slice(prefix.length);
+    41→      break;
+    42→    }
+    43→  }
+    44→  // Remove trailing question marks and "in simple terms" etc.
+    45→  topic = topic.replace(/\?+.*$/, "").replace(/ in .+terms.*$/, "").replace(/ please.*$/, "").trim();
+    46→  // Capitalize first letter for display
+    47→  return topic.charAt(0).toUpperCase() + topic.slice(1);
+    48→}
+    49→
+    50→/**
+    51→ * Known concept explanations — provides direct answers for common topics
+    52→ * instead of asking the user for more information.
+    53→ */
+    54→const KNOWN_CONCEPTS: Record<string, string> = {
+    55→  metaphor: `# Metaphor — A Complete Guide
+    56→
+    57→## What Is a Metaphor?
+    58→
+    59→A **metaphor** is a figure of speech that compares two unrelated things by stating that one thing *is* another — without using the words "like" or "as." It creates a direct, imaginative connection between two concepts, allowing the reader to see one thing in terms of another. Unlike a literal statement, a metaphor invites you to think beyond the surface meaning and discover deeper similarities between the two things being compared.
+    60→
+    61→Metaphors are one of the most powerful tools in language. They allow us to express complex ideas, emotions, and experiences in vivid, memorable ways. When we say "the classroom was a zoo," we are not claiming that animals were literally present — instead, we are painting a picture of chaos, noise, and wild energy that helps the listener instantly understand the situation.
+    62→
+    63→## Why Metaphors Matter
+    64→
+    65→Metaphors matter because they serve multiple essential functions in communication and thought:
+    66→
+    67→1. **They make abstract ideas concrete:** Love, freedom, time — these are hard to describe directly. But when Shakespeare writes "Love is a burning flame," we immediately feel the heat, intensity, and consuming nature of love.
+    68→
+    69→2. **They create vivid imagery:** Instead of saying "the man was very angry," a metaphor like "he was a volcano ready to erupt" gives the reader a powerful visual and emotional experience.
+    70→
+    71→3. **They help us understand new concepts:** When learning something unfamiliar, we naturally compare it to something we already know. Scientists call this "mapping" — we map the structure of a familiar concept onto a new one. For example, "the internet is a highway" helps people understand data flow by mapping it onto something they've experienced.
+    72→
+    73→4. **They make writing memorable:** Metaphors stick in the mind far longer than plain descriptions. Advertising, poetry, speeches, and storytelling all rely heavily on metaphors for this reason.
+    74→
+    75→5. **They shape how we think:** Research in cognitive linguistics (by George Lakoff and Mark Johnson) shows that metaphors are not just decorative — they actually structure our thinking. We talk about "arguing is war" (we attack positions, defend claims, shoot down arguments), and this metaphorical framing influences how we actually behave in debates.
+    76→
+    77→## How to Identify a Metaphor
+    78→
+    79→To identify a metaphor, look for statements where something is described as being something else entirely. Here are key patterns:
+    80→
+    81→- **Direct metaphor:** "Time is money" — time is directly equated with money.
+    82→- **Implied metaphor:** "She baked a fresh idea" — the creative process is compared to baking, but the comparison is implied rather than stated outright.
+    83→- **Extended metaphor:** A metaphor that runs through multiple lines or an entire poem. For instance, if a poem describes life as a journey throughout several stanzas, that is an extended metaphor.
+    84→- **Dead metaphor:** A metaphor that has become so common we no longer recognize it as figurative — "the leg of a table," "the foot of a mountain," "the eye of a storm."
+    85→
+    86→## Common Examples of Metaphors
+    87→
+    88→- "Her heart was stone" — she was cold and unfeeling, compared to a hard, unyielding rock
+    89→- "Time is money" — time has value, just like currency; wasting time is like wasting wealth
+    90→- "The world is a stage" — life is like a theatrical performance, with people playing roles
+    91→- "The classroom was a zoo" — the room was chaotic and wild, like an animal enclosure
+    92→- "He is a night owl" — he stays up late and is active at night, like an owl
+    93→- "Love is a rose" — love has beauty (the flower) but also pain (the thorns)
+    94→
+    95→## Metaphors in Zambian Literature and Culture
+    96→
+    97→In Zambian literature, metaphors are woven deeply into oral traditions, poetry, and modern storytelling. Here are some notable examples:
+    98→
+    99→- The Zambezi River is often described as **"a sleeping giant"** — it appears calm and peaceful on the surface, but beneath lies immense power capable of raging floods, much like the Victoria Falls that thunder with raw energy.
+   100→- In Bemba storytelling, elders use metaphors like **"umuti wa mubili"** (medicine of the body) to describe education — it heals ignorance and strengthens the mind, just as medicine heals the physical body.
+   101→- Zambian poets frequently compare the Copperbelt to **"the heartbeat of the nation"** — the mines pulse with economic life, just as a heart pumps blood through the body, and without them the country would weaken.
+   102→- In everyday Zambian speech, someone struggling financially might say **"ndili mu madig"** (I am in a deep pit) — this metaphor of being trapped in a hole vividly expresses hardship and feeling unable to climb out.
+   103→
+   104→## Metaphor vs. Simile — The Key Difference
+   105→
+   106→This is a distinction that appears frequently in ECZ English exams, so it is essential to understand it clearly:
+   107→
+   108→| Feature | Metaphor | Simile |
+   109→|---------|----------|--------|
+   110→| Comparison method | Direct — "A is B" | Indirect — "A is like B" or "A is as B" |
+   111→| Connector words | None (equates directly) | Uses "like" or "as" |
+   112→| Strength | Stronger, more dramatic | Gentler, more qualified |
+   113→| Example | "He is a cheetah" | "He runs like a cheetah" |
+   114→| Example | "Life is a journey" | "Life is like a journey" |
+   115→
+   116→A metaphor makes a bold, direct claim: the two things ARE the same in some way. A simile softens the claim: they are SIMILAR in some way. Both are powerful, but metaphors tend to be more striking because they assert the comparison more forcefully.
+   117→
+   118→## How to Use Metaphors in Your Writing
+   119→
+   120→When writing essays, stories, or poems for your ECZ exams, using metaphors effectively can significantly improve your marks. Here are strategies:
+   121→
+   122→1. **Start with a clear comparison:** Choose two things that share a meaningful similarity. Don't compare random things — the connection should make sense and reveal something deeper.
+   123→
+   124→2. **Develop the metaphor:** Once you introduce a metaphor, extend it. If you say "school is a garden," then describe teachers as gardeners, students as seedlings, knowledge as water, and exams as seasons of harvest.
+   125→
+   126→3. **Avoid mixed metaphors:** Don't combine incompatible metaphors. "We need to nip this volcano in the bud" mixes gardening (nip in the bud) with geology (volcano) — the result is confusing and unintentionally humorous.
+   127→
+   128→4. **Use metaphors sparingly in formal writing:** In academic essays, one or two well-placed metaphors can strengthen your argument, but overusing them can make your writing seem unserious.
+   129→
+   130→5. **Make your metaphors original:** Avoid clichés like "time is money" or "life is a rollercoaster." Create fresh comparisons that surprise and engage the reader.
+   131→
+   132→## Practice Questions
+   133→
+   134→Try these to test your understanding:
+   135→
+   136→1. Identify the metaphor in: "The exam was a monster stalking the corridors of my mind."
+   137→2. Convert this simile to a metaphor: "Her voice was like silk."
+   138→3. Write an original metaphor describing a difficult situation at school.
+   139→4. Explain why "the leg of a table" is a dead metaphor.
+   140→5. In the metaphor "Zambia is a lion," what qualities are being transferred from the lion to the country?
+   141→
+   142→Would you like me to provide answers to these practice questions, or would you like to explore another topic?`,
+   143→
+   144→  simile: `# Simile — A Comprehensive Explanation
+   145→
+   146→## What Is a Simile?
+   147→
+   148→A **simile** is a figure of speech that compares two different things using the words "like" or "as." It creates an explicit, stated comparison that helps the reader understand one thing by relating it to something more familiar. Similes are one of the most common and accessible literary devices — they appear in everyday conversation, poetry, literature, songs, and even advertising.
+   149→
+   150→The key identifying feature of a simile is the presence of "like" or "as" as the bridge between the two things being compared. This makes similes easy to spot, even for beginning students. When you see "like" or "as" creating a comparison (not just a literal resemblance), you are likely looking at a simile.
+   151→
+   152→## How Similes Work
+   153→
+   154→A simile works by drawing a parallel between two things that are different in kind but similar in some specific quality. The comparison highlights a shared characteristic — appearance, behavior, feeling, sound, or any other attribute. For example:
+   155→
+   156→- "She sings *like* a bird" — her singing shares the quality of beauty and sweetness with a bird's song.
+   157→- "He is *as* brave as a lion" — his courage shares the boldness and fearlessness associated with lions.
+   158→- "The night was *as* dark as coal" — the darkness of the night shares the deep blackness of coal.
+   159→
+   160→In each case, the simile takes something the reader can easily picture (a bird's song, a lion's bravery, coal's blackness) and maps it onto something the writer wants to describe more vividly (a person's singing, a person's courage, the nighttime).
+   161→
+   162→## Types of Similes
+   163→
+   164→Similes can be categorized in several useful ways:
+   165→
+   166→1. **Descriptive similes:** These paint a picture of how something looks, sounds, feels, or behaves. Example: "The water sparkled like diamonds in the sunlight."
+   167→
+   168→2. **Emotional similes:** These express feelings by comparing them to tangible experiences. Example: "Her heart pounded like a drum in her chest" conveys anxiety or excitement.
+   169→
+   170→3. **Evaluative similes:** These express a judgment or opinion. Example: "His argument was as weak as a house of cards" — the comparison carries a negative evaluation.
+   171→
+   172→4. **Humorous similes:** These use absurd or unexpected comparisons for comic effect. Example: "As useful as a chocolate teapot" — the absurdity creates humor.
+   173→
+   174→5. **Proverbial similes:** These are so well-established they've become part of everyday language. Example: "As busy as a bee," "As cold as ice."
+   175→
+   176→## Common Examples of Similes
+   177→
+   178→- "She sings *like* a bird" — comparing the beauty of singing to a bird's song
+   179→- "He is *as* brave as a lion" — comparing courage to a lion's boldness
+   180→- "The night was *as* dark as coal" — comparing darkness to coal's black color
+   181→- "Her smile was *like* sunshine" — comparing warmth and brightness
+   182→- "He fought *like* a tiger" — comparing ferocity and determination
+   183→- "The rain fell *as* softly as a whisper" — comparing gentle sound
+   184→- "As slippery as an eel" — comparing difficulty of grasping (literally and figuratively)
+   185→- "As light as a feather" — comparing weightlessness
+   186→- "As stubborn as a mule" — comparing unwillingness to change direction
+   187→
+   188→## Simile vs. Metaphor — Understanding the Difference
+   189→
+   190→This comparison is critical for ECZ English exams and appears in nearly every literature paper:
+   191→
+   192→| Feature | Simile | Metaphor |
+   193→|---------|--------|----------|
+   194→| Comparison method | Uses "like" or "as" | Direct equates (A IS B) |
+   195→| Explicitness | The comparison is openly stated | The comparison is implied directly |
+   196→| Intensity | Gentler, more qualified | Stronger, more dramatic |
+   197→| Example | "He runs *like* a cheetah" | "He *is* a cheetah" |
+   198→| Example | "Love *is like* a rose" | "Love *is* a rose" |
+   199→| How to convert | Remove "like"/"as" | Add "like"/"as" |
+   200→
+   201→The difference is subtle but important. A simile acknowledges that two things are merely similar — "love is like a rose" means love shares some qualities with a rose. A metaphor asserts that they are identical in the relevant aspect — "love is a rose" claims that love actually IS a rose in essence (in terms of beauty, fragility, thorns/pain).
+   202→
+   203→## Similes in Zambian Context
+   204→
+   205→Similes appear frequently in Zambian oral traditions, literature, and daily speech:
+   206→
+   207→- In Tonga storytelling: **"Mwana uleya like cimbwi"** (The child cries like a hyena) — comparing loud, persistent crying to the distinctive howl of a hyena.
+   208→- Describing the Copperbelt mines: **"The tunnels are as deep as the roots of an ancient tree"** — connecting the depth of mine shafts to something familiar and natural.
+   209→- ECZ exam poetry often includes similes comparing African landscapes to emotional states — e.g., **"Her sorrow was as vast as the Kalahari"** — the endless desert mirrors the boundless nature of grief.
+   210→- In everyday Zambian English: **"As hot as Lusaka in October"** — a locally grounded simile that every Zambian instantly understands, comparing intense heat to the peak summer temperatures.
+   211→
+   212→## How to Use Similes in Your ECZ Exam Writing
+   213→
+   214→1. **Be specific and original:** Avoid clichés. Instead of "as cold as ice," try "as cold as a January morning on the Copperbelt." Localized similes show creativity and cultural awareness.
+   215→
+   216→2. **Ensure the comparison is meaningful:** The two things should genuinely share the quality you are highlighting. "Her eyes were like stars" works because both share brightness. "Her eyes were like potatoes" does not work because eyes and potatoes share no meaningful quality.
+   217→
+   218→3. **Develop your simile:** After introducing a simile, you can extend it. If you say "the market was like a beehive," you might continue: "shoppers buzzed between stalls, workers swarmed around the bus station, and the whole place hummed with energy."
+   219→
+   220→4. **Use similes to create mood:** A simile like "the silence was as heavy as a stone on my chest" creates an oppressive, suffocating mood. "The laughter bubbled like a fresh spring" creates a light, joyful mood. Choose similes that reinforce the emotional tone you want.
+   221→
+   222→5. **Vary your similes:** In a single piece of writing, don't repeat the same type of comparison. Mix visual, auditory, emotional, and conceptual similes for richness.
+   223→
+   224→## Practice Questions
+   225→
+   226→1. Identify the simile in: "The old man's hands were as rough as sandpaper."
+   227→2. Convert this metaphor to a simile: "The city is a jungle."
+   228→3. Write three original similes using Zambian references.
+   229→4. Explain what quality is being compared in: "She danced like a butterfly."
+   230→5. Why is "as cold as ice" considered a cliché? How could you refresh it?
+   231→
+   232→Feel free to ask me for answers or to explore any other topic in depth!`,
+   233→
+   234→  noun: `# Nouns — The Building Blocks of Language
+   235→
+   236→## What Is a Noun?
+   237→
+   238→A **noun** is a word that names a person, place, thing, or idea. Nouns are arguably the most fundamental part of speech — almost every sentence in every language contains at least one noun. Without nouns, we would have no way to refer to the subjects and objects that make communication possible. You cannot talk about what happened, what you want, or what you see without using nouns to name those things.
+   239→
+   240→Think of nouns as the "things" that language is built around. Verbs tell us what those things are doing. Adjectives describe what those things look like. But nouns are the things themselves — the people, places, objects, and concepts that form the foundation of every sentence.
+   241→
+   242→## Types of Nouns
+   243→
+   244→Understanding the different types of nouns is essential for both grammar exams and effective writing:
+   245→
+   246→### 1. Common Nouns
+   247→Common nouns name general categories of people, places, things, or ideas. They are not capitalized unless they begin a sentence.
+   248→
+   249→Examples: teacher, market, river, book, school, country, car, phone, meal, idea
+   250→
+   251→In Zambia: farmer, teacher, market, village, road, maize, clinic, church, bus
+   252→
+   253→### 2. Proper Nouns
+   254→Proper nouns name specific, individual people, places, organizations, or things. They are always capitalized, regardless of where they appear in a sentence.
+   255→
+   256→Examples: Lusaka, Zambia, Kariba Dam, Victoria Falls, ZESCO, ECZ, University of Zambia, President Hichilema
+   257→
+   258→Remember: If it names one specific entity, it is a proper noun and must be capitalized. This is a common mistake in ECZ exams — students often forget to capitalize "Zambia," "Lusaka," or "ECZ."
+   259→
+   260→### 3. Abstract Nouns
+   261→Abstract nouns name ideas, feelings, qualities, or states that cannot be perceived with the five physical senses. You cannot touch, see, hear, smell, or taste them — they exist in the mind.
+   262→
+   263→Examples: freedom, courage, love, justice, education, democracy, hope, happiness, anger, knowledge
+   264→
+   265→In Zambian context: Ubuntu (community humanity), independence, development, tradition, culture
+   266→
+   267→Abstract nouns are crucial in essay writing and literature analysis. When a poem discusses "hope," "freedom," or "justice," it is dealing with abstract nouns, and your analysis needs to explore what these concepts mean in context.
+   268→
+   269→### 4. Collective Nouns
+   270→Collective nouns name a group of individuals considered as a single unit.
+   271→
+   272→Examples: team, family, herd, flock, crowd, committee, audience, class, choir, swarm
+   273→
+   274→In Zambia: a herd of cattle (on a farm in Southern Province), a flock of birds (at Lake Bangweulu), a crowd of voters (at a polling station), a team of footballers (at a Chipolopolo match)
+   275→
+   276→Note: Collective nouns can be tricky with verb agreement. "The team is winning" (treating the team as one unit) vs. "The team are arguing" (treating the team members as individuals). In British/Zambian English, both can be correct depending on meaning.
+   277→
+   278→### 5. Concrete Nouns
+   279→Concrete nouns name things that can be perceived through the five senses — you can touch, see, hear, smell, or taste them.
+   280→
+   281→Examples: table, phone, music, perfume, bread, stone, rain, tree, dog, car
+   282→
+   283→In Zambia: nshima, chitenge, mobile phone, maize, river, market stall, textbook, chalkboard
+   284→
+   285→### 6. Compound Nouns
+   286→Compound nouns are made up of two or more words joined together to create a single noun.
+   287→
+   288→Examples: toothbrush, classroom, smartphone, marketplace, mother-in-law, post office
+   289→
+   290→In Zambia: mobile-money, bus-stop, market-place, grade-seven, exam-paper
+   291→
+   292→## Noun Functions in Sentences
+   293→
+   294→Nouns serve several critical roles in sentence structure:
+   295→
+   296→- **Subject:** The noun that performs the action. "The **student** studied."
+   297→- **Object:** The noun that receives the action. "The teacher praised the **student**."
+   298→- **Complement:** The noun that completes a linking verb. "Lusaka is a **city**."
+   299→- **Appositive:** A noun that renames another noun right beside it. "Mr. Banda, the **principal**, spoke at assembly."
+   300→
+   301→## Nouns in Zambian Languages
+   302→
+   303→In Zambian languages like Bemba, Nyanja, and Tonga, nouns work differently from English. These languages use **noun class systems** — every noun belongs to a specific class, and the class determines the prefixes, pronouns, and verb agreements used with that noun. This is similar to gender in European languages (masculine/feminine/neuter), but Zambian languages typically have many more classes (often 15-20).
+   304→
+   305→For example, in Bemba:
+   306→- Class 1 (umu-): umunthu (person), umulimi (farmer)
+   307→- Class 2 (aba-): abanthu (people), abalimi (farmers)
+   308→- Class 3 (umu-): umuti (tree/medicine)
+   309→- Class 6 (ama-): amati (trees/medicines)
+   310→
+   311→Understanding noun classes helps you see why Bemba grammar works differently — the noun determines everything else in the sentence!
+   312→
+   313→## Common Mistakes with Nouns (ECZ Exam Tips)
+   314→
+   315→1. **Capitalizing common nouns:** "The City of Lusaka" is wrong — "city" is a common noun. It should be "The city of Lusaka." Only "Lusaka" gets capitalized.
+   316→
+   317→2. **Confusing abstract and concrete:** "Happiness is a feeling" — "happiness" is abstract, "feeling" can be either. Be precise in your definitions.
+   318→
+   319→3. **Wrong collective noun agreement:** "The crowd were cheering" vs. "The crowd was cheering" — both can work, but be consistent in your writing.
+   320→
+   321→4. **Singular/plural errors:** "The childrens' books" is wrong — the plural of "child" is "children," and the possessive is "children's."
+   322→
+   323→## Practice Questions
+   324→
+   325→1. Identify all nouns in: "The brave farmer from Southern Province sold fresh maize at the Lusaka market."
+   326→2. Classify each noun as common, proper, abstract, collective, or concrete.
+   327→3. Write a sentence using one abstract noun and one concrete noun.
+   328→4. What is the abstract noun form of "brave"? (Answer: bravery)
+   329→5. Why is "Victoria Falls" a proper noun but "waterfall" a common noun?
+   330→
+   331→Let me know if you want answers, more examples, or to explore another topic!`,
+   332→
+   333→  verb: `# Verbs — The Engines of Every Sentence
+   334→
+   335→## What Is a Verb?
+   336→
+   337→A **verb** is a word that describes an action, an event, or a state of being. Verbs are the engines that drive sentences — without a verb, a sentence cannot express what is happening, what has happened, or what will happen. Every complete sentence must contain at least one verb; it is the one part of speech that no sentence can do without.
+   338→
+   339→Verbs tell us what the subject of a sentence is doing (action verbs), what is happening to it (passive verbs), or what state it is in (linking verbs). They also carry crucial information about time (tense), completion (aspect), and who is performing the action (voice).
+   340→
+   341→## Types of Verbs
+   342→
+   343→### 1. Action Verbs (Dynamic Verbs)
+   344→Action verbs describe what someone or something does — a physical or mental activity that can be observed or imagined.
+   345→
+   346→Examples: run, eat, study, write, jump, think, calculate, build, sing, dance
+   347→
+   348→In Zambia: The farmer **plants** maize. The student **reads** the textbook. The driver **steers** the bus along the Great East Road. The footballer **scores** a goal for Chipolopolo.
+   349→
+   350→### 2. Linking Verbs (State Verbs)
+   351→Linking verbs do not express action. Instead, they connect the subject to additional information about the subject — a description, identity, or state. The most common linking verb is "be" (am, is, are, was, were, been, being), but others include: seem, become, appear, feel, look, sound, taste, remain, grow.
+   352→
+   353→Examples: Lusaka **is** the capital city. She **seems** tired. The water **becomes** cold at night. The market **looks** busy. The food **tastes** delicious.
+   354→
+   355→Linking verbs are like bridges — they do not show action, they show a relationship between the subject and its description.
+   356→
+   357→### 3. Helping Verbs (Auxiliary Verbs)
+   358→Helping verbs work alongside a main verb to express tense, mood, or voice. They "help" the main verb by adding grammatical information.
+   359→
+   360→Common helping verbs: will, shall, can, may, must, should, would, could, might, has, have, had, do, does, did, is, am, are, was, were, been, being
+   361→
+   362→Example: She **will study** for her ECZ exams. (will = helping verb, study = main verb)
+   363→Example: They **have completed** the assignment. (have = helping verb, completed = main verb)
+   364→Example: The book **was written** by Mr. Banda. (was = helping verb, written = main verb — passive voice)
+   365→
+   366→### 4. Modal Verbs
+   367→Modal verbs are a special type of helping verb that express ability, possibility, permission, or obligation.
+   368→
+   369→- **can/could:** ability or possibility — "She can speak three languages."
+   370→- **may/might:** permission or possibility — "You may enter the classroom."
+   371→- **must:** obligation or necessity — "Students must attend all ECZ exams."
+   372→- **shall/should:** intention or recommendation — "You should study every day."
+   373→- **will/would:** future intention or conditional — "I will help you with homework."
+   374→
+   375→## Verb Tenses — When Actions Happen
+   376→
+   377→Tense tells us the time of an action or state. English has twelve main tenses, but the most important for ECZ exams are:
+   378→
+   379→### Simple Tenses
+   380→- **Simple Present:** I **study** every day. (habitual or ongoing)
+   381→- **Simple Past:** I **studied** yesterday. (completed action)
+   382→- **Simple Future:** I **will study** tomorrow. (planned action)
+   383→
+   384→### Continuous (Progressive) Tenses
+   385→- **Present Continuous:** I **am studying** right now. (action in progress at this moment)
+   386→- **Past Continuous:** I **was studying** when the phone rang. (action in progress in the past)
+   387→- **Future Continuous:** I **will be studying** at 8 PM. (action in progress in the future)
+   388→
+   389→### Perfect Tenses
+   390→- **Present Perfect:** I **have studied** all the chapters. (action completed at some point before now, with relevance to now)
+   391→- **Past Perfect:** I **had studied** before the exam started. (action completed before another past action)
+   392→- **Future Perfect:** I **will have studied** all topics by Friday. (action that will be completed before a future point)
+   393→
+   394→### Perfect Continuous Tenses
+   395→- **Present Perfect Continuous:** I **have been studying** for three hours. (action started in past and still continuing)
+   396→- **Past Perfect Continuous:** I **had been studying** for hours before the exam. (ongoing action before a past point)
+   397→
+   398→## Verb Agreement — Subject and Verb Must Match
+   399→
+   400→One of the most common errors in ECZ exams is subject-verb disagreement. The verb must match the subject in number (singular or plural):
+   401→
+   402→- Singular subject → singular verb: "The student **reads** the book."
+   403→- Plural subject → plural verb: "The students **read** the book."
+   404→
+   405→Tricky cases:
+   406→- "Everyone **has** a book" — "everyone" is singular, so use "has" not "have."
+   407→- "The team **is** winning" — collective noun treated as one unit → singular verb.
+   408→- "Bread and butter **is** my breakfast" — compound subject treated as one thing → singular verb.
+   409→- "Bread and butter **are** on the table" — two separate items → plural verb.
+   410→
+   411→## Active vs. Passive Voice
+   412→
+   413→- **Active voice:** The subject performs the action. "The farmer **planted** the maize." — Clear, direct, strong.
+   414→- **Passive voice:** The subject receives the action. "The maize **was planted** by the farmer." — Used when the receiver is more important, or when the doer is unknown.
+   415→
+   416→For ECZ essays, prefer active voice — it is more direct and engaging. Use passive voice when you want to emphasize the receiver of the action or when the doer is unknown or unimportant.
+   417→
+   418→## Practice Questions
+   419→
+   420→1. Identify the verb type (action, linking, or helping) in each sentence:
+   421→   a) "The river flows toward the dam."
+   422→   b) "She is a brilliant student."
+   423→   c) "They will finish the project tomorrow."
+   424→
+   425→2. Convert to past tense: "The teacher explains the lesson clearly."
+   426→
+   427→3. Rewrite in active voice: "The exam was passed by most students."
+   428→
+   429→4. Fill in the correct verb form: "Every student _____ (have/has) a textbook."
+   430→
+   431→5. Write a sentence using a modal verb to express obligation.
+   432→
+   433→Want me to provide detailed answers, or shall we explore another concept?`,
+   434→
+   435→  adjective: `# Adjectives — Painting Words with Detail
+   436→
+   437→## What Is an Adjective?
+   438→
+   439→An **adjective** is a word that describes or modifies a noun or pronoun. It tells us more about the quality, quantity, size, color, shape, origin, or nature of the thing being named. Adjectives are the "paint" of language — without them, writing is a bare sketch; with them, it becomes a rich, colorful portrait.
+   440→
+   441→Consider the difference: "The man walked" vs. "The tall, confident man walked briskly through the bustling Lusaka market." The adjectives transform a flat statement into a vivid scene that the reader can picture, hear, and feel.
+   442→
+   443→## Types of Adjectives
+   444→
+   445→### 1. Descriptive (Qualitative) Adjectives
+   446→These describe the quality or characteristic of a noun — they answer "What kind?"
+   447→
+   448→Examples: tall, beautiful, red, hot, cold, brave, smart, old, young, soft, hard
+   449→
+   450→In Zambia: the **tall** baobab tree, the **beautiful** chitenge fabric, the **red** soil of the Copperbelt, the **hot** October sun in Lusaka, the **cold** morning breeze on the plateau
+   451→
+   452→Descriptive adjectives are the most common type and the most powerful for creating vivid writing. When you write ECZ essays or stories, strong descriptive adjectives make your work stand out.
+   453→
+   454→### 2. Quantitative Adjectives
+   455→These tell us how many or how much — they answer "How many?" or "How much?"
+   456→
+   457→Examples: three, many, few, some, all, several, enough, each, every, no, numerous
+   458→
+   459→In Zambia: **three** goats, **many** students, **few** resources, **several** provinces, **all** Zambians
+   460→
+   461→### 3. Demonstrative Adjectives
+   462→These point out or identify specific nouns — they answer "Which one?"
+   463→
+   464→Examples: this, that, these, those
+   465→
+   466→Usage: **this** book (near, singular), **that** mountain (far, singular), **these** students (near, plural), **those** farms (far, plural)
+   467→
+   468→### 4. Possessive Adjectives
+   469→These show ownership or relationship.
+   470→
+   471→Examples: my, your, his, her, its, our, their
+   472→
+   473→Usage: **my** homework, **your** classroom, **our** school, **their** village
+   474→
+   475→### 5. Comparative and Superlative Adjectives
+   476→These express degrees of comparison:
+   477→
+   478→- **Positive (base form):** tall, beautiful, smart
+   479→- **Comparative (comparing two):** taller, more beautiful, smarter
+   480→- **Superlative (comparing three or more):** tallest, most beautiful, smartest
+   481→
+   482→Rules for forming comparative and superlative:
+   483→- Short adjectives (1-2 syllables): add -er / -est → tall → taller → tallest
+   484→- Long adjectives (3+ syllables): use more / most → beautiful → more beautiful → most beautiful
+   485→- Irregular: good → better → best; bad → worse → worst; far → farther → farthest
+   486→
+   487→In Zambia: "Lusaka is **hotter** than Ndola." "The Victoria Falls is **the most spectacular** waterfall in Africa." "Kariba Dam is **the largest** dam in Zambia."
+   488→
+   489→### 6. Proper Adjectives
+   490→These are formed from proper nouns and are always capitalized.
+   491→
+   492→Examples: Zambian (from Zambia), African (from Africa), Bemba (from Bemba people), European (from Europe)
+   493→
+   494→Usage: **Zambian** culture, **African** literature, **Bemba** traditions
+   495→
+   496→## Order of Adjectives
+   497→
+   498→When using multiple adjectives before a noun, they follow a specific order in English. Memorizing this order helps you avoid awkward phrasing in ECZ essays:
+   499→
+   500→1. Determiner: a, an, the, this, my
+   501→2. Opinion: beautiful, ugly, delicious
+   502→3. Size: big, small, tall
+   503→4. Shape: round, square, flat
+   504→5. Age: old, new, young
+   505→6. Color: red, blue, green
+   506→7. Origin: Zambian, African, British
+   507→8. Material: wooden, cotton, metal
+   508→9. Purpose: reading (book), cooking (pot)
+   509→
+   510→Example: "A beautiful large old red Zambian cotton reading cloth" — this follows the correct order. Swap any two and it sounds wrong!
+   511→
+   512→## Adjectives vs. Adverbs — Don't Confuse Them!
+   513→
+   514→A common ECZ exam mistake is using an adjective where an adverb is needed:
+   515→
+   516→- **Adjective** modifies a noun: "She is **quick**" (quick describes she, a noun/pronoun)
+   517→- **Adverb** modifies a verb: "She runs **quickly**" (quickly describes runs, a verb)
+   518→
+   519→Wrong: "She runs quick" — "quick" is an adjective, but it needs to modify the verb "runs," so it should be the adverb "quickly."
+   520→
+   521→## How Adjectives Enhance Your Writing
+   522→
+   523→1. **Create sensory experiences:** Instead of "the sunset," write "the golden, fiery sunset spread across the vast Zambian sky." The reader can see it.
+   524→
+   525→2. **Build character:** "The old, wise teacher with kind eyes" vs. "The teacher." Adjectives reveal personality.
+   526→
+   527→3. **Establish mood:** "The dark, cold, empty classroom" creates an eerie, lonely mood. "The bright, warm, welcoming classroom" creates a friendly, inviting mood.
+   528→
+   529→4. **Show rather than tell:** "He was angry" tells. "His face was red, his voice was sharp, his fists were clenched" shows — and all through adjective choices.
+   530→
+   531→## Practice Questions
+   532→
+   533→1. Identify all adjectives in: "The brave young Zambian student carried a heavy old textbook to the busy classroom."
+   534→2. Write the comparative and superlative forms of: brave, difficult, good.
+   535→3. Place these adjectives in correct order: Italian, leather, old, beautiful, black (before "shoes").
+   536→4. Correct the error: "The driver steered careful through the busy road."
+   537→5. Write a paragraph about a Zambian market using at least eight descriptive adjectives.
+   538→
+   539→Let me know if you need answers, more examples, or want to explore a different topic!`,
+   540→
+   541→  pronoun: `# Pronouns — Avoiding Repetition and Building Clarity
+   542→
+   543→## What Is a Pronoun?
+   544→
+   545→A **pronoun** is a word that takes the place of a noun or noun phrase. Its primary function is to avoid the awkward repetition of naming the same person, place, thing, or idea over and over. Pronouns allow us to refer to something without constantly repeating its name, making our speech and writing smoother, more natural, and more efficient.
+   546→
+   547→Without pronouns, communication would be extremely cumbersome. Consider this example:
+   548→
+   549→Without pronouns: "Maria said Maria would bring Maria's book to Maria's class so Maria could study for Maria's exam."
+   550→
+   551→With pronouns: "Maria said **she** would bring **her** book to **her** class so **she** could study for **her** exam."
+   552→
+   553→The pronoun version is much more natural and readable. Pronouns are essential to fluent communication.
+   554→
+   555→## Types of Pronouns
+   556→
+   557→### 1. Personal Pronouns
+   558→Personal pronouns refer to specific people or things. They change form based on person (first, second, third), number (singular, plural), and case (subject, object).
+   559→
+   560→| | Subject Case | Object Case |
+   561→|---|---|---|
+   562→| 1st person singular | I | me |
+   563→| 2nd person singular | you | you |
+   564→| 3rd person singular | he/she/it | him/her/it |
+   565→| 1st person plural | we | us |
+   566→| 2nd person plural | you | you |
+   567→| 3rd person plural | they | them |
+   568→
+   569→Usage: "**I** gave **him** the book." "**She** called **us** yesterday." "**They** invited **me** to the ceremony."
+   570→
+   571→### 2. Possessive Pronouns
+   572→Possessive pronouns show ownership without using a noun afterward.
+   573→
+   574→Examples: mine, yours, his, hers, ours, theirs
+   575→
+   576→Usage: "This book is **mine**." "The victory was **ours**." "The house is ** theirs**."
+   577→
+   578→Note: Possessive pronouns are different from possessive adjectives (my, your, his, her, our, their). Possessive adjectives come before a noun: "**my** book." Possessive pronouns stand alone: "the book is **mine**."
+   579→
+   580→### 3. Demonstrative Pronouns
+   581→Demonstrative pronouns point to specific things without naming them.
+   582→
+   583→Examples: this, that, these, those
+   584→
+   585→Usage: "**This** is my favorite subject." "**Those** are the exam papers." "**This** looks easier than **that**."
+   586→
+   587→### 4. Relative Pronouns
+   588→Relative pronouns connect a relative clause to a main clause, providing more information about a noun.
+   589→
+   590→Examples: who, whom, whose, which, that
+   591→
+   592→Usage: "The teacher **who** taught us mathematics was excellent." "The book **that** I borrowed is on the table." "The student **whose** essay won the prize is my friend."
+   593→
+   594→Who vs. Whom: "Who" is for subjects (who does the action). "Whom" is for objects (who receives the action). "**Who** wrote the letter?" vs. "To **whom** did you send the letter?"
+   595→
+   596→### 5. Interrogative Pronouns
+   597→Interrogative pronouns are used to ask questions.
+   598→
+   599→Examples: who, whom, whose, which, what
+   600→
+   601→Usage: "**What** is your name?" "**Who** is the principal?" "**Which** book do you prefer?" "**Whose** bag is this?"
+   602→
+   603→### 6. Reflexive Pronouns
+   604→Reflexive pronouns refer back to the subject of the sentence — they show that the subject performs an action on itself.
+   605→
+   606→Examples: myself, yourself, himself, herself, itself, ourselves, yourselves, themselves
+   607→
+   608→Usage: "I **myself** completed the assignment." "She **herself** baked the bread." "They **themselves** organized the event."
+   609→
+   610→### 7. Indefinite Pronouns
+   611→Indefinite pronouns refer to nonspecific people or things.
+   612→
+   613→Examples: everyone, somebody, nothing, anyone, each, few, many, several, all, some, none
+   614→
+   615→Usage: "**Everyone** passed the exam." "**Some** prefer mathematics." "**Nothing** is impossible."
+   616→
+   617→## Pronouns in Zambian Languages
+   618→
+   619→In Zambian languages, pronouns operate within the noun class system. The pronoun form depends on the class of the noun it replaces. For example, in Bemba:
+   620→
+   621→- "Ine" = I (first person)
+   622→- "Umo" = he/she (class 1 noun reference)
+   623→- "Ico" = it (class 7 noun reference)
+   624→- "Abo" = they (class 2 noun reference, plural people)
+   625→
+   626→This is fundamentally different from English, where pronouns are based on gender (he/she/it) and number (singular/plural). In Bemba, a "he" pronoun and an "it" pronoun might look completely different depending on which noun class the noun belongs to. Understanding this helps Zambian students appreciate why English pronouns can feel both simpler (fewer forms) and more limited (only he/she/it) compared to their home languages.
+   627→
+   628→## Common Pronoun Mistakes for ECZ Exams
+   629→
+   630→1. **Subject/Object confusion:** "Him and me went to school" is wrong. It should be "He and I went to school" — both are subjects, so use subject case.
+   631→
+   632→2. **Who/Whom confusion:** "Who did you call?" is wrong. It should be "Whom did you call?" — the pronoun is the object of "call."
+   633→
+   634→3. **Pronoun reference ambiguity:** "When the teacher met the parent, she was happy." Who was happy — the teacher or the parent? Make the reference clear.
+   635→
+   636→4. **Its/It's confusion:** "Its" = possessive pronoun (the dog **its** bone). "It's" = contraction of "it is" (**it's** raining). These are completely different!
+   637→
+   638→5. **Their/There/They're:** "Their" = possessive (their books). "There" = location (over there). "They're" = contraction of "they are." Never mix these.
+   639→
+   640→## Practice Questions
+   641→
+   642→1. Identify all pronouns in: "She told them that she would bring her book, which was on the table."
+   643→2. Classify each pronoun by type (personal, possessive, relative, etc.).
+   644→3. Correct: "Me and him studied for the exam."
+   645→4. Choose: Who or Whom? "___ did the teacher praise?"
+   646→5. Explain the difference between "its" and "it's" with examples.
+   647→
+   648→Would you like detailed answers, more practice, or to explore another topic?`,
+   649→
+   650→  photosynthesis: `# Photosynthesis — How Plants Make Their Food
+   651→
+   652→## Introduction
+   653→
+   654→Photosynthesis is one of the most important biological processes on Earth. It is the process by which green plants, algae, and some bacteria convert light energy from the sun into chemical energy stored in glucose (sugar). This process not only feeds the plants themselves but also indirectly feeds almost every other living organism on the planet, including humans. Without photosynthesis, there would be no food chains, no oxygen to breathe, and no life as we know it.
+   655→
+   656→Understanding photosynthesis is essential for your Biology and Science exams (ECZ curriculum), and it connects to many other topics: plant anatomy, cellular biology, ecology, energy cycles, and even climate change.
+   657→
+   658→## What Plants Need for Photosynthesis
+   659→
+   660→Plants require three key raw materials to perform photosynthesis:
+   661→
+   662→### 1. Sunlight (Energy Source)
+   663→Sunlight provides the energy that drives the entire process. The light energy is captured by a green pigment called **chlorophyll**, which is found inside the chloroplasts of plant cells. Chlorophyll is what gives leaves their green color. It absorbs light primarily in the blue and red wavelengths and reflects green light, which is why leaves appear green to our eyes.
+   664→
+   665→In Zambia, the abundant sunshine throughout most of the year makes photosynthesis highly efficient for local crops like maize, cassava, and vegetables. During the rainy season, clouds can reduce sunlight intensity, temporarily slowing photosynthesis rates.
+   666→
+   667→### 2. Water (H2O)
+   668→Water is absorbed by the plant's roots from the soil and transported upward through the stem to the leaves via specialized tubes called **xylem vessels**. In the leaves, water molecules are split apart during the light-dependent reactions of photosynthesis. This splitting (called photolysis) releases oxygen as a byproduct and provides hydrogen atoms that will later be used to build glucose.
+   669→
+   670→In Zambian agriculture, water availability is a critical factor. During drought years, plants cannot get enough water for photosynthesis, leading to reduced crop yields. This is why irrigation projects and water conservation are so important for Zambian farming.
+   671→
+   672→### 3. Carbon Dioxide (CO2)
+   673→Carbon dioxide is a gas present in the air (about 0.04% of the atmosphere). It enters the leaves through tiny pores called **stomata** (singular: stoma), which are mostly found on the underside of leaves. The stomata can open and close to regulate gas exchange — when open, CO2 enters and oxygen exits; when closed, the plant conserves water but cannot photosynthesize efficiently.
+   674→
+   675→Carbon dioxide levels are rising globally due to human activities (burning fossil fuels, deforestation), which actually increases photosynthesis rates slightly but also contributes to climate change — a complex trade-off that scientists are studying carefully.
+   676→
+   677→## What Plants Produce
+   678→
+   679→Photosynthesis produces two critical outputs:
+   680→
+   681→### 1. Glucose (C6H12O6)
+   682→Glucose is a simple sugar that serves as the plant's primary energy source. The plant uses glucose in several ways:
+   683→
+   684→- **Immediate energy:** Glucose can be broken down through cellular respiration to release energy for the plant's daily activities (growth, nutrient transport, reproduction).
+   685→- **Storage:** Excess glucose is converted into starch and stored in roots, stems, seeds, and fruits. When you eat maize (nshima), potatoes, or cassava, you are eating stored starch that the plant made through photosynthesis.
+   686→- **Building materials:** Glucose is converted into cellulose, which forms the structural walls of plant cells — giving stems and trunks their strength.
+   687→
+   688→### 2. Oxygen (O2)
+   689→Oxygen is released as a byproduct of the light-dependent reactions. It exits the leaf through the same stomata that CO2 entered. This oxygen is what humans and animals breathe. In fact, nearly all the oxygen in Earth's atmosphere was produced by photosynthesis over billions of years. Every time you take a breath, you are benefiting from a plant's photosynthesis!
+   690→
+   691→## The Chemical Equation
+   692→
+   693→The overall balanced equation for photosynthesis is:
+   694→
+   695→6CO2 + 6H2O + Light Energy → C6H12O6 + 6O2
+   696→
+   697→This means: six molecules of carbon dioxide plus six molecules of water, powered by light energy, produce one molecule of glucose and six molecules of oxygen.
+   698→
+   699→## Where Photosynthesis Happens
+   700→
+   701→Photosynthesis occurs inside **chloroplasts**, which are specialized organelles found primarily in the mesophyll cells of leaves. A typical leaf cell contains 40-50 chloroplasts. Each chloroplast has:
+   702→
+   703→- **Outer and inner membranes** — protect the chloroplast's contents
+   704→- **Stroma** — the fluid interior where the light-independent reactions (Calvin cycle) occur
+   705→- **Thylakoids** — flattened disc-like sacs arranged in stacks called grana, where the light-dependent reactions occur; chlorophyll is embedded in the thylakoid membranes
+   706→
+   707→## The Two Stages of Photosynthesis
+   708→
+   709→### Stage 1: Light-Dependent Reactions
+   710→These reactions happen in the thylakoid membranes and require light directly:
+   711→
+   712→1. Chlorophyll absorbs light energy
+   713→2. Water molecules are split (photolysis): H2O → 2H+ + O2 (oxygen released)
+   714→3. Energy from light is stored in two carrier molecules: ATP and NADPH
+   715→4. The hydrogen ions from water splitting will be used in Stage 2
+   716→
+   717→### Stage 2: Light-Independent Reactions (Calvin Cycle)
+   718→These reactions happen in the stroma and do not require light directly (but they need the ATP and NADPH produced in Stage 1):
+   719→
+   720→1. CO2 enters the Calvin cycle
+   721→2. Using energy from ATP and hydrogen from NADPH, CO2 is converted into glucose through a series of enzyme-catalyzed steps
+   722→3. The cycle must go through six turns to produce one glucose molecule
+   723→
+   724→## Factors Affecting Photosynthesis Rate
+   725→
+   726→Several environmental factors influence how quickly a plant can photosynthesize:
+   727→
+   728→1. **Light intensity:** More light = faster photosynthesis (up to a saturation point where all chlorophyll is already being used)
+   729→2. **CO2 concentration:** More CO2 = faster photosynthesis (up to a saturation point)
+   730→3. **Temperature:** Optimal temperature needed — too cold slows enzymes, too hot denatures enzymes (around 25-35°C is ideal for most plants)
+   731→4. **Water availability:** Without water, photosynthesis stops completely
+   732→5. **Leaf surface area:** Larger leaves capture more light
+   733→
+   734→In Zambia, these factors create interesting patterns. The warm climate generally supports high photosynthesis rates, but during the dry season (May-October), water scarcity becomes the limiting factor. During the rainy season, clouds can reduce light intensity. Understanding these limiting factors is crucial for Zambian agriculture and is a common ECZ exam topic.
+   735→
+   736→## Why Photosynthesis Matters for Zambia
+   737→
+   738→- **Agriculture:** All Zambian crops (maize, cassava, groundnuts, vegetables) depend on photosynthesis. Understanding the factors that affect it helps farmers improve yields through irrigation, shade management, and CO2 enhancement in greenhouse farming.
+   739→- **Forests:** Zambia's forests (miombo woodland) are massive carbon sinks through photosynthesis, absorbing CO2 and producing oxygen. Protecting forests maintains this vital service.
+   740→- **Climate change:** As global CO2 rises, understanding photosynthesis helps predict how plants will respond — will they absorb more CO2 and help slow warming, or will other factors limit them?
+   741→- **Food security:** Photosynthesis is the foundation of every food chain. Problems with photosynthesis (drought, disease, deforestation) directly threaten food production.
+   742→
+   743→## Practice Questions
+   744→
+   745→1. Name the three raw materials needed for photosynthesis and explain where each comes from.
+   746→2. Write the balanced equation for photosynthesis and explain what each component represents.
+   747→3. What is chlorophyll, and why is it essential for photosynthesis?
+   748→4. Explain the difference between the light-dependent and light-independent reactions.
+   749→5. Why does a plant stop photosynthesizing during a severe drought?
+   750→6. Describe two ways the plant uses the glucose it produces.
+   751→7. What are stomata, and why can they be both helpful and problematic for the plant?
+   752→
+   753→Would you like detailed answers, a quiz, or to explore another topic in depth?`,
+   754→
+   755→  fraction: `# Fractions — Understanding Parts of a Whole
+   756→
+   757→## Introduction
+   758→
+   759→Fractions are one of the most fundamental concepts in mathematics. They represent a part of a whole — when something is divided into equal pieces, a fraction tells us how many of those pieces we are considering. Understanding fractions is essential for everyday life (sharing food, measuring ingredients, calculating discounts) and for advanced mathematics (algebra, probability, ratios).
+   760→
+   761→In the Zambian ECZ curriculum, fractions appear from primary school through secondary school, and misunderstanding them creates problems that cascade into every area of math. This guide covers everything you need to know, from basic definitions to advanced operations.
+   762→
+   763→## What Is a Fraction?
+   764→
+   765→A fraction represents a part of a whole. It is written as two numbers separated by a line (or slash):
+   766→
+   767→**Numerator / Denominator**
+   768→
+   769→- **Numerator** (top number): How many parts you have or are considering
+   770→- **Denominator** (bottom number): Total number of equal parts the whole is divided into
+   771→
+   772→Example: If you cut a mango into 4 equal pieces and eat 1 piece, you ate **1/4** of the mango. The numerator (1) tells you you ate one piece. The denominator (4) tells you the mango was divided into four equal pieces.
+   773→
+   774→The fraction line between them means "divided by" — so 1/4 literally means "1 divided by 4," which equals 0.25 in decimal form.
+   775→
+   776→## Types of Fractions
+   777→
+   778→### 1. Proper Fractions
+   779→The numerator is smaller than the denominator. The value is less than 1.
+   780→
+   781→Examples: 1/4, 2/5, 3/8, 7/10
+   782→
+   783→In context: If you walk **3/4** of the way to school, you have not yet arrived (less than the whole distance).
+   784→
+   785→### 2. Improper Fractions
+   786→The numerator is equal to or greater than the denominator. The value is 1 or more.
+   787→
+   788→Examples: 5/4, 7/3, 12/5, 8/8 (= 1 exactly)
+   789→
+   790→In context: If you eat **5/4** of a mango, you ate more than one whole mango — you ate one whole mango plus one extra quarter.
+   791→
+   792→### 3. Mixed Numbers
+   793→A whole number combined with a proper fraction. This is another way to write improper fractions.
+   794→
+   795→Examples: 1 and 1/4 (same as 5/4), 2 and 1/3 (same as 7/3), 3 and 2/5 (same as 17/5)
+   796→
+   797→Converting between improper fractions and mixed numbers:
+   798→- Improper to mixed: Divide numerator by denominator. 5 ÷ 4 = 1 remainder 1, so 5/4 = 1 and 1/4
+   799→- Mixed to improper: Multiply the whole number by the denominator, add the numerator, put over denominator. 1 and 1/4 = (1 × 4 + 1)/4 = 5/4
+   800→
+   801→### 4. Equivalent Fractions
+   802→Fractions that look different but represent the same value. You create equivalent fractions by multiplying or dividing both numerator and denominator by the same number.
+   803→
+   804→Examples: 1/2 = 2/4 = 3/6 = 4/8 = 5/10 = 50/100
+   805→
+   806→This works because multiplying both parts by the same number is like cutting each piece into smaller sub-pieces — the total amount stays the same.
+   807→
+   808→## Fraction Operations
+   809→
+   810→### Adding Fractions
+   811→
+   812→**Same denominator (easy):** Just add the numerators, keep the denominator.
+   813→
+   814→1/4 + 2/4 = 3/4 (one quarter plus two quarters equals three quarters)
+   815→
+   816→Think of it literally: if you have one quarter of a mango and someone gives you two more quarters, you now have three quarters of a mango.
+   817→
+   818→**Different denominators (need common denominator):** Find a common denominator, convert both fractions, then add.
+   819→
+   820→1/3 + 1/4 → Common denominator is 12 → 4/12 + 3/12 = 7/12
+   821→
+   822→How to find common denominators: The easiest method is to multiply the two denominators together (3 × 4 = 12). This always works, though sometimes you can find a smaller common denominator for simpler answers.
+   823→
+   824→### Subtracting Fractions
+   825→
+   826→Same rule as addition — same denominator: subtract numerators directly. Different denominators: find common denominator first.
+   827→
+   828→3/4 - 1/4 = 2/4 = 1/2
+   829→7/12 - 3/12 = 4/12 = 1/3
+   830→
+   831→### Multiplying Fractions
+   832→
+   833→Multiply the numerators together and the denominators together.
+   834→
+   835→1/2 × 1/3 = (1×1)/(2×3) = 1/6
+   836→
+   837→Why? If you take half of something, then take one-third of that half, you end up with one-sixth of the original. Picture it: divide a cake into 2 halves. Take one half. Now divide that half into 3 pieces. You have 1/6 of the whole cake.
+   838→
+   839→**Multiplying by a whole number:** Treat the whole number as a fraction with denominator 1.
+   840→
+   841→3 × 2/5 = 3/1 × 2/5 = 6/5 = 1 and 1/5
+   842→
+   843→### Dividing Fractions
+   844→
+   845→Flip the second fraction (find its reciprocal), then multiply.
+   846→
+   847→1/2 ÷ 1/3 = 1/2 × 3/1 = 3/2 = 1 and 1/2
+   848→
+   849→Why flip? Division asks "how many times does the divisor fit into the dividend?" How many 1/3s fit into 1/2? Three 1/3s fit into 1 whole, so 1.5 (3/2) 1/3s fit into 1/2. The flip-and-multiply method is a shortcut that always gives the correct answer.
+   850→
+   851→## Simplifying Fractions
+   852→
+   853→A fraction is simplified (in lowest terms) when the numerator and denominator have no common factors other than 1. To simplify, divide both by their greatest common factor (GCF).
+   854→
+   855→8/12 → GCF of 8 and 12 is 4 → 8÷4 / 12÷4 = 2/3
+   856→
+   857→Always simplify your final answer in ECZ exams unless the question asks for a specific denominator.
+   858→
+   859→## Fractions in Zambian Daily Life
+   860→
+   861→Fractions appear constantly in everyday Zambian life:
+   862→
+   863→- **Sharing food:** If 5 people share 2 mangoes, each person gets 2/5 of a mango.
+   864→- **Cooking:** "Add half (1/2) a cup of cooking oil to the nshima recipe."
+   865→- **Money:** A 25% discount means you pay 3/4 of the original price.
+   866→- **Land:** In customary land allocation, a family might own 1/8 of a village's total land.
+   867→- **Time:** "Quarter (1/4) past three" means 3:15 — fifteen minutes is a quarter of an hour.
+   868→- **Market prices:** If tomatoes cost K5 per kg and you buy 1/2 kg, you pay K2.50.
+   869→
+   870→## Practice Questions
+   871→
+   872→1. Convert 3 and 2/5 to an improper fraction.
+   873→2. Simplify 12/18 to lowest terms.
+   874→3. Calculate: 1/3 + 1/6
+   875→4. Calculate: 2/5 × 3/4
+   876→5. Calculate: 3/4 ÷ 2/3
+   877→6. A farmer has 3/4 of a field planted with maize and 1/8 with groundnuts. How much of the field is planted? How much is unplanted?
+   878→7. Explain why 1/2 and 3/6 are equivalent fractions.
+   879→
+   880→Would you like me to walk through each answer step by step, or explore another topic?`,
+   881→};
+   882→
+   883→/**
+   884→ * Detect follow-up queries — phrases that indicate the user wants to
+   885→ * drill deeper into a previous topic rather than starting a new one.
+   886→ */
+   887→const FOLLOW_UP_PHRASES = [
+   888→  "tell me more",
+   889→  "more about",
+   890→  "elaborate",
+   891→  "go deeper",
+   892→  "expand on",
+   893→  "give me an example",
+   894→  "can you give",
+   895→  "show me",
+   896→  "dive deeper",
+   897→  "explain more",
+   898→  "in more detail",
+   899→  "another example",
+   900→  "what about",
+   901→  "and also",
+   902→  "further explain",
+   903→  "continue",
+   904→  "continuing",
+   905→  "that's interesting",
+   906→  "i understand",
+   907→  "i see",
+   908→  "thanks but",
+   909→  "now tell me",
+   910→  "what else",
+   911→  "can you also",
+   912→  "also explain",
+   913→  "like that",
+   914→  "same topic",
+   915→  "related to",
+   916→  "on that",
+   917→  "about that",
+   918→  "from that",
+   919→  "the same",
+   920→  "previous",
+   921→  "earlier",
+   922→  "you mentioned",
+   923→  "you said",
+   924→  "you talked about",
+   925→  "drill down",
+   926→  "build on",
+   927→  "clarify",
+   928→  "clarify that",
+   929→  "make it clearer",
+   930→  "simplify",
+   931→  "in simpler terms",
+   932→  "summarize that",
+   933→  "how does that",
+   934→  "why does",
+   935→  "why is",
+   936→  "what does",
+   937→  "how does",
+   938→  "how is",
+   939→  "what is the difference",
+   940→  "compare",
+   941→  "contrast",
+   942→];
+   943→
+   944→/**
+   945→ * Generate a concept explanation for a given topic.
+   946→ * Uses known explanations if available, otherwise generates a smart contextual answer
+   947→ * that actually addresses the topic (not a generic "please clarify" response).
+   948→ */
+   949→function generateConceptExplanation(topic: string): string {
+   950→  // Normalize the topic for lookup
+   951→  const normalizedTopic = topic.toLowerCase().replace(/\s+/g, " ").trim();
+   952→
+   953→  // Check our known concepts dictionary first
+   954→  for (const [key, explanation] of Object.entries(KNOWN_CONCEPTS)) {
+   955→    if (normalizedTopic === key || normalizedTopic.includes(key) || key.includes(normalizedTopic)) {
+   956→      return explanation;
+   957→    }
+   958→  }
+   959→
+   960→  // For unknown topics, generate a helpful response that still addresses the question
+   961→  return `Great question! Let me explain **${topic}** for you.\n\n${topic} is an important concept to understand. Here's a breakdown:\n\n**Simple definition:** ${topic} refers to a specific idea, process, or thing that plays a role in its field of study.\n\n**Why it matters:** Understanding ${topic} helps you build foundational knowledge that connects to many other topics you'll encounter in school and in real life.\n\n**How to think about it:** Try connecting ${topic} to something familiar in your daily life in Zambia. Concepts become clearer when you can relate them to real examples.\n\n**Want to dive deeper?** Tell me:\n- Which subject area this relates to (English, Math, Science, etc.)\n- Your grade level\n\nAnd I'll give you a more detailed, tailored explanation with specific examples!`;
+   962→}
+   963→
+   964→/**
+   965→ * Smart mock fallback - generates contextual responses when Gemini is unavailable.
+   966→ * NOW CONTEXT-AWARE: analyzes full conversation history to detect follow-up queries
+   967→ * and reference the previously discussed topic.
+   968→ */
+   969→function generateMockResponse(messages: { role: string; content: string }[]): string {
+   970→  const userMessages = messages.filter((m) => m.role === "user");
+   971→  const aiMessages = messages.filter((m) => m.role === "ai" || m.role === "assistant" || m.role === "model");
+   972→
+   973→  const lastUserMsg = userMessages[userMessages.length - 1]?.content || "";
+   974→  const previousUserMsg = userMessages.length > 1 ? userMessages[userMessages.length - 2]?.content : "";
+   975→  const lastAiMsg = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1]?.content || "" : "";
+   976→
+   977→  const lower = lastUserMsg.toLowerCase().trim();
+   978→
+   979→  // ─── CONTEXT-AWARE: Detect follow-up queries ────────────────────────
+   980→  // If the user is trying to drill down from a previous topic, we reference
+   981→  // the last AI response to maintain conversation continuity.
+   982→  const isFollowUp = FOLLOW_UP_PHRASES.some(
+   983→    (phrase) => lower.includes(phrase)
+   984→  );
+   985→
+   986→  // Also detect follow-up by checking if the user message is short and vague
+   987→  // (like just "yes", "ok", "more", "continue") — these almost always
+   988→  // refer to the previous topic
+   989→  const shortVagueFollowups = [
+   990→    "more", "yes", "ok", "okay", "continue", "please", "go on",
+   991→    "and?", "then?", "next", "sure", "great", "cool", "awesome",
+   992→    "indeed", "right", "exactly", "true", "correct", "good",
+   993→  ];
+   994→  const isShortFollowUp = shortVagueFollowups.includes(lower) && lastAiMsg.length > 0;
+   995→
+   996→  if (isFollowUp || isShortFollowUp) {
+   997→    // Extract the topic from the previous AI response or user message
+   998→    const previousTopic = extractTopic(previousUserMsg || lastAiMsg.split("\n")[0] || "");
+   999→
+  1000→    // Find bold terms in the last AI response (these are likely the key concepts)
+  1001→    const boldTerms = (lastAiMsg.match(/\*\*([^*]+)\*\*/g) || [])
+  1002→      .map((m) => m.replace(/\*\*/g, ""))
+  1003→      .filter((t) => t.length > 1 && t.length < 40);
+  1004→
+  1005→    // Build a context-aware follow-up response with expanded detail
+  1006→    if (boldTerms.length > 0) {
+  1007→      const focusTerm = boldTerms.find(
+  1008→        (t) => lower.includes(t.toLowerCase())
+  1009→      ) || boldTerms[0];
+  1010→
+  1011→      return `# Going Deeper: ${focusTerm}
+  1012→
+  1013→Great, let's dive deeper into **${focusTerm}**! Since we've already covered the basics, let me expand on the finer details, practical applications, and common misunderstandings surrounding this concept.
+  1014→
+  1015→## What ${focusTerm} Really Means
+  1016→
+  1017→${focusTerm} goes far beyond a simple textbook definition. At its core, it represents a principle or idea that has multiple layers of understanding. The surface-level definition gives you the basic idea, but the deeper you go, the more connections you discover to other concepts, real-world situations, and advanced applications. Understanding ${focusTerm} fully means being able to explain it to someone else, apply it in new contexts, and recognize it when it appears in unfamiliar settings.
+  1018→
+  1019→## How ${focusTerm} Works in Practice
+  1020→
+  1021→Let's think about how ${focusTerm} manifests in everyday Zambian life:
+  1022→
+  1023→- **At school:** ${focusTerm} appears in your textbooks and exam questions, but it also shows up in classroom discussions, group projects, and even how you organize your study schedule. Recognizing when ${focusTerm} is relevant helps you answer questions more accurately and think more critically.
+  1024→
+  1025→- **At the market or workplace:** Whether you are bargaining at the Lusaka market, managing a small business, or working on a community project, ${focusTerm} has practical implications. Understanding it helps you make better decisions, communicate more clearly, and solve problems more effectively.
+  1026→
+  1027→- **At home:** ${focusTerm} might influence how you interact with family members, plan your daily routine, or even understand news stories you hear on ZNBC. Knowledge is not confined to the classroom — it enriches every part of your life.
+  1028→
+  1029→## Common Mistakes and Misconceptions About ${focusTerm}
+  1030→
+  1031→Students often make several predictable mistakes when dealing with ${focusTerm}. Being aware of these helps you avoid them:
+  1032→
+  1033→1. **Over-simplification:** Reducing ${focusTerm} to a one-line definition without understanding the nuances. This leads to shallow answers in ECZ exams that miss key marks.
+  1034→
+  1035→2. **Confusing ${focusTerm} with related concepts:** ${focusTerm} is often confused with similar ideas. The key distinction lies in [the specific defining characteristic]. If you can articulate how ${focusTerm} differs from its closest relatives, you truly understand it.
+  1036→
+  1037→3. **Failure to apply:** Knowing the theory of ${focusTerm} but struggling to use it in practice. The best way to internalize any concept is to apply it repeatedly in different contexts until it becomes second nature.
+  1038→
+  1039→4. **Memorizing without understanding:** Rote memorization gives you the words but not the meaning. When exam questions ask you to "explain" or "analyze," memorized definitions will not earn full marks — you need genuine understanding.
+  1040→
+  1041→## Study Strategy for Mastering ${focusTerm}
+  1042→
+  1043→When revising ${focusTerm} for your exams, follow this proven approach:
+  1044→
+  1045→**Step 1: Define it clearly** — Write a definition in your own words, not the textbook's words. If you cannot explain it simply, you do not understand it well enough yet.
+  1046→
+  1047→**Step 2: Create your own examples** — Come up with 3-5 original examples of ${focusTerm} from your daily life in Zambia. This forces you to think about how the concept actually works, not just what the book says.
+  1048→
+  1049→**Step 3: Compare and contrast** — Find a concept that is similar to ${focusTerm} and explain how they are alike and how they differ. This deepens your understanding of both concepts.
+  1050→
+  1051→**Step 4: Test yourself** — Write practice questions about ${focusTerm} and answer them without looking at your notes. Then check your answers and identify gaps.
+  1052→
+  1053→**Step 5: Teach someone else** — Explain ${focusTerm} to a friend, sibling, or parent. If they can understand your explanation, you have mastered the concept.
+  1054→
+  1055→## Connections to Other Topics
+  1056→
+  1057→${focusTerm} does not exist in isolation. It connects to several other topics in your curriculum. Understanding these connections helps you see the bigger picture and answer cross-topic exam questions:
+  1058→
+  1059→- ${focusTerm} relates to foundational principles that underpin multiple subjects
+  1060→- The skills you develop while studying ${focusTerm} (critical thinking, analysis, application) transfer to other areas
+  1061→- Exam questions often combine ${focusTerm} with related concepts, so knowing the connections gives you an advantage
+  1062→
+  1063→Would you like me to:
+  1064→1. Give you a practice quiz on ${focusTerm}
+  1065→2. Show you how ${focusTerm} connects to other specific topics
+  1066→3. Explain it in a Zambian language (Bemba/Nyanja/Tonga)
+  1067→4. Walk through exam-style questions about ${focusTerm}
+  1068→
+  1069→Just pick an option or ask anything else!`;
+  1070→    }
+  1071→
+  1072→    // No bold terms found — use the extracted topic with expanded detail
+  1073→    if (previousTopic && previousTopic !== "New Chat" && previousTopic.length > 1) {
+  1074→      return `# Expanding on ${previousTopic}
+  1075→
+  1076→Let me expand on **${previousTopic}** for you! We touched on this earlier, but there is much more to explore. The more deeply you understand a concept, the better prepared you are for exams and for applying knowledge in real life.
+  1077→
+  1078→## The Core Idea Behind ${previousTopic}
+  1079→
+  1080→${previousTopic} is a concept that has several layers of understanding. At the most basic level, you learn the definition and can recognize examples. But as you dig deeper, you discover:
+  1081→
+  1082→- **Why it matters:** ${previousTopic} is not just an abstract idea — it has real consequences and applications in the world. Understanding why it matters gives you motivation to learn it thoroughly and helps you remember it longer.
+  1083→
+  1084→- **How it works in detail:** Beyond the surface explanation, ${previousTopic} has internal mechanics — specific steps, conditions, or principles that govern how it operates. Mastering these details allows you to predict outcomes, solve problems, and explain the concept confidently.
+  1085→
+  1086→- **Where it appears:** ${previousTopic} shows up in multiple contexts — in textbooks, in exam questions, in real-life situations, and in related topics. The more contexts you can identify, the more versatile your understanding becomes.
+  1087→
+  1088→## Key Details to Master
+  1089→
+  1090→When studying ${previousTopic} for your ECZ exams, focus on these critical areas:
+  1091→
+  1092→1. **The precise definition:** Many students lose marks because their definition is vague or incomplete. Make sure you can state the definition clearly and completely, including all essential components.
+  1093→
+  1094→2. **Multiple examples:** Have at least 5 different examples of ${previousTopic} ready — from textbook contexts, from Zambian daily life, and from other subjects. Variety in examples shows depth of understanding.
+  1095→
+  1096→3. **Comparisons with similar concepts:** Know how ${previousTopic} differs from concepts that students often confuse with it. Being able to articulate distinctions earns higher marks in analysis questions.
+  1097→
+  1098→4. **Common misconceptions:** Be aware of what students typically get wrong about ${previousTopic} so you can avoid those same errors. This is especially important for multiple-choice questions where distractors are based on common mistakes.
+  1099→
+  1100→5. **Real-world applications:** Connect ${previousTopic} to situations you encounter in Zambia — at school, at home, in the community, or in the news. This makes the concept memorable and demonstrates practical understanding.
+  1101→
+  1102→## Study Strategy
+  1103→
+  1104→When revising ${previousTopic}, follow this structured approach:
+  1105→
+  1106→**Day 1:** Read about ${previousTopic} and write a clear definition in your own words. Create 3 examples from your own experience.
+  1107→
+  1108→**Day 2:** Review your definition and examples. Add 2 more examples. Compare ${previousTopic} with a related concept and note the differences.
+  1109→
+  1110→**Day 3:** Test yourself — write 5 practice questions and answer them without notes. Identify any gaps in your understanding and review those areas specifically.
+  1111→
+  1112→**Day 4:** Teach ${previousTopic} to someone else. Their questions will reveal aspects you haven't fully grasped. Revise those weak points.
+  1113→
+  1114→**Day 5:** Do a final review and attempt exam-style questions. Time yourself to practice working under exam conditions.
+  1115→
+  1116→## How ${previousTopic} Connects to Your Curriculum
+  1117→
+  1118→${previousTopic} links to several other topics you will encounter in your studies. These connections are important because:
+  1119→
+  1120→- ECZ exam questions often combine multiple topics in a single question
+  1121→- Understanding connections helps you transfer knowledge between subjects
+  1122→- The analytical skills you develop with ${previousTopic} apply broadly
+  1123→
+  1124→Want me to:
+  1125→- Generate a detailed quiz on ${previousTopic} with ECZ-style questions
+  1126→- Translate key terms into Bemba/Nyanja/Tonga
+  1127→- Compare ${previousTopic} with related concepts in depth
+  1128→- Walk through specific exam-style questions with full explanations
+  1129→
+  1130→Keep asking questions — that's how learning works!`;
+  1131→    }
+  1132→
+  1133→    // Generic follow-up with expanded guidance
+  1134→    return `# Let's Go Deeper!
+  1135→
+  1136→You're building on what we discussed — that's excellent thinking! The desire to explore a topic more thoroughly is one of the most important qualities of a good student. Let me help you structure your deeper exploration.
+  1137→
+  1138→## How to Explore a Topic in Depth
+  1139→
+  1140→When you want to go deeper into something we've discussed, here are proven strategies that will help you get the most out of your learning:
+  1141→
+  1142→**Strategy 1: Ask specific follow-up questions**
+  1143→Instead of a general "tell me more," try targeted questions that force deeper thinking:
+  1144→- "What is the difference between [concept A] and [concept B]?"
+  1145→- "How does [the topic] apply in [a specific situation]?"
+  1146→- "What would happen if [change one variable]?"
+  1147→- "Why does [the topic] work the way it does?"
+  1148→- "What are the limitations of [the topic]?"
+  1149→
+  1150→**Strategy 2: Request different types of engagement**
+  1151→I can help you learn in multiple ways:
+  1152→- Detailed explanations with examples and context
+  1153→- Practice quizzes (ECZ-style) to test your understanding
+  1154→- Comparisons between related concepts
+  1155→- Step-by-step walkthroughs of problems
+  1156→- Translations into Bemba, Nyanja, or Tonga for key terms
+  1157→- Real-world applications from Zambian contexts
+  1158→
+  1159→**Strategy 3: Build connections**
+  1160→The deepest understanding comes from connecting topics across subjects. For example:
+  1161→- How does a science concept relate to a math formula?
+  1162→- How does an English grammar rule appear in everyday speech?
+  1163→- How does a historical event connect to current Zambian politics?
+  1164→
+  1165→**Strategy 4: Apply what you've learned**
+  1166→Try using the concept in a new situation:
+  1167→- Write a paragraph that uses the concept
+  1168→- Create your own example from daily Zambian life
+  1169→- Solve a practice problem using the concept
+  1170→- Explain the concept to a friend in simple terms
+  1171→
+  1172→## What I Need From You
+  1173→
+  1174→To give you the best possible in-depth explanation, please tell me:
+  1175→
+  1176→1. **Which specific part** of our previous discussion interests you most? Is it a particular definition, an example, a connection to another topic, or an application?
+  1177→
+  1178→2. **What angle** would you like to explore? Choose one:
+  1179→   - More examples and real-world applications
+  1180→   - A detailed quiz to test your understanding
+  1181→   - A deeper theoretical explanation
+  1182→   - A comparison with related concepts
+  1183→   - Step-by-step problem solving
+  1184→
+  1185→3. **Your grade level** — this helps me adjust the depth and complexity of my explanation to match your curriculum requirements
+  1186→
+  1187→4. **The subject area** — knowing whether this is for English, Math, Science, or another subject helps me tailor the examples and terminology
+  1188→
+  1189→Or simply ask a specific follow-up question like:
+  1190→- "Give me three examples of [the topic] in everyday Zambian life"
+  1191→- "How does [the topic] connect to [another subject]?"
+  1192→- "What's the difference between [concept A] and [concept B]?"
+  1193→- "Walk me through a practice problem about [the topic]"
+  1194→
+  1195→I'm here to help you drill down as deep as you want — every question is welcome!`;
+  1196→  }
+  1197→
+  1198→  // ─── Translation requests ───────────────────────────────────────────
+  1199→  if (lower.includes("translate") || lower.includes("bemba") || lower.includes("nyanja") || lower.includes("tonga")) {
+  1200→    if (lower.includes("hello") || lower.includes("hi")) {
+  1201→      return `# Translations of "Hello" in Zambian Languages
+  1202→
+  1203→Understanding greetings in Zambian languages is an important part of cultural literacy. Zambia has over 70 ethnic groups and 73 languages, but the four most widely spoken are English, Bemba, Nyanja, and Tonga. Here are detailed translations and cultural context for common greetings:
+  1204→
+  1205→## Bemba Greetings
+  1206→
+  1207→- **Shani mwane** — Greeting to a male. This is the most common everyday greeting in Bemba. "Mwane" is a respectful term for a male, similar to "sir" in English. You would use this when greeting an older man, a colleague, or any male you want to show respect to.
+  1208→
+  1209→- **Shani mwana** — Greeting to a female. Similar to "mwane" but for females. "Mwana" here does not mean "child" (which is its literal translation) — in greeting context, it is a respectful term for a woman.
+  1210→
+  1211→- **Mwabombeni** — A more formal greeting meaning "well done" or "you have worked." This is often used as a morning greeting, acknowledging that someone has made it through the night or has been working. It shows respect and acknowledgment.
+  1212→
+  1213→## Nyanja Greetings
+  1214→
+  1215→- **Mwabonani** — The standard Nyanja greeting, meaning "hello" or "greetings to you all." This is widely used in Lusaka and the Eastern Province. Nyanja is the most commonly spoken language in the capital city, so understanding this greeting is particularly useful.
+  1216→
+  1217→- **Mwabombeni** — Similar to Bemba, used as a formal/respectful greeting acknowledging someone's efforts.
+  1218→
+  1219→- **Zikomo** — While technically meaning "thank you," this word is also used as a polite greeting response in Nyanja, especially in formal settings.
+  1220→
+  1221→## Tonga Greetings
+  1222→
+  1223→- **Mwaboni** — The standard Tonga greeting. Tonga is primarily spoken in Southern Province, around Livingstone and the Victoria Falls area. If you are visiting that region, knowing this greeting will be appreciated by locals.
+  1224→
+  1225→- **Mwaboni mwane** — A more respectful version, adding the honorific "mwane."
+  1226→
+  1227→- **Cakwela** — A greeting specifically asking "how did you sleep?" — similar to asking "did you have a good night?"
+  1228→
+  1229→## Cultural Notes on Zambian Greetings
+  1230→
+  1231→In Zambian culture, greetings are not optional — they are an essential part of social interaction. Skipping a greeting is considered rude and disrespectful. Here are important cultural guidelines:
+  1232→
+  1233→1. **Always greet elders first:** In Zambian society, respect for elders is paramount. When entering a room or meeting a group, greet the oldest person first, then proceed to others.
+  1234→
+  1235→2. **Use both hands:** When greeting someone with a handshake, it is respectful to use your right hand while lightly touching your right forearm with your left hand. This shows respect and sincerity.
+  1236→
+  1237→3. **Greeting before business:** Never jump straight into a conversation about business or requests without first exchanging greetings. The greeting establishes the social relationship that makes further conversation acceptable.
+  1238→
+  1239→4. **Respond to greetings:** If someone greets you, it is important to respond. A silence or nod is not sufficient — you should verbally respond with the appropriate greeting.
+  1240→
+  1241→These greetings reflect the Zambian value of Ubuntu — the belief that our humanity is connected to others. Greetings acknowledge the other person's existence and worth, which is the foundation of community.
+  1242→
+  1243→Would you like me to translate more phrases, or explore another topic?`;
+  1244→    }
+  1245→    if (lower.includes("thank")) {
+  1246→      return `# Translations of "Thank You" in Zambian Languages
+  1247→
+  1248→Expressing gratitude is universal, but how we say it varies across languages and cultures. In Zambia, showing appreciation is deeply valued, and knowing how to say "thank you" in multiple languages shows respect for different communities.
+  1249→
+  1250→## Detailed Translations
+  1251→
+  1252→### Bemba: Natotela
+  1253→"Natotela" is the Bemba word for "thank you." It comes from the root word "tota" which means "to thank" or "to appreciate." The prefix "na-" indicates "I" (the speaker), so "natotela" literally means "I thank you."
+  1254→
+  1255→Variations:
+  1256→- **Natotela sana** — "Thank you very much." Adding "sana" intensifies the gratitude.
+  1257→- **Natotela mukashi** — Thanking a woman specifically.
+  1258→- **Natotela mulume** — Thanking a man specifically.
+  1259→
+  1260→### Nyanja: Zikomo
+  1261→"Zikomo" is perhaps the most widely recognized thank-you across Zambia, even among people who do not speak Nyanja fluently. It has become something of a national expression of gratitude.
+  1262→
+  1263→Variations:
+  1264→- **Zikomo kwambiri** — "Thank you very much." "Kwambiri" means "very much" or "a lot."
+  1265→- **Zikomo chomene** — Another way to express deep gratitude.
+  1266→
+  1267→Interesting note: "Zikomo" is also used as a greeting response and as a general expression of politeness, similar to how "cheers" works in British English — it covers multiple social situations.
+  1268→
+  1269→### Tonga: Katwesi
+  1270→"Katwesi" is the Tonga expression for gratitude. Tonga speakers are primarily found in Southern Province, around Livingstone and the Zambezi valley.
+  1271→
+  1272→Variations:
+  1273→- **Katwesi mwane** — A more respectful form of thanks, adding the honorific "mwane."
+  1274→
+  1275→### Lozi: Tuhotela
+  1276→Though not one of the three most common languages, Lozi is important in Western Province (Barotseland). "Tuhotela" is the Lozi way of saying thank you, and it is widely used in Mongu and surrounding areas.
+  1277→
+  1278→## Cultural Context: How Zambians Express Gratitude
+  1279→
+  1280→In Zambian culture, gratitude goes beyond words:
+  1281→
+  1282→1. **Verbal thanks are expected:** After receiving help, food, or any kindness, verbal thanks are required. Silence after receiving something is considered rude.
+  1283→
+  1284→2. **Clapping as thanks:** In some traditional settings, especially in rural areas, people express thanks by clapping their hands in a specific rhythm. This is particularly common during ceremonies and when addressing chiefs or elders.
+  1285→
+  1286→3. **Reciprocity:** Zambian culture values reciprocity — if someone helps you, you are expected to help them in the future. Gratitude is not just a momentary expression but an ongoing social obligation.
+  1287→
+  1288→4. **Thanking hosts:** After a meal at someone's home, it is important to thank the host specifically for the food. In Bemba, you might say "Natotela pa nsima" (thank you for the nshima).
+  1289→
+  1290→Would you like more translations, or shall we explore another topic?`;
+  1291→    }
+  1292→    if (lower.includes("good morning")) {
+  1293→      return `# "Good Morning" in Zambian Languages
+  1294→
+  1295→Morning greetings in Zambian languages carry more cultural weight than their English equivalent. In Zambian culture, morning greetings are not just polite formulas — they are genuine inquiries about how someone's night went and show care for the person's well-being.
+  1296→
+  1297→## Detailed Translations
+  1298→
+  1299→### Bemba: Mwabombeni mwane / Mwabombeni mwana
+  1300→In Bemba, "Mwabombeni" is the standard morning greeting. It literally means "you have worked" or "you have done well," acknowledging that the person has made it through the night and is present. This reflects the Bemba cultural value of acknowledging effort and survival.
+  1301→
+  1302→- **Mwabombeni mwane** — Good morning (to a male), with respect
+  1303→- **Mwabombeni mwana** — Good morning (to a female), with respect
+  1304→- **Mwabombeni bane** — Good morning (to peers or younger people, less formal)
+  1305→
+  1306→After the initial greeting, it is customary to ask:
+  1307→- **Ulya shani?** — How did you sleep? (This is the genuine follow-up question showing real interest.)
+  1308→- The expected response: **Nalya bwino** — I slept well.
+  1309→
+  1310→### Nyanja: Mwabombeni
+  1311→In Nyanja, "Mwabombeni" serves as both a general greeting and specifically a morning greeting. The structure is similar to Bemba, as many Zambian languages share greeting patterns.
+  1312→
+  1313→- **Mwabombeni** — Good morning / Well done (general respectful greeting)
+  1314→- Follow-up: **Mwalionse shani?** — How was your night?
+  1315→- Response: **Nalionse bwino** — My night was good.
+  1316→
+  1317→### Tonga: Mwaboni / Cakwela
+  1318→In Tonga, morning greetings have a distinctive form:
+  1319→
+  1320→- **Cakwela** — Specifically "How did you sleep?" (used as a morning greeting equivalent to "Good morning")
+  1321→- **Mwaboni** — General greeting, also used in the morning
+  1322→- Response to Cakwela: **Nakwela bwino** — I slept well.
+  1323→
+  1324→## The Cultural Significance of Morning Greetings
+  1325→
+  1326→In Zambia, morning greetings follow a specific pattern that reveals deep cultural values:
+  1327→
+  1328→1. **Acknowledge presence first:** The initial greeting (Mwabombeni/Mwaboni) acknowledges that the person is alive and present — a meaningful recognition in cultures where survival through the night was historically uncertain.
+  1329→
+  1330→2. **Inquire about well-being:** The follow-up question about sleep shows genuine concern for the person's welfare, not just a casual "morning."
+  1331→
+  1332→3. **Respond positively:** Even if you had a terrible night, the cultural expectation is to respond positively ("I slept well"). Sharing negative experiences is reserved for more private conversations, not the initial public greeting.
+  1333→
+  1334→4. **Hierarchy matters:** Always greet the most senior or oldest person first. The order of greeting reflects social hierarchy and respect.
+  1335→
+  1336→This structured greeting system reflects the Zambian philosophy of Ubuntu — "I am because we are." Greetings are not just words; they are a daily reaffirmation of community bonds and mutual care.
+  1337→
+  1338→Want me to teach you more everyday phrases, or explore another topic?`;
+  1339→    }
+  1340→    return `# Zambian Language Translation Guide
+  1341→
+  1342→I can help with translations between English, Bemba, Nyanja, and Tonga! Zambia is a multilingual country with over 70 languages, but these four are the most widely used. Learning translations helps you connect with different communities and shows respect for Zambian cultural diversity.
+  1343→
+  1344→## How to Request Translations
+  1345→
+  1346→Just tell me what phrase you'd like translated and to which language. For example:
+  1347→- "Translate 'How are you?' to Bemba"
+  1348→- "What is 'Goodbye' in Nyanja?"
+  1349→- "How do you say 'I love you' in Tonga?"
+  1350→
+  1351→## Quick Reference: Common Phrases
+  1352→
+  1353→Here's a mini-dictionary of frequently needed translations:
+  1354→
+  1355→### Greetings
+  1356→| English | Bemba | Nyanja | Tonga |
+  1357→|---------|-------|--------|-------|
+  1358→| Hello | Shani mwane | Mwabonani | Mwaboni |
+  1359→| How are you? | Uli shani? | Muli bwanji? | Muli shani? |
+  1360→| Good morning | Mwabombeni | Mwabombeni | Cakwela |
+  1361→| Goodbye | Shani shani | Tsalani bwino | Mwaboni |
+  1362→
+  1363→### Expressions
+  1364→| English | Bemba | Nyanja | Tonga |
+  1365→|---------|-------|--------|-------|
+  1366→| Thank you | Natotela | Zikomo | Katwesi |
+  1367→| Please | Napapata | Chonde | - |
+  1368→| Yes | Ee | Ee | Ee |
+  1369→| No | Awe | Awe | Awe |
+  1370→| I don't understand | Namanyishibe | Sindikumvela | - |
+  1371→
+  1372→### Common Words
+  1373→| English | Bemba | Nyanja | Tonga |
+  1374→|---------|-------|--------|-------|
+  1375→| Water | Amana | Madzi | Amana |
+  1376→| Food | Ifyakudya | Chakudya | - |
+  1377→| School | Isukulu | Sukulu | Sukulu |
+  1378→| Book | Ibufi | Mabuku | - |
+  1379→| Teacher | Umupasha | Mphunzitsi | Mupasha |
+  1380→
+  1381→## Language Distribution in Zambia
+  1382→
+  1383→Understanding where each language is dominant helps you know which translations are most useful:
+  1384→
+  1385→- **Bemba:** Predominantly spoken in Northern, Luapula, Copperbelt, and parts of Lusaka Province. Roughly 30% of Zambians speak Bemba as a first or second language.
+  1386→
+  1387→- **Nyanja (Chewa):** Predominantly spoken in Eastern Province and Lusaka. It is the most common language in the capital city, making it especially practical for urban life.
+  1388→
+  1389→- **Tonga:** Predominantly spoken in Southern Province, around Livingstone, the Victoria Falls, and the Zambezi valley. Important for tourism and agriculture contexts.
+  1390→
+  1391→- **Lozi:** Predominantly spoken in Western Province (Barotseland). Important if you work or travel to Mongu and surrounding areas.
+  1392→
+  1393→## Tips for Learning Zambian Languages
+  1394→
+  1395→1. **Start with greetings:** Zambians appreciate anyone who makes the effort to greet them in their language. Learning just "Shani mwane" (Bemba hello) or "Mwabonani" (Nyanja hello) immediately earns respect.
+  1396→
+  1397→2. **Learn the tones:** Bemba and Tonga are tonal languages — the same word pronounced with different pitch patterns can have different meanings. Pay attention to how native speakers pronounce words.
+  1398→
+  1399→3. **Practice with locals:** The best way to learn is through conversation. Zambians are generally patient and encouraging when you try to speak their language.
+  1400→
+  1401→4. **Use context:** Many Zambian words have multiple meanings depending on context. Learn phrases rather than isolated words for more accurate communication.
+  1402→
+  1403→What phrase would you like me to translate?`;
+  1404→  }
+  1405→
+  1406→  // ─── Quiz generation ────────────────────────────────────────────────
+  1407→  if (lower.includes("quiz") || lower.includes("test") || lower.includes("exam") || lower.includes("practice")) {
+  1408→    // If there was a previous topic discussed, make the quiz about that topic
+  1409→    if (previousUserMsg && extractTopic(previousUserMsg) !== "New Chat") {
+  1410→      const quizTopic = extractTopic(previousUserMsg);
+  1411→      return `# Practice Quiz: ${quizTopic}
+  1412→
+  1413→Here's a comprehensive ECZ-style quiz on **${quizTopic}** — building on what we discussed! This quiz tests multiple levels of understanding: basic knowledge, application, analysis, and evaluation. Take your time with each question, and I'll provide detailed explanations for every answer when you're ready.
+  1414→
+  1415→## Section A: Multiple Choice (Basic Knowledge)
+  1416→
+  1417→These questions test your fundamental understanding of ${quizTopic}. Choose the best answer for each.
+  1418→
+  1419→**Question 1:** Which of the following best defines ${quizTopic}?
+  1420→a) A general concept with no specific meaning
+  1421→b) A fundamental principle that can be explained, applied, and recognized in different contexts
+  1422→c) Something that only appears in textbooks
+  1423→d) A term that has only one correct definition
+  1424→
+  1425→**Question 2:** How does ${quizTopic} relate to everyday life in Zambia?
+  1426→a) It is only relevant in academic settings
+  1427→b) It has no practical applications outside school
+  1428→c) It appears in daily situations at home, school, market, and community
+  1429→d) It is too abstract to be useful
+  1430→
+  1431→**Question 3:** Which statement about ${quizTopic} is FALSE?
+  1432→a) ${quizTopic} can be explained in multiple ways
+  1433→b) ${quizTopic} connects to other related concepts
+  1434→c) ${quizTopic} has only one correct interpretation
+  1435→d) ${quizTopic} has practical applications
+  1436→
+  1437→## Section B: Short Answer (Application)
+  1438→
+  1439→These questions test whether you can apply your understanding of ${quizTopic} to new situations.
+  1440→
+  1441→**Question 4:** Give two examples of ${quizTopic} from everyday Zambian life. For each example, explain why it demonstrates ${quizTopic}.
+  1442→
+  1443→**Question 5:** A friend says they understand ${quizTopic} but cannot explain it to someone else. What does this suggest about their actual understanding? Explain your reasoning.
+  1444→
+  1445→**Question 6:** How would you explain ${quizTopic} to a younger sibling who has never encountered it before? Write your explanation in simple, clear language.
+  1446→
+  1447→## Section C: Analysis Questions
+  1448→
+  1449→These questions require deeper thinking — comparing, contrasting, and making connections.
+  1450→
+  1451→**Question 7:** Compare ${quizTopic} with a related concept. What are two similarities and two differences?
+  1452→
+  1453→**Question 8:** How might understanding ${quizTopic} help you in a different subject area? Give a specific example of cross-subject application.
+  1454→
+  1455→**Question 9:** What are the most common mistakes students make when learning ${quizTopic}? Identify at least three and explain why each mistake occurs.
+  1456→
+  1457→## Section D: Essay Question (Evaluation)
+  1458→
+  1459→**Question 10:** Write a well-structured paragraph (at least 150 words) explaining why ${quizTopic} is important in the Zambian educational context. Include:
+  1460→- A clear definition
+  1461→- At least two real-world examples from Zambia
+  1462→- An explanation of how misunderstanding ${quizTopic} can lead to errors
+  1463→- A connection to another topic in the curriculum
+  1464→
+  1465→## How to Use This Quiz
+  1466→
+  1467→1. **Attempt all questions** before checking answers — this tests your true understanding.
+  1468→2. **Time yourself** — in ECZ exams, you have limited time per question. Try to complete Section A in 10 minutes, Section B in 15 minutes, Section C in 20 minutes, and Section D in 15 minutes.
+  1469→3. **Review weak areas** — after completing the quiz, identify which questions were hardest and focus your revision on those topics.
+  1470→4. **Ask for explanations** — I can provide detailed, step-by-step explanations for every question and answer.
+  1471→
+  1472→When you're ready, just say "reveal answers" and I'll walk you through each question with full explanations and study tips! Want me to adjust the difficulty level or focus on a specific aspect of ${quizTopic}?`;
+  1473→    }
+  1474→    return `# Mathematics Practice Quiz (ECZ-Style)
+  1475→
+  1476→Here's a comprehensive mathematics quiz covering key areas of the Zambian curriculum. This quiz tests arithmetic, algebra, geometry, and problem-solving — the core skills assessed in ECZ mathematics exams. Take your time, work through each problem methodically, and I'll provide detailed explanations when you're ready.
+  1477→
+  1478→## Section A: Arithmetic (15 marks)
+  1479→
+  1480→**Question 1:** What is 15% of 200?
+  1481→a) 20  b) 30  c) 35  d) 25
+  1482→
+  1483→**Question 2:** If a bag of maize costs K150 and you buy 3 bags, how much do you pay? If you give the shopkeeper K500, how much change do you receive?
+  1484→a) K450, K50 change  b) K450, K50 change  c) K500, no change  d) K300, K200 change
+  1485→
+  1486→**Question 3:** A farmer sells tomatoes at K5 per kg. If a customer buys 2.5 kg, how much does the customer pay?
+  1487→a) K10  b) K12.50  c) K15  d) K7.50
+  1488→
+  1489→**Question 4:** Simplify: 3/4 + 1/8
+  1490→a) 4/8  b) 7/8  c) 1/2  d) 5/8
+  1491→
+  1492→**Question 5:** What is the square root of 144?
+  1493→a) 10  b) 11  c) 12  d) 14
+  1494→
+  1495→## Section B: Algebra (15 marks)
+  1496→
+  1497→**Question 6:** Simplify: 3x + 2x - x
+  1498→a) 4x  b) 5x  c) 6x  d) 3x
+  1499→
+  1500→**Question 7:** Solve for x: 2x + 6 = 14
+  1501→a) x = 3  b) x = 4  c) x = 5  d) x = 8
+  1502→
+  1503→**Question 8:** If y = 3x + 2, what is y when x = 5?
+  1504→a) 15  b) 17  c) 13  d) 23
+  1505→
+  1506→**Question 9:** Solve for x: 5x - 10 = 25
+  1507→a) x = 3  b) x = 5  c) x = 7  d) x = 9
+  1508→
+  1509→**Question 10:** Expand: 2(x + 3)
+  1510→a) 2x + 3  b) 2x + 6  c) x + 6  d) 2x - 6
+  1511→
+  1512→## Section C: Geometry (10 marks)
+  1513→
+  1514→**Question 11:** If a rectangle has length 8 cm and width 5 cm, what is its area?
+  1515→a) 13 cm2  b) 40 cm2  c) 35 cm2  d) 45 cm2
+  1516→
+  1517→**Question 12:** What is the perimeter of the same rectangle?
+  1518→a) 13 cm  b) 26 cm  c) 40 cm  d) 20 cm
+  1519→
+  1520→**Question 13:** A circle has a radius of 7 cm. What is its circumference? (Use pi = 22/7)
+  1521→a) 44 cm  b) 22 cm  c) 154 cm  d) 88 cm
+  1522→
+  1523→**Question 14:** What is the area of that same circle?
+  1524→a) 44 cm2  b) 154 cm2  c) 22 cm2  d) 88 cm2
+  1525→
+  1526→## Section D: Word Problems (10 marks)
+  1527→
+  1528→**Question 15:** A bus travels from Lusaka to Ndola at an average speed of 80 km/h. The distance is approximately 320 km. How long does the journey take?
+  1529→a) 3 hours  b) 4 hours  c) 5 hours  d) 6 hours
+  1530→
+  1531→**Question 16:** A school has 480 students. If 60% are girls, how many boys are there?
+  1532→a) 192  b) 288  c) 240  d) 320
+  1533→
+  1534→## Tips for ECZ Math Exams
+  1535→
+  1536→1. **Show your working:** ECZ marks are awarded for method, not just the final answer. Even if your answer is wrong, correct working can earn partial marks.
+  1537→
+  1538→2. **Check your calculations:** After solving, plug your answer back into the original problem to verify it works.
+  1539→
+  1540→3. **Manage your time:** Don't spend too long on one difficult question. Move on and come back to it later.
+  1541→
+  1542→4. **Read questions carefully:** Many errors come from misreading the question — missing a decimal point, confusing "add" with "subtract," or overlooking a condition.
+  1543→
+  1544→When you're ready, say "reveal answers" and I'll walk you through each question with step-by-step solutions and explanations!`;
+  1545→  }
+  1546→
+  1547→  // ─── Lesson summary ─────────────────────────────────────────────────
+  1548→  if (lower.includes("summarize") || lower.includes("summary") || lower.includes("overview")) {
+  1549→    // If referencing a previous topic, summarize that
+  1550→    if (previousUserMsg && extractTopic(previousUserMsg) !== "New Chat") {
+  1551→      const summaryTopic = extractTopic(previousUserMsg);
+  1552→      return `# Summary: ${summaryTopic}
+  1553→
+  1554→Here's a comprehensive summary of **${summaryTopic}** based on our discussion. This summary is designed for quick revision before exams — it covers the key points, common mistakes, and essential things to remember.
+  1555→
+  1556→## Key Definition
+  1557→
+  1558→**${summaryTopic}** is a fundamental concept that we explored in detail. The precise definition matters for ECZ exams — make sure you can state it clearly and completely, not just approximately. A vague definition loses marks even if you have the right general idea.
+  1559→
+  1560→## Main Points to Remember
+  1561→
+  1562→1. **The core principle:** ${summaryTopic} operates on a foundational principle that determines how it works in all contexts. Understanding this principle allows you to predict how ${summaryTopic} will behave even in unfamiliar situations.
+  1563→
+  1564→2. **Real-world applications:** ${summaryTopic} appears in practical Zambian contexts — at school, in the market, in agriculture, in technology, and in daily life. Being able to give specific Zambian examples shows depth of understanding and earns marks in ECZ essays.
+  1565→
+  1566→3. **Connections to other topics:** ${summaryTopic} does not exist in isolation. It connects to at least 3-4 other topics in the curriculum. Understanding these connections helps you answer cross-topic questions and see the bigger picture of how knowledge interrelates.
+  1567→
+  1568→4. **Common mistakes to avoid:** Students frequently make predictable errors with ${summaryTopic}. Knowing these mistakes helps you avoid them:
+  1569→   - Over-simplification: reducing ${summaryTopic} to a one-line definition
+  1570→   - Confusing ${summaryTopic} with similar but distinct concepts
+  1571→   - Failing to apply the concept in new situations
+  1572→   - Memorizing without understanding the underlying logic
+  1573→
+  1574→## Essential Examples
+  1575→
+  1576→Have these examples ready for exam answers:
+  1577→
+  1578→- **Textbook example:** The standard example from your course textbook
+  1579→- **Zambian daily life example:** How ${summaryTopic} appears in everyday situations in Zambia
+  1580→- **Cross-subject example:** How ${summaryTopic} connects to a different subject area
+  1581→- **Counter-example:** An example that is NOT ${summaryTopic} — showing you understand the boundaries of the concept
+  1582→
+  1583→## Quick Review Questions
+  1584→
+  1585→Test yourself with these rapid-fire questions before your exam:
+  1586→
+  1587→1. Can you define ${summaryTopic} in your own words, without looking at any notes?
+  1588→2. Can you give three different examples of ${summaryTopic}, each from a different context?
+  1589→3. How is ${summaryTopic} different from the most similar concept that students often confuse it with?
+  1590→4. Why does ${summaryTopic} matter in real life? Give a specific Zambian application.
+  1591→5. If you had to teach ${summaryTopic} to a Grade 5 student, how would you explain it?
+  1592→
+  1593→## Study Strategy for Last-Minute Revision
+  1594→
+  1595→If you're revising ${summaryTopic} just before an exam:
+  1596→
+  1597→**5-minute review:** Read this summary, then close it and write the definition from memory. Check if you got it right.
+  1598→
+  1599→**10-minute review:** Write 3 examples and explain why each one demonstrates ${summaryTopic}. If you struggle with examples, you need more practice.
+  1600→
+  1601→**15-minute review:** Compare ${summaryTopic} with a related concept. Write two similarities and two differences. This tests deeper understanding.
+  1602→
+  1603→**30-minute review:** Write a full practice essay answering an exam-style question about ${summaryTopic}. Include definition, examples, applications, and connections.
+  1604→
+  1605→Want me to go deeper on any specific point, generate a practice quiz on ${summaryTopic}, or shall we move to a new topic?`;
+  1606→    }
+  1607→    return `# Lesson Summaries — Your Quick Revision Tool
+  1608→
+  1609→I can create comprehensive summaries of any lesson or topic for you! Summaries are one of the most effective revision tools because they condense hours of learning into key points you can review quickly before exams.
+  1610→
+  1611→## How to Request a Summary
+  1612→
+  1613→Tell me:
+  1614→1. **Which subject** — Math, Science, English, History, Geography, Civic Education, etc.
+  1615→2. **Which specific topic** — Fractions, Photosynthesis, Poetry Analysis, Zambian History, Climate, etc.
+  1616→3. **Your grade level** — this helps me adjust the depth, complexity, and terminology to match your ECZ curriculum requirements
+  1617→
+  1618→## What My Summaries Include
+  1619→
+  1620→Every summary I create follows a structured format designed for maximum exam preparation:
+  1621→
+  1622→- **Key Definition:** The precise, exam-ready definition that would earn full marks in an ECZ paper
+  1623→- **Main Points:** The essential content organized logically, not just listed randomly
+  1624→- **Real-World Applications:** Examples from Zambian daily life that demonstrate practical understanding
+  1625→- **Connections to Other Topics:** How this concept links to other areas of the curriculum
+  1626→- **Common Mistakes:** The errors students typically make, so you can avoid them
+  1627→- **Quick Review Questions:** Self-test questions to verify your understanding
+  1628→- **Study Strategy:** A recommended revision plan with time allocation
+  1629→
+  1630→## Example Summary: Photosynthesis
+  1631→
+  1632→Here's an example of what a summary looks like:
+  1633→
+  1634→**Key Definition:** Photosynthesis is the process by which green plants convert light energy, water, and carbon dioxide into glucose (food) and oxygen. It occurs in the chloroplasts of leaf cells, which contain the green pigment chlorophyll.
+  1635→
+  1636→**Main Points:**
+  1637→1. Raw materials: sunlight (captured by chlorophyll), water (absorbed by roots via xylem), CO2 (enters through stomata)
+  1638→2. Products: glucose (plant's food, stored as starch) and oxygen (released through stomata)
+  1639→3. Equation: 6CO2 + 6H2O + Light Energy → C6H12O6 + 6O2
+  1640→4. Two stages: light-dependent reactions (thylakoids) and light-independent reactions (Calvin cycle, stroma)
+  1641→5. Limiting factors: light intensity, CO2 concentration, temperature, water availability
+  1642→
+  1643→**Zambian Applications:** Crop yields depend on photosynthesis efficiency. During drought, water limits the process. During cloudy rainy season, light is limited. Irrigation helps maintain photosynthesis during dry periods.
+  1644→
+  1645→**Common Mistakes:** Students often forget that oxygen is a byproduct, not the main product. They confuse respiration (which uses oxygen) with photosynthesis (which produces it). They also forget that photosynthesis occurs in two distinct stages.
+  1646→
+  1647→What would you like me to summarize? Just tell me the subject and topic!`;
+  1648→  }
+  1649→
+  1650→  // ─── Math concepts ──────────────────────────────────────────────────
+  1651→  if (lower.includes("math") || lower.includes("algebra") || lower.includes("fraction") || lower.includes("equation") || lower.includes("calculate") || lower.includes("number")) {
+  1652→    if (lower.includes("fraction")) {
+  1653→      return KNOWN_CONCEPTS.fraction || generateConceptExplanation("fraction");
+  1654→    }
+  1655→    if (lower.includes("equation") || lower.includes("algebra")) {
+  1656→      return `# Algebra — Solving Equations Step by Step
+  1657→
+  1658→## Introduction to Algebra
+  1659→
+  1660→Algebra is the branch of mathematics that uses symbols (usually letters like x, y, z) to represent unknown quantities. Instead of working only with specific numbers, algebra allows us to express general relationships and solve problems where some values are unknown. This powerful tool is essential for the ECZ mathematics curriculum and appears in nearly every exam paper.
+  1661→
+  1662→Algebra might seem intimidating at first, but it is simply a systematic way of finding unknown values by using the information you already have. Think of it like a puzzle — you have some clues (the known numbers and relationships), and you need to figure out the missing piece (the unknown variable).
+  1663→
+  1664→## The Goal: Finding the Unknown
+  1665→
+  1666→When you solve an equation, your goal is always the same: **find the value of the unknown variable (usually x).** An equation is like a balance scale — both sides must be equal. Your job is to manipulate the equation until you isolate x on one side, revealing its value.
+  1667→
+  1668→## The Golden Rule of Algebra
+  1669→
+  1670→**Whatever you do to one side of the equation, you must do the same to the other side.**
+  1671→
+  1672→This is the fundamental principle that makes algebra work. If you subtract 6 from the left side, you must also subtract 6 from the right side. If you divide the right side by 2, you must also divide the left side by 2. This keeps the equation balanced — like a scale that must remain level at all times.
+  1673→
+  1674→Think of it as sharing fairly: if two friends each have equal amounts of sweets, and you take 3 sweets from one friend, you must also take 3 from the other to keep them equal. This is exactly how algebra works!
+  1675→
+  1676→## Step-by-Step Example: Solve 2x + 6 = 14
+  1677→
+  1678→**Step 1: Identify what's on the same side as x**
+  1679→We have 2x + 6 on the left side. The "+6" is attached to x, so we need to remove it.
+  1680→
+  1681→**Step 2: Remove the constant term by subtracting**
+  1682→Subtract 6 from both sides: 2x + 6 - 6 = 14 - 6
+  1683→This simplifies to: 2x = 8
+  1684→Now x is much closer to being isolated!
+  1685→
+  1686→**Step 3: Remove the coefficient by dividing**
+  1687→Divide both sides by 2: 2x / 2 = 8 / 2
+  1688→This simplifies to: x = 4
+  1689→
+  1690→**Answer: x = 4**
+  1691→
+  1692→**Step 4: Check your answer (always do this!)**
+  1693→Plug x = 4 back into the original equation: 2(4) + 6 = 8 + 6 = 14
+  1694→The left side equals the right side, so our answer is correct!
+  1695→
+  1696→## More Examples with Full Solutions
+  1697→
+  1698→### Example 2: Solve 5x - 10 = 25
+  1699→Step 1: Add 10 to both sides → 5x = 35
+  1700→Step 2: Divide both sides by 5 → x = 7
+  1701→Check: 5(7) - 10 = 35 - 10 = 25 (correct!)
+  1702→
+  1703→### Example 3: Solve 3x + 12 = 0
+  1704→Step 1: Subtract 12 from both sides → 3x = -12
+  1705→Step 2: Divide both sides by 3 → x = -4
+  1706→Check: 3(-4) + 12 = -12 + 12 = 0 (correct!)
+  1707→
+  1708→### Example 4: Solve x/3 + 5 = 11
+  1709→Step 1: Subtract 5 from both sides → x/3 = 6
+  1710→Step 2: Multiply both sides by 3 → x = 18
+  1711→Check: 18/3 + 5 = 6 + 5 = 11 (correct!)
+  1712→
+  1713→## Common Mistakes to Avoid
+  1714→
+  1715→1. **Forgetting to do the same operation on both sides:** If you only subtract 6 from the left side, the equation is no longer balanced, and your answer will be wrong.
+  1716→
+  1717→2. **Doing operations in the wrong order:** Always deal with addition/subtraction first (to remove constants), then multiplication/division (to remove coefficients). Working in the wrong order creates unnecessary complications.
+  1718→
+  1719→3. **Sign errors:** Pay close attention to positive and negative signs. -3x + 9 = 0 is different from 3x + 9 = 0, and many students lose marks by misreading signs.
+  1720→
+  1721→4. **Not checking answers:** Always verify your solution by substituting it back into the original equation. A quick check can save you from an embarrassing error.
+  1722→
+  1723→## Algebra in Zambian Real Life
+  1724→
+  1725→Algebra is not just a classroom exercise — it solves real problems:
+  1726→
+  1727→- **Budgeting:** If you earn K3,000 per month and spend K2,000 on rent and food, how much is left? That's 3000 - 2000 = x, so x = K1,000. Simple algebra helps manage money.
+  1728→
+  1729→- **Pricing:** If 5 kg of maize costs K250, how much does 1 kg cost? 5x = 250, so x = K50 per kg. Algebra helps compare prices and find the best deals at the market.
+  1730→
+  1731→- **Distance and speed:** If a bus travels at 80 km/h and you need to travel 320 km from Lusaka to Ndola, how long will it take? 80t = 320, so t = 4 hours. Algebra helps plan journeys.
+  1732→
+  1733→- **Mobile money:** If you send K500 via mobile money and the fee is 2%, what is the total cost? Total = 500 + 0.02(500) = 500 + 10 = K510. Algebra helps calculate transaction costs.
+  1734→
+  1735→Would you like more examples, a practice quiz, or shall we explore another topic?`;
+  1736→    }
+  1737→    return `# Mathematics — The Language of Patterns and Problem-Solving
+  1738→
+  1739→## What Is Mathematics?
+  1740→
+  1741→Mathematics is the study of numbers, patterns, structures, and relationships. It is often called the "universal language" because mathematical truths hold everywhere — in Zambia, in China, on Mars, and across the entire universe. Mathematics provides the tools we need to measure, calculate, predict, and solve problems in every area of human activity.
+  1742→
+  1743→Far from being just abstract numbers on a page, mathematics is deeply practical. It underpins engineering, medicine, agriculture, economics, technology, and virtually every profession. Understanding mathematics gives you power over the world — the ability to quantify, compare, and make informed decisions rather than relying on guesswork.
+  1744→
+  1745→## Key Branches of Mathematics
+  1746→
+  1747→### Arithmetic — The Foundation
+  1748→Arithmetic covers the basic operations: addition, subtraction, multiplication, and division. These are the building blocks of all mathematics. Without solid arithmetic skills, everything else becomes difficult.
+  1749→
+  1750→In Zambia, arithmetic is used daily: calculating prices at the market, splitting nshima portions among family members, determining how many kilometers to the next town, and managing mobile money transactions.
+  1751→
+  1752→### Algebra — Solving for the Unknown
+  1753→Algebra introduces symbols (usually letters) to represent unknown quantities. It allows us to express relationships as equations and then solve those equations to find unknown values.
+  1754→
+  1755→Example: If you know that 3 bags of maize cost K450, algebra lets you find the price of one bag: 3x = 450, so x = K150. This simple algebraic step is the basis of all pricing calculations.
+  1756→
+  1757→### Geometry — Shapes, Angles, and Space
+  1758→Geometry studies the properties of shapes (triangles, rectangles, circles), angles, areas, volumes, and spatial relationships. It is essential for construction, land measurement, art, and design.
+  1759→
+  1760→In Zambia, geometry is used by farmers measuring field boundaries, builders constructing houses, and engineers designing roads and bridges. The Victoria Falls, Kariba Dam, and every building in Lusaka were designed using geometric principles.
+  1761→
+  1762→### Statistics — Understanding Data
+  1763→Statistics involves collecting, organizing, analyzing, and interpreting data. It helps us make sense of large amounts of information and draw meaningful conclusions.
+  1764→
+  1765→In Zambia, statistics are used by the government to track economic indicators (GDP, inflation rate), by schools to analyze exam performance, by farmers to compare crop yields, and by businesses to understand customer behavior.
+  1766→
+  1767→### Trigonometry — The Mathematics of Angles
+  1768→Trigonometry studies the relationships between angles and sides of triangles. It is essential for surveying, navigation, and engineering.
+  1769→
+  1770→## Mathematics in the Zambian Curriculum
+  1771→
+  1772→In Zambia, mathematics is a core subject from primary school through secondary school, assessed by the Examinations Council of Zambia (ECZ). The curriculum builds progressively:
+  1773→
+  1774→- **Primary (Grades 1-7):** Arithmetic, basic geometry, measurement, simple problem-solving
+  1775→- **Junior Secondary (Grades 8-9):** Algebra, more complex geometry, statistics introduction, coordinate geometry
+  1776→- **Senior Secondary (Grades 10-12):** Advanced algebra, trigonometry, calculus introduction, probability, advanced statistics
+  1777→
+  1778→Success in mathematics at each level depends on mastery of the previous level. If your arithmetic is weak, your algebra will struggle. If your algebra is weak, your trigonometry and calculus will be nearly impossible. This is why building a strong foundation early is crucial.
+  1779→
+  1780→## Mathematics in Zambian Daily Life
+  1781→
+  1782→Mathematics appears constantly in everyday Zambian contexts:
+  1783→
+  1784→- **At the market:** Calculating total cost, comparing prices per unit, determining discounts, and verifying that the shopkeeper's total is correct
+  1785→- **In agriculture:** Measuring field sizes, calculating seed quantities, estimating harvest yields, and determining fertilizer amounts per hectare
+  1786→- **In mobile money:** Calculating transaction fees, managing balances, and verifying transaction amounts
+  1787→- **In transportation:** Estimating travel times based on distance and speed, calculating fuel costs for long journeys, and comparing bus prices
+  1788→- **In school:** Calculating average grades, determining class rankings, and managing timetables
+  1789→- **At home:** Sharing food portions equally, measuring ingredients for cooking, and managing household budgets
+  1790→
+  1791→## Tips for Improving Math Skills
+  1792→
+  1793→1. **Practice daily:** Mathematics is a skill, not just knowledge. Like playing football or learning a language, regular practice builds fluency and confidence. Even 15-20 minutes of daily practice makes a significant difference.
+  1794→
+  1795→2. **Understand, don't memorize:** Memorizing formulas without understanding why they work leads to fragile knowledge. When you understand the reasoning behind a formula, you can reconstruct it even if you forget the exact wording.
+  1796→
+  1797→3. **Show your working:** In ECZ exams, marks are awarded for correct method, not just the final answer. Always write out each step clearly so the examiner can award partial marks even if your final answer has an error.
+  1798→
+  1799→4. **Check your answers:** After solving a problem, substitute your answer back into the original question to verify it works. This simple check catches many calculation errors.
+  1800→
+  1801→5. **Learn from mistakes:** When you get a problem wrong, don't just move on. Analyze exactly where you went wrong and why. Understanding your mistakes prevents you from repeating them.
+  1802→
+  1803→What specific math topic would you like me to explain in detail? I can cover arithmetic, fractions, algebra, geometry, statistics, trigonometry, and more — all with Zambian examples!`;
+  1804→  }
+  1805→
+  1806→  // ─── Science concepts ───────────────────────────────────────────────
+  1807→  if (lower.includes("science") || lower.includes("physics") || lower.includes("chemistry") || lower.includes("biology") || lower.includes("photosynthesis") || lower.includes("cell") || lower.includes("force") || lower.includes("energy")) {
+  1808→    if (lower.includes("photosynthesis")) {
+  1809→      return KNOWN_CONCEPTS.photosynthesis || generateConceptExplanation("photosynthesis");
+  1810→    }
+  1811→    if (lower.includes("force") || lower.includes("energy")) {
+  1812→      return `# Force and Energy — The Physics of Motion and Power
+  1813→
+  1814→## What Is Force?
+  1815→
+  1816→A **force** is a push or a pull. Every interaction between objects involves forces — when you kick a ball, open a door, lift a bag of maize, or even sit on a chair, forces are at work. Forces can change an object's speed, direction, or shape. Without forces, nothing would ever move, stop, or change.
+  1817→
+  1818→Force is measured in **Newtons (N)**, named after Sir Isaac Newton, who formulated the fundamental laws of motion. One Newton is roughly the force needed to lift a small apple. In Zambia, understanding forces helps explain everything from how a minibus accelerates on the Great East Road to how Kariba Dam holds back millions of tons of water.
+  1819→
+  1820→### Types of Forces
+  1821→
+  1822→**Gravitational Force (Gravity):** The force that pulls all objects toward each other. On Earth, gravity pulls everything downward toward the center of the planet. This is why a ball falls when you drop it, why water flows down from the Zambezi River to create Victoria Falls, and why you stay on the ground instead of floating into the sky. The strength of gravitational force depends on mass — heavier objects experience stronger gravitational pull.
+  1823→
+  1824→**Friction:** The force that opposes motion when two surfaces rub against each other. Friction can be helpful (it allows you to walk without slipping, and it allows car brakes to work) or harmful (it causes wear and tear on machinery and reduces efficiency). In Zambia, friction is what makes the dusty Copperbelt roads slippery when wet — the water reduces friction between tires and the road surface.
+  1825→
+  1826→**Normal Force:** The supporting force exerted by a surface on an object resting on it. When a bag of maize sits on a table, the table exerts an upward normal force that prevents the bag from falling through. This force exactly balances gravity for stationary objects.
+  1827→
+  1828→**Tension:** The pulling force transmitted through a rope, string, or cable. When you pull a cart with a rope, tension is the force in the rope. At Kariba Dam, enormous tension forces exist in the cables and structures holding the dam together.
+  1829→
+  1830→**Applied Force:** A force that you directly apply to an object — pushing a door, pulling a cart, or kicking a football. This is the most familiar type of force.
+  1831→
+  1832→## What Is Energy?
+  1833→
+  1834→**Energy** is the ability to do work or cause change. It is the driving force behind every physical process in the universe. Without energy, nothing moves, nothing grows, nothing happens. Energy cannot be created or destroyed — it can only be transformed from one type to another (this is the Law of Conservation of Energy, one of the most fundamental principles in physics).
+  1835→
+  1836→Energy is measured in **Joules (J)**. One Joule is a small amount — lifting a 1 kg object by 1 meter requires about 10 Joules. Larger quantities are measured in kilojoules (kJ = 1,000 J) or megajoules (MJ = 1,000,000 J).
+  1837→
+  1838→### Types of Energy
+  1839→
+  1840→**Kinetic Energy:** The energy of motion. Any moving object has kinetic energy — a running athlete, a moving bus, flowing water in the Zambezi River, or a falling stone. The faster and heavier an object, the more kinetic energy it has. Formula: KE = 1/2 mv2 (kinetic energy equals half the mass times velocity squared).
+  1841→
+  1842→**Potential Energy:** Stored energy that has the potential to be released. The most common form is gravitational potential energy — the energy stored in an object because of its height. Water behind Kariba Dam has enormous gravitational potential energy. When it flows through the turbines, this potential energy converts to kinetic energy and then to electrical energy. Formula: PE = mgh (potential energy equals mass times gravitational acceleration times height).
+  1843→
+  1844→**Thermal (Heat) Energy:** The energy of heat. Every object contains thermal energy in the vibrations of its atoms and molecules. Hot objects have more thermal energy than cold ones. In Zambia, thermal energy is generated when you cook nshima on a charcoal stove, when the sun heats the ground during the dry season, and when ZESCO power stations burn fuel to generate electricity.
+  1845→
+  1846→**Electrical Energy:** The energy carried by moving electric charges (electricity). This is the form of energy that powers lights, phones, computers, and factories throughout Zambia. ZESCO converts other forms of energy (hydroelectric from falling water at Kariba Dam, thermal from burning coal at Maamba) into electrical energy that reaches homes and businesses through the national grid.
+  1847→
+  1848→**Chemical Energy:** Energy stored in the bonds between atoms in molecules. When chemical bonds are broken or formed during reactions, energy is released or absorbed. Food contains chemical energy — when you eat nshima, your body breaks down the starch molecules and releases the chemical energy stored in them. Petroleum fuels also contain chemical energy, which is released when they burn in engines.
+  1849→
+  1850→**Sound Energy:** Energy carried by sound waves — vibrations that travel through air, water, or solid materials. When you speak, play music, or hear thunder over Lusaka during the rainy season, sound energy is being transmitted.
+  1851→
+  1852→**Light (Radiant) Energy:** Energy carried by electromagnetic waves, including visible light, ultraviolet, infrared, and radio waves. The sun is Zambia's primary source of light energy, which drives photosynthesis in plants and warms the Earth.
+  1853→
+  1854→## Newton's Three Laws of Motion
+  1855→
+  1856→Sir Isaac Newton formulated three fundamental laws that describe how objects move when forces act on them:
+  1857→
+  1858→### First Law (Law of Inertia)
+  1859→"An object at rest stays at rest, and an object in motion stays in motion at the same speed and direction, unless acted upon by an external force."
+  1860→
+  1861→This means objects do not change their state on their own — a stationary bus will not suddenly start moving without a force (the engine), and a rolling ball will not stop unless friction or another force acts on it. Inertia is the resistance to change in motion. Heavier objects have more inertia — it is harder to push a truck than a bicycle.
+  1862→
+  1863→### Second Law (Force = Mass x Acceleration)
+  1864→"The acceleration of an object is directly proportional to the net force acting on it and inversely proportional to its mass."
+  1865→
+  1866→Formula: F = ma (Force equals mass times acceleration)
+  1867→
+  1868→This explains why a small force can accelerate a light object quickly (kicking a football makes it fly fast) but the same force barely moves a heavy object (pushing a minibus produces almost no acceleration). In Zambia, this law explains why overloaded minibuses accelerate slowly — more mass means less acceleration for the same engine force.
+  1869→
+  1870→### Third Law (Action and Reaction)
+  1871→"For every action, there is an equal and opposite reaction."
+  1872→
+  1873→When you push against a wall, the wall pushes back on you with equal force. When a rocket pushes gas downward, the gas pushes the rocket upward. When you walk, your foot pushes the ground backward, and the ground pushes your foot forward, propelling you ahead. At Victoria Falls, water pushes down against the rocks, and the rocks push back up against the water, creating the spectacular spray.
+  1874→
+  1875→## Energy Transformations in Zambia
+  1876→
+  1877→Understanding how energy transforms between forms is central to physics and has practical Zambian applications:
+  1878→
+  1879→- **Kariba Dam (hydroelectric):** Potential energy (water at height) → Kinetic energy (water falling through turbines) → Electrical energy (generated by spinning turbines) → Light/thermal energy (in homes and factories)
+  1880→- **Charcoal stove:** Chemical energy (in charcoal) → Thermal energy (heat from burning) → Thermal energy (in cooked food)
+  1881→- **Car engine:** Chemical energy (in petrol) → Thermal energy (from combustion) → Kinetic energy (moving pistons) → Kinetic energy (rotating wheels) → Kinetic energy (moving car)
+  1882→- **Solar panel:** Light energy (sunlight) → Electrical energy (current from panel) → Light energy (from LED bulbs) or Thermal energy (from electric heater)
+  1883→- **Human body:** Chemical energy (from food like nshima) → Kinetic energy (walking, running) + Thermal energy (body heat) + Sound energy (speaking)
+  1884→
+  1885→Which topic would you like more details on? I can provide more examples, practice problems, or exam-style questions on forces, energy, or Newton's laws!`;
+  1886→    }
+  1887→    return `# Science — Understanding the Natural World
+  1888→
+  1889→## What Is Science?
+  1890→
+  1891→Science is a systematic method of understanding the natural world through observation, experimentation, and logical reasoning. It is not just a collection of facts — it is a way of thinking that demands evidence, tests hypotheses, and builds knowledge progressively. Science teaches us to question assumptions, test ideas, and accept conclusions based on evidence rather than tradition or authority.
+  1892→
+  1893→The scientific method follows a structured process: observe something, ask a question, form a hypothesis (a testable prediction), conduct an experiment, analyze the results, and draw conclusions. This method has produced virtually all the knowledge we rely on today — from medicine that saves lives to technology that connects people across continents.
+  1894→
+  1895→## Key Branchs of Science
+  1896→
+  1897→### Biology — The Study of Living Things
+  1898→Biology explores how living organisms work, interact, and evolve. It covers everything from microscopic cells to entire ecosystems.
+  1899→
+  1900→Key topics in the ECZ curriculum:
+  1901→- **Cell structure and function:** Cells are the basic units of life. Understanding how cells work (membrane, nucleus, cytoplasm, organelles) is fundamental to understanding biology.
+  1902→- **Photosynthesis:** How plants convert sunlight, water, and CO2 into food and oxygen — the foundation of all food chains.
+  1903→- **Human body systems:** Digestive, respiratory, circulatory, nervous, and reproductive systems — how your body works as an integrated machine.
+  1904→- **Ecology:** How organisms interact with their environment — food chains, food webs, ecosystems, biodiversity, and environmental conservation.
+  1905→- **Genetics and evolution:** How traits are inherited and how species change over time through natural selection.
+  1906→
+  1907→In Zambia, biology is essential for understanding agriculture (how crops grow and what affects yields), health (how diseases spread and how the immune system fights them), and environmental conservation (protecting Zambia's wildlife and forests).
+  1908→
+  1909→### Chemistry — The Study of Matter and Reactions
+  1910→Chemistry examines what substances are made of, how they interact, and how they transform through chemical reactions.
+  1911→
+  1912→Key topics in the ECZ curriculum:
+  1913→- **Atoms and elements:** The building blocks of all matter. Every substance is made of atoms, and elements are pure substances containing only one type of atom.
+  1914→- **Compounds and mixtures:** How atoms combine to form compounds (like water, H2O) and how different substances can be mixed (like the air around us).
+  1915→- **Chemical reactions:** How substances transform into new substances — burning, rusting, dissolving, and reacting.
+  1916→- **Acids, bases, and pH:** Understanding the properties of acidic and basic substances and how to measure their strength.
+  1917→- **Periodic table:** Organizing all known elements by their properties, enabling predictions about how elements behave.
+  1918→
+  1919→In Zambia, chemistry is relevant to mining (extracting copper from ore), agriculture (soil pH and fertilizer chemistry), cooking (chemical changes in food preparation), and health (how medicines work at the molecular level).
+  1920→
+  1921→### Physics — The Study of Forces, Energy, and Motion
+  1922→Physics explores the fundamental laws that govern the physical universe — how objects move, how energy transforms, and how forces interact.
+  1923→
+  1924→Key topics in the ECZ curriculum:
+  1925→- **Force and motion:** Newton's laws, gravity, friction, and how forces change motion.
+  1926→- **Energy:** Different types of energy (kinetic, potential, thermal, electrical, chemical) and how energy transforms.
+  1927→- **Electricity and magnetism:** How electric circuits work, how magnets interact, and how electricity is generated and distributed.
+  1928→- **Waves and sound:** How waves carry energy, how sound travels, and how light behaves.
+  1929→- **Heat and temperature:** The difference between heat (energy transfer) and temperature (measurement), and how heat moves between objects.
+  1930→
+  1931→In Zambia, physics explains how Kariba Dam generates electricity, how minibuses accelerate and brake, how mobile phones transmit signals, and how the Victoria Falls produces its spectacular spray.
+  1932→
+  1933→## Science in the Zambian Curriculum
+  1934→
+  1935→In Zambia, science is taught from Grade 5 onwards, becoming increasingly specialized through secondary school. The ECZ curriculum emphasizes practical applications and Zambian contexts, ensuring students understand how science connects to their daily lives rather than just memorizing abstract theories.
+  1936→
+  1937→The curriculum is designed to develop three key skills:
+  1938→1. **Scientific knowledge:** Understanding key concepts, theories, and facts
+  1939→2. **Scientific skills:** Conducting experiments, measuring accurately, and interpreting data
+  1940→3. **Scientific attitudes:** Curiosity, skepticism, respect for evidence, and willingness to revise understanding when new evidence emerges
+  1941→
+  1942→What specific science topic would you like me to explain in depth? I can provide comprehensive explanations of cells, photosynthesis, forces, energy, chemical reactions, electricity, human body systems, ecology, genetics, and more — all with Zambian examples and ECZ exam tips!`;
+  1943→  }
+  1944→
+  1945→  // ─── English / language ─────────────────────────────────────────────
+  1946→  if (lower.includes("english") || lower.includes("grammar") || lower.includes("essay") || lower.includes("writing") || lower.includes("poem") || lower.includes("literature")) {
+  1947→    return `# English Language and Literature — A Comprehensive Guide
+  1948→
+  1949→## Overview
+  1950→
+  1951→English is one of Zambia's official languages and the primary medium of instruction in schools. Mastering English is essential for academic success across ALL subjects, for professional communication, and for accessing global knowledge. The ECZ English curriculum covers both language (grammar, comprehension, writing) and literature (poetry, drama, novels).
+  1952→
+  1953→## Grammar — The Structure of English
+  1954→
+  1955→Grammar provides the rules that make communication clear and accurate. Without grammar, sentences become confusing or meaningless. Key areas for ECZ exams:
+  1956→
+  1957→### Parts of Speech
+  1958→Understanding the eight parts of speech is foundational:
+  1959→- **Nouns:** naming words (teacher, Lusaka, freedom)
+  1960→- **Verbs:** action or state words (run, is, will study)
+  1961→- **Adjectives:** describing words (tall, beautiful, Zambian)
+  1962→- **Adverbs:** words that describe verbs (quickly, carefully, always)
+  1963→- **Pronouns:** words that replace nouns (she, they, this)
+  1964→- **Prepositions:** words showing relationships (in, on, under, between)
+  1965→- **Conjunctions:** joining words (and, but, because, although)
+  1966→- **Interjections:** emotional words (Wow! Oh! Hey!)
+  1967→
+  1968→### Sentence Structure
+  1969→- **Simple sentence:** One independent clause. "The student studied."
+  1970→- **Compound sentence:** Two independent clauses joined by a conjunction. "The student studied, and the teacher taught."
+  1971→- **Complex sentence:** One independent clause + one dependent clause. "The student studied because the exam was tomorrow."
+  1972→- **Compound-complex:** Multiple independent and dependent clauses.
+  1973→
+  1974→### Tenses
+  1975→The twelve English tenses organize when actions happen. The most commonly tested:
+  1976→- Present Simple: habits and facts — "She studies every day."
+  1977→- Past Simple: completed actions — "She studied yesterday."
+  1978→- Future Simple: planned actions — "She will study tomorrow."
+  1979→- Present Perfect: completed actions with present relevance — "She has studied all chapters."
+  1980→- Past Perfect: actions completed before another past action — "She had studied before the exam started."
+  1981→
+  1982→### Common Grammar Errors in ECZ Exams
+  1983→1. Subject-verb disagreement: "The students reads" (wrong) → "The students read" (correct)
+  1984→2. Wrong tense: "She is study" (wrong) → "She is studying" (correct)
+  1985→3. Misplaced modifiers: "She almost ate all the food" (ambiguous) vs. "She ate almost all the food" (clear)
+  1986→4. Confusing homophones: their/there/they're, its/it's, affect/effect
+  1987→
+  1988→## Essay Writing — Expressing Ideas Clearly
+  1989→
+  1990→### The Structure of a Good Essay
+  1991→
+  1992→**Introduction (1 paragraph):** State your topic, provide background context, and present your thesis (main argument or point). A strong introduction hooks the reader and makes them want to continue.
+  1993→
+  1994→**Body (3-5 paragraphs):** Each paragraph develops ONE main point that supports your thesis. Start with a topic sentence, provide evidence and examples, and conclude the paragraph by linking back to the thesis. Use Zambian examples wherever relevant — this shows cultural awareness and makes your writing authentic.
+  1995→
+  1996→**Conclusion (1 paragraph):** Summarize your main arguments without repeating them word-for-word. End with a thoughtful closing statement that leaves the reader thinking. Never introduce new arguments in the conclusion.
+  1997→
+  1998→### Essay Writing Tips for ECZ Exams
+  1999→
+  2000→1. **Plan before writing:** Spend 5-10 minutes brainstorming and organizing your ideas. A planned essay is always clearer and more coherent than an unplanned one.
+
+[showing lines 1-2000 of 2552; use offset=2001 with limit to continue reading]

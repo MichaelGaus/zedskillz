@@ -2,11 +2,152 @@
 
 // AUTO-GENERATED from Zedskillz_landing_page_ui.txt — DO NOT EDIT MANUALLY
 // Conversion: HTML body → JSX (class=→className=, void tags self-closed, style attrs converted)
+// Modified: AI chat mockup card is now fully functional with SSE streaming
 
 import { useAppStore } from "@/lib/store";
+import { useState, useRef, useCallback } from "react";
+
+// ─── Types ──────────────────────────────────────────────────────────
+type Message = { id: string; role: "ai" | "user"; content: string };
+
+// ─── SSE helper (same as ai-overlay.tsx) ─────────────────────────────
+async function readSSEStream(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  onData: (json: Record<string, unknown>) => void,
+  signal: AbortSignal
+): Promise<void> {
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const payload = line.slice(6).trim();
+        if (payload === "[DONE]") return;
+        try { const json = JSON.parse(payload); onData(json); } catch { /* skip */ }
+      }
+    }
+  }
+}
+
+const GREETING: Message = {
+  id: "m1",
+  role: "ai",
+  content: "Muli bwanji! I'm your ZedSkillz AI Tutor — ready to help in Bemba, Nyanja & English. Ask me anything about math, science, coding, or any subject!",
+};
 
 export function LandingBody() {
   const { setActivePage, setAiOverlayOpen } = useAppStore();
+
+  // ── AI chat state ───────────────────────────────────────────────────
+  const [messages, setMessages] = useState<Message[]>([GREETING]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [streamingId, setStreamingId] = useState<string | null>(null);
+  const [streamingContent, setStreamingContent] = useState("");
+  const abortRef = useRef<AbortController | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const streamingContentRef = useRef("");
+
+  // Auto-scroll to bottom on new messages or streaming content
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+  }, []);
+
+  // ── Send message with SSE streaming ─────────────────────────────────
+  const send = async (text?: string) => {
+    const msg = text || input;
+    if (!msg.trim() || isLoading) return;
+
+    const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: msg.trim() }; 
+    const streamId = `stream-${Date.now()}`;
+    const streamMsg: Message = { id: streamId, role: "ai", content: "" }; 
+
+    abortRef.current?.abort();
+    const abortController = new AbortController();
+    abortRef.current = abortController;
+    streamingContentRef.current = "";
+
+    setMessages((prev) => [...prev, userMsg, streamMsg]);
+    setStreamingId(streamId);
+    setStreamingContent("");
+    setInput("");
+    setIsLoading(true);
+    scrollToBottom();
+
+    const timeoutSignal = AbortSignal.timeout(120000);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        signal: AbortSignal.any([abortController.signal, timeoutSignal]),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
+      await readSSEStream(
+        reader,
+        (data) => {
+          if (data.content && typeof data.content === "string") {
+            streamingContentRef.current += data.content as string;
+            const current = streamingContentRef.current;
+            setStreamingContent(current);
+            setMessages((prev) =>
+              prev.map((m) => m.id === streamId ? { ...m, content: current } : m)
+            );
+            scrollToBottom();
+          }
+        },
+        abortController.signal
+      );
+
+      // Finalize streaming message
+      const finalContent = streamingContentRef.current;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === streamId
+            ? { id: `a-${Date.now()}`, role: "ai", content: finalContent || "Sorry, I couldn't process that." }
+            : m
+        )
+      );
+    } catch (err: any) {
+      if (err?.name === "AbortError") return;
+      const partial = streamingContentRef.current;
+      if (partial.trim()) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === streamId ? { id: `a-${Date.now()}`, role: "ai", content: partial } : m
+          )
+        );
+      } else {
+        const errorMsg = err?.name === "TimeoutError"
+          ? "The response is taking longer than expected. Please try again."
+          : "I'm having trouble connecting right now. Please check your internet and try again.";
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === streamId ? { id: `a-${Date.now()}`, role: "ai", content: errorMsg } : m
+          )
+        );
+      }
+    } finally {
+      setStreamingId(null);
+      setStreamingContent("");
+      streamingContentRef.current = "";
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -77,59 +218,103 @@ export function LandingBody() {
       </div>
       </div>
 
-      {/* Right: AI Tutor chat mockup card */}
+      {/* Right: Functional AI Tutor chat card */}
       <div className="flex-1 relative w-full max-w-2xl">
       <div className="glass-surface p-lg rounded-3xl ai-glow shadow-2xl relative overflow-hidden border-outline-variant/30">
       {/* Header */}
-      <div className="flex items-center justify-between mb-xl">
+      <div className="flex items-center justify-between mb-md">
       <div className="flex items-center gap-md">
       <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white">
       <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>smart_toy</span>
       </div>
       <div>
       <p className="font-bold text-primary">ZedSkillz AI Assistant</p>
-      <p className="text-xs text-on-surface-variant">Online • Ready to help in Bemba, Nyanja &amp; English</p>
+      <p className="text-xs text-on-surface-variant flex items-center gap-1">
+        <span className={`w-1.5 h-1.5 rounded-full ${isLoading ? "bg-yellow-400 animate-pulse" : "bg-green-400"}`} />
+        {isLoading ? "Thinking..." : "Online • Ready to help in Bemba, Nyanja & English"}
+      </p>
       </div>
       </div>
-      <span className="material-symbols-outlined text-outline">more_vert</span>
       </div>
 
-      {/* Chat Bubbles */}
-      <div className="space-y-lg">
-      {/* AI message 1 */}
-      <div className="flex gap-md">
-      <div className="w-8 h-8 rounded-full bg-secondary-container shrink-0"></div>
-      <div className="bg-surface-container-low p-md rounded-2xl rounded-tl-none border border-outline-variant/20 max-w-[80%]">
-      <p className="text-body-sm">Muli bwanji! How can I help you with your Grade 12 Math revision today?</p>
+      {/* Chat messages — scrollable area */}
+      <div className="space-y-md max-h-[320px] overflow-y-auto pr-sm" style={{ scrollbarWidth: "thin" }}>
+      {messages.map((m) => (
+        <div key={m.id} className={`flex gap-md ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+          {m.role === "ai" && (
+            <div className="w-8 h-8 bg-primary rounded-2xl flex items-center justify-center text-white shrink-0">
+              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span>
+            </div>
+          )}
+          {m.role === "user" && (
+            <div className="w-8 h-8 rounded-full bg-primary-container shrink-0"></div>
+          )}
+          <div className={`p-md rounded-2xl max-w-[80%] whitespace-pre-wrap ${
+            m.role === "user"
+              ? "bg-primary text-white rounded-tr-none"
+              : m.id === streamingId
+                ? "bg-surface-container-low rounded-tl-none border-l-4 border-primary ai-glow"
+                : "bg-surface-container-low rounded-tl-none border border-outline-variant/20"
+          }`}>
+            {m.id === streamingId ? (
+              m.content.trim() ? (
+                <>
+                  {m.content}
+                  <span className="inline-flex items-center gap-0.5 ml-0.5">
+                    <span className="w-1 h-1 bg-on-surface-variant rounded-full animate-pulse" />
+                  </span>
+                </>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <span className="text-body-sm italic text-primary font-semibold">AI is thinking...</span>
+                  <span className="flex items-center gap-0.5">
+                    <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                </span>
+              )
+            ) : (
+              <p className="text-body-sm">{m.content}</p>
+            )}
+          </div>
+        </div>
+      ))}
+      <div ref={chatEndRef} />
       </div>
-      </div>
-      {/* User message */}
-      <div className="flex gap-md flex-row-reverse">
-      <div className="w-8 h-8 rounded-full bg-primary-container shrink-0"></div>
-      <div className="bg-primary text-white p-md rounded-2xl rounded-tr-none max-w-[80%]">
-      <p className="text-body-sm">I'm struggling with quadratic equations. Can you explain them simply?</p>
-      </div>
-      </div>
-      {/* AI message 2 (thinking + response) */}
-      <div className="flex gap-md">
-      <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shrink-0">
-      <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span>
-      </div>
-      <div className="bg-surface-container-low p-md rounded-2xl rounded-tl-none border-l-4 border-primary ai-glow max-w-[80%]">
-      <p className="text-body-sm italic text-primary font-semibold mb-2">AI is thinking...</p>
-      <p className="text-body-sm">Of course! Think of a quadratic equation like a bridge arch. In Zambia, we see these in architecture all the time. Let's look at the formula ax² + bx + c = 0...</p>
-      </div>
-      </div>
-      </div>
+
+      {/* Suggestion chips */}
+      {messages.length <= 1 && !isLoading && (
+        <div className="mt-sm flex flex-wrap gap-xs">
+          {["Explain a concept", "Generate a quiz", "Translate to Bemba", "Summarize a lesson"].map((s) => (
+            <button
+              key={s}
+              onClick={() => send(s)}
+              className="text-xs px-sm py-xs rounded-full border border-outline-variant hover:bg-surface-container transition-colors text-on-surface-variant"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Input area */}
-      <div className="mt-xl flex gap-md">
-      <div className="flex-1 bg-surface rounded-full border border-outline-variant px-md py-sm flex items-center text-on-surface-variant">
-                                      Type your question...
-                                  </div>
-      <button className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-md">
-      <span className="material-symbols-outlined">send</span>
-      </button>
+      <div className="mt-md flex gap-md">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+          placeholder="Type your question..."
+          disabled={isLoading}
+          className="flex-1 bg-surface rounded-full border border-outline-variant px-md py-sm text-body-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+        />
+        <button
+          onClick={() => send()}
+          disabled={isLoading || !input.trim()}
+          className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-md hover:bg-primary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span className="material-symbols-outlined">send</span>
+        </button>
       </div>
       </div>
 
