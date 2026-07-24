@@ -238,10 +238,41 @@ export function AIOverlay() {
   }, []);
 
   // ── Auto-scroll ────────────────────────────────────────────────────
+  // During streaming, tokens arrive every ~50-200ms. Using "smooth" scroll
+  // on every token creates overlapping scroll animations that shake the screen.
+  // Instead: use "auto" (instant) during streaming, "smooth" for normal messages.
   const activeMessages = conversations.find((c) => c.id === activeConvId)?.messages || [];
+  const prevMsgLengthRef = useRef(0);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeMessages]);
+    const isStreaming = isLoading || streamingMessageIdRef.current !== null;
+    const newMsgAdded = activeMessages.length > prevMsgLengthRef.current;
+    prevMsgLengthRef.current = activeMessages.length;
+
+    // Cancel any pending throttled scroll
+    if (scrollTimerRef.current) {
+      clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = null;
+    }
+
+    if (newMsgAdded) {
+      // New message appeared — scroll immediately (instant during stream, smooth otherwise)
+      messagesEndRef.current?.scrollIntoView({ behavior: isStreaming ? "auto" : "smooth" });
+    } else if (isStreaming) {
+      // Streaming content grew — throttle to max once per 80ms, always instant
+      scrollTimerRef.current = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+        scrollTimerRef.current = null;
+      }, 80);
+    }
+
+    return () => {
+      if (scrollTimerRef.current) {
+        clearTimeout(scrollTimerRef.current);
+        scrollTimerRef.current = null;
+      }
+    };
+  }, [activeMessages, isLoading]);
 
   // ── Persist conversations ──────────────────────────────────────────
   useEffect(() => {
@@ -699,12 +730,17 @@ export function AIOverlay() {
                 }
               }}
               onFocus={() => {
-                // On mobile, scroll input into view when keyboard appears
+                // On mobile, scroll the message area to bottom when keyboard appears
+                // Use scrollTop directly instead of scrollIntoView to avoid shaking
                 if (isSmallScreen && typeof window !== "undefined" && window.visualViewport) {
                   const vv = window.visualViewport;
                   if (vv.height < window.innerHeight - 100) {
-                    // Keyboard is visible — ensure input stays in view
-                    setTimeout(() => inputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
+                    setTimeout(() => {
+                      const msgContainer = messagesEndRef.current?.parentElement;
+                      if (msgContainer) {
+                        msgContainer.scrollTop = msgContainer.scrollHeight;
+                      }
+                    }, 100);
                   }
                 }
               }}
