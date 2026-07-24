@@ -112,9 +112,8 @@ export function GlobalAIFab() {
       <button
         key={activePage}
         onClick={handleFabClick}
-        data-global-ai-fab="true"
-        className={cn(
-          "relative fixed z-50 flex items-center justify-center gap-2 rounded-full bg-primary text-on-primary shadow-[0_0_20px_rgba(112,0,14,0.15)] transition-all duration-300 hover:scale-110 active:scale-95",
+        data-global-ai-fab="true"          className={cn(
+          "fixed z-50 flex items-center justify-center gap-2 rounded-full bg-primary text-on-primary shadow-[0_0_20px_rgba(112,0,14,0.15)] transition-all duration-300 hover:scale-110 active:scale-95",
           // When overlay is open, FAB morphs into a close button (slightly smaller)
           aiOverlayOpen && "scale-[0.85] hover:scale-100",
           // Entrance animation

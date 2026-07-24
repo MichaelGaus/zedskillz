@@ -178,15 +178,13 @@ export default function Home() {
         `}</style>
       )}
       {showGlobalTopbar && <GlobalTopbar />}
-      {/* data-page-content wrapper — GlobalBottomNav adds bottom padding here
-          to prevent content from being hidden behind the fixed bottom nav,
-          without creating empty space below the Footer */}
+      {/* data-page-content wrapper — GlobalBottomNav adds padding-bottom:64px here
+          so the element just above the bottom nav is visible. Footer lives inside
+          so it also benefits from this bottom-nav clearance. */}
       <div data-page-content className="flex flex-1 flex-col">
         {renderPage()}
+        {showGlobalElements && <Footer className="mt-auto" />}
       </div>
-      {/* Shared footer — mt-auto pushes it below viewport on short pages;
-          on pages with their own min-h-screen (like courses), it sits naturally after content */}
-      {showGlobalElements && <Footer className="mt-auto" />}
       <AIOverlay />
       <GlobalUserMenu />
       {showGlobalElements && <GlobalBottomNav />}
