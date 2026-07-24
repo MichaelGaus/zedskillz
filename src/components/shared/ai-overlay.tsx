@@ -161,6 +161,7 @@ export function AIOverlay() {
   const streamingContentRef = useRef("");
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // ── Responsive detection ────────────────────────────────────────────
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -174,6 +175,17 @@ export function AIOverlay() {
 
   // Auth pages don't have bottom nav
   const hasBottomNav = activePage !== "auth" && activePage !== "signup";
+
+  // ── Auto-focus input when panel opens ────────────────────────────────
+  useEffect(() => {
+    if (animPhase === "open" && !isLoading) {
+      // Small delay to let the entrance animation settle
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 450);
+      return () => clearTimeout(timer);
+    }
+  }, [animPhase, isLoading]);
 
   // ── Animate open/close based on store state ────────────────────────
   useEffect(() => {
@@ -479,8 +491,8 @@ export function AIOverlay() {
         animPhase === "closing" ? "animate-smoke-fade" : "animate-smoke-rise",
         // Mode-specific positioning (expanded = full-screen, collapsed = side panel)
         isExpanded ? expandedClasses : collapsedClasses,
-        // Visual: glassmorphism background
-        "glass-panel border border-outline-variant/50",
+        // Visual: glassmorphism background (no backdrop-filter to avoid input focus bug)
+        "glass-panel-no-blur border border-outline-variant/50",
       )}
     >
       {/* ─── Header ─────────────────────────────────────────────── */}
@@ -654,8 +666,10 @@ export function AIOverlay() {
           )}
 
           {/* ─── Input ─────────────────────────────────────────── */}
-          <div className="p-3 border-t border-outline-variant flex items-center gap-2 shrink-0">
+          <div className="p-3 border-t border-outline-variant flex items-center gap-2 shrink-0" style={{ isolation: "isolate" }}>
             <input
+              ref={inputRef}
+              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -664,9 +678,21 @@ export function AIOverlay() {
                   send();
                 }
               }}
+              onFocus={() => {
+                // On mobile, scroll input into view when keyboard appears
+                if (isSmallScreen && typeof window !== "undefined" && window.visualViewport) {
+                  const vv = window.visualViewport;
+                  if (vv.height < window.innerHeight - 100) {
+                    // Keyboard is visible — ensure input stays in view
+                    setTimeout(() => inputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
+                  }
+                }
+              }}
               placeholder="Ask anything..."
               disabled={isLoading}
+              autoComplete="off"
               className="flex-1 h-10 px-4 text-sm bg-surface-container-high rounded-full outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+              style={{ WebkitTransform: "translateZ(0)" }}
             />
             <button
               onClick={() => send()}
