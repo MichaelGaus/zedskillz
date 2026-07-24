@@ -14,6 +14,7 @@ export interface UserProfile {
   province: string;
   phone: string;
   gender: string;
+  age: number;
   education: string;
   school: string;
   interests: string[];
@@ -34,6 +35,15 @@ interface AppState {
   isAuthenticated: boolean;
   user: UserProfile | null;
   signIn: (email: string, name?: string, role?: string) => void;
+  signUp: (data: {
+    firstName: string;
+    surname: string;
+    email: string;
+    role: UserProfile["role"];
+    gender: string;
+    age: number;
+    province: string;
+  }) => void;
   signOut: () => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
 
@@ -88,6 +98,7 @@ const DEFAULT_PROFILE: Omit<UserProfile, "name" | "email" | "avatar"> = {
   province: "",
   phone: "",
   gender: "",
+  age: 0,
   education: "",
   school: "",
   interests: [],
@@ -197,6 +208,40 @@ export const useAppStore = create<AppState>((set, get) => ({
         useAppStore.getState().setAiOverlayOpen(true);
       }, 300);
     }
+  },
+  signUp: ({ firstName, surname, email, role, gender, age, province }) => {
+    const name = `${firstName} ${surname}`.trim();
+    const derivedRole = email.toLowerCase().includes("admin") || email.toLowerCase().includes("grace.tembo")
+      ? "admin" as const
+      : email.toLowerCase().includes("tutor")
+        ? "tutor" as const
+        : role;
+
+    const user: UserProfile = {
+      ...DEFAULT_PROFILE,
+      name,
+      email,
+      gender,
+      age,
+      province,
+      role: derivedRole,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
+    };
+
+    const activePage = derivedRole === "admin" ? "admin-dashboard"
+      : derivedRole === "tutor" ? "tutor-dashboard"
+      : "my-courses";
+
+    set({
+      isAuthenticated: true,
+      user,
+      activePage,
+      intendedPage: null,
+      intendedAiOverlay: false,
+    });
+
+    const { language, theme } = get();
+    savePersistedState({ isAuthenticated: true, user, language, theme: theme as string, activePage, intendedPage: null, intendedAiOverlay: false });
   },
   signOut: () => {
     set({

@@ -1,12 +1,85 @@
 "use client";
 
-// AUTO-GENERATED from zedskillz_signup_page_ui.txt — DO NOT EDIT MANUALLY
-// Conversion: HTML body → JSX (class=→className=, void tags self-closed, style attrs converted)
-
 import { useAppStore } from "@/lib/store";
+import { useState, type FormEvent } from "react";
 
 export function SignupBody() {
-  const { setActivePage } = useAppStore();
+  const { setActivePage, signUp } = useAppStore();
+
+  // ── Form state ─────────────────────────────────────────────────────
+  const [firstName, setFirstName] = useState("");
+  const [surname, setSurname] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [gender, setGender] = useState("");
+  const [age, setAge] = useState<number | null>(null);
+  const [province, setProvince] = useState("");
+  const [selectedRole, setSelectedRole] = useState("student");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [error, setError] = useState("");
+
+  // ── Form submission ───────────────────────────────────────────────
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+
+    // Validation
+    if (!firstName.trim() || !surname.trim()) {
+      setError("Please enter your first name and surname.");
+      return;
+    }
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    if (!password) {
+      setError("Please enter a password.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (!gender) {
+      setError("Please select your gender.");
+      return;
+    }
+    if (age === null || age < 1 || age > 150) {
+      setError("Please enter a valid age.");
+      return;
+    }
+    if (!province) {
+      setError("Please select your province.");
+      return;
+    }
+    if (!agreedToTerms) {
+      setError("You must agree to the Terms of Service and Privacy Policy.");
+      return;
+    }
+
+    signUp({
+      firstName: firstName.trim(),
+      surname: surname.trim(),
+      email: email.trim(),
+      role: selectedRole as "student" | "parent" | "tutor" | "school",
+      gender,
+      age: Number(age),
+      province,
+    });
+  };
+
+  // ── Role options ──────────────────────────────────────────────────
+  const roles = [
+    { role: "student", icon: "school", label: "Student" },
+    { role: "parent", icon: "family_history", label: "Parent" },
+    { role: "tutor", icon: "auto_stories", label: "Tutor" },
+    { role: "school", icon: "business", label: "School" },
+  ] as const;
 
   return (
     <>
@@ -51,25 +124,21 @@ export function SignupBody() {
       <p className="font-body-sm text-body-sm text-on-surface-variant mt-sm whitespace-nowrap">Start your learning journey today.</p>
       </div>
       
-      <form className="space-y-md" onSubmit={(e) => { e.preventDefault(); }}>
+      <form className="space-y-md" onSubmit={handleSubmit}>
       
       {/* Role selector */}
       <div className="space-y-xs">
         <label className="font-label-caps text-label-caps text-on-surface-variant block">I am a</label>
         <div className="grid grid-cols-2 gap-sm" data-role-selector>
-          {[
-            { role: "student", icon: "school", label: "Student" },
-            { role: "parent", icon: "family_history", label: "Parent" },
-            { role: "tutor", icon: "auto_stories", label: "Tutor" },
-            { role: "school", icon: "business", label: "School" },
-          ].map(({ role, icon, label }) => (
+          {roles.map(({ role, icon, label }) => (
             <button
               key={role}
               type="button"
               data-role={role}
-              data-selected={role === "student" ? "true" : undefined}
+              data-selected={selectedRole === role ? "true" : undefined}
+              onClick={() => setSelectedRole(role)}
               className={`flex flex-col items-center gap-xs px-md py-md rounded-xl border-2 transition-all active:scale-95 ${
-                role === "student"
+                selectedRole === role
                   ? "border-primary bg-primary-fixed/20"
                   : "border-outline-variant bg-white hover:border-primary hover:bg-primary-fixed/10"
               }`}
@@ -81,11 +150,20 @@ export function SignupBody() {
         </div>
       </div>
       
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
       <div className="space-y-xs">
-      <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="full_name">Full Name</label>
+      <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="first_name">First Name</label>
       <div className="relative">
       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">person</span>
-      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="full_name" placeholder="John Doe" type="text" />
+      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="first_name" placeholder="John" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+      </div>
+      </div>
+      <div className="space-y-xs">
+      <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="surname">Surname</label>
+      <div className="relative">
+      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">badge</span>
+      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="surname" placeholder="Doe" type="text" value={surname} onChange={(e) => setSurname(e.target.value)} />
+      </div>
       </div>
       </div>
       
@@ -93,7 +171,7 @@ export function SignupBody() {
       <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="email">Email Address</label>
       <div className="relative">
       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">mail</span>
-      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="email" placeholder="name@email.com" type="email" />
+      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="email" placeholder="name@email.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       </div>
       
@@ -102,24 +180,77 @@ export function SignupBody() {
       <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="password">Password</label>
       <div className="relative">
       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">lock</span>
-      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="password" placeholder="••••••••" type="password" />
+      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="password" placeholder="••••••••" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       </div>
       <div className="space-y-xs">
       <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="confirm_password">Confirm</label>
       <div className="relative">
       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">shield</span>
-      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="confirm_password" placeholder="••••••••" type="password" />
+      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="confirm_password" placeholder="••••••••" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
       </div>
       </div>
       </div>
       
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+      <div className="space-y-xs">
+      <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="gender">Gender</label>
+      <div className="relative">
+      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">wc</span>
+      <select className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all appearance-none cursor-pointer" id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
+      <option value="">Select gender</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+      <option value="other">Other</option>
+      </select>
+      <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">arrow_drop_down</span>
+      </div>
+      </div>
+      <div className="space-y-xs">
+      <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="age">Age</label>
+      <div className="relative">
+      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">cake</span>
+      <input className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all" id="age" placeholder="Your age" type="number" min="1" max="150" value={age ?? ""} onChange={(e) => setAge(e.target.value ? Number(e.target.value) : null)} />
+      </div>
+      </div>
+      </div>
+
+      {/* Province */}
+      <div className="space-y-xs">
+      <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="province">Province</label>
+      <div className="relative">
+      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">map</span>
+      <select className="w-full pl-10 pr-md py-sm bg-white border border-outline-variant rounded-lg font-body-md transition-all appearance-none cursor-pointer" id="province" value={province} onChange={(e) => setProvince(e.target.value)}>
+      <option value="">Select your province</option>
+      <option value="Central">Central</option>
+      <option value="Copperbelt">Copperbelt</option>
+      <option value="Eastern">Eastern</option>
+      <option value="Luapula">Luapula</option>
+      <option value="Lusaka">Lusaka</option>
+      <option value="Muchinga">Muchinga</option>
+      <option value="Northern">Northern</option>
+      <option value="North-Western">North-Western</option>
+      <option value="Southern">Southern</option>
+      <option value="Western">Western</option>
+      <option value="outside_zambia">Outside Zambia</option>
+      </select>
+      <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">arrow_drop_down</span>
+      </div>
+      </div>
+
       <div className="flex items-start gap-sm pt-sm">
-      <input className="mt-1 rounded text-primary focus:ring-primary h-4 w-4 border-outline-variant" id="terms" type="checkbox" />
+      <input className="mt-1 rounded text-primary focus:ring-primary h-4 w-4 border-outline-variant" id="terms" type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} />
       <label className="font-body-sm text-body-sm text-on-surface-variant leading-tight whitespace-nowrap" htmlFor="terms">
                                       I agree to the <a className="text-primary font-semibold hover:underline" href="#">Terms of Service</a> and <a className="text-primary font-semibold hover:underline" href="#">Privacy Policy</a>.
                                   </label>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-md py-sm text-body-sm text-destructive font-medium">
+          {error}
+        </div>
+      )}
       
       <div className="pt-md space-y-md">
       <button className="w-full h-touch-target bg-primary text-on-primary rounded-lg font-title-sm transition-all active:scale-95 shadow-md hover:bg-primary-container" type="submit">
@@ -146,8 +277,6 @@ export function SignupBody() {
                                   Already have an account? 
                                   <a className="text-primary font-bold hover:underline ml-1" href="#" onClick={(event) => {
                                     event.preventDefault();
-                                    // Preserve existing intendedPage if set (user was redirected from a protected page)
-                                    // Only clear if there's no intended destination (explicit navigation to sign-in)
                                     const { intendedPage } = useAppStore.getState();
                                     if (!intendedPage) {
                                       useAppStore.getState().setIntendedPage(null);
