@@ -11,7 +11,12 @@ import { cn } from "@/lib/utils";
  * Mobile & Tablet (< 1024px): Icon only (48px circle), positioned above the bottom nav bar
  * Desktop (≥ 1024px): Icon + "Ask AI Tutor" label pill, positioned at bottom-right
  *
- * Clicking opens the AI overlay (setAiOverlayOpen).
+ * When the AI overlay is OPEN: the FAB morphs into a close (X) icon so the
+ * user can toggle the panel back down with the same button — creating a
+ * natural "smoke source" metaphor.
+ *
+ * Clicking opens the AI overlay (setAiOverlayOpen), or closes it with
+ * the smoke-fade animation.
  */
 const TOOLTIP_STORAGE_KEY = "zedskillz_ai_fab_tooltip_seen";
 const TOOLTIP_DELAY_MS = 5000;
@@ -53,12 +58,11 @@ function useFirstVisitTooltip() {
 }
 
 export function GlobalAIFab() {
-  const { activePage, setAiOverlayOpen } = useAppStore();
+  const { activePage, aiOverlayOpen, setAiOverlayOpen } = useAppStore();
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const { show: showTooltip, dismiss: dismissTooltip } = useFirstVisitTooltip();
 
   // Responsive detection using CSS media query (avoids resize thrashing)
-  // Icon-only on mobile & tablet (< 1024px), icon + label on desktop (≥ 1024px)
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)");
     setIsSmallScreen(mq.matches);
@@ -72,13 +76,16 @@ export function GlobalAIFab() {
 
   const handleFabClick = () => {
     dismissTooltip();
-    setAiOverlayOpen(true);
+    // Toggle: open if currently closed, close if currently open
+    // (The AIOverlay component handles the smoke animation for closing)
+    setAiOverlayOpen(!aiOverlayOpen);
   };
 
   return (
     <>
-      {/* First-visit tooltip — desktop only, positioned to the left of the FAB */}
-      {showTooltip && !isSmallScreen && (
+      {/* First-visit tooltip — desktop only, positioned to the left of the FAB.
+          Only shown when overlay is closed. */}
+      {showTooltip && !isSmallScreen && !aiOverlayOpen && (
         <div
           className={cn(
             "fixed z-50 flex items-center gap-2",
@@ -107,27 +114,42 @@ export function GlobalAIFab() {
         onClick={handleFabClick}
         data-global-ai-fab="true"
         className={cn(
-          "relative fixed z-50 flex items-center justify-center gap-2 rounded-full bg-primary text-on-primary shadow-[0_0_20px_rgba(112,0,14,0.15)] transition-transform duration-200 hover:scale-110 active:scale-95",
-          isSmallScreen
-            ? "animate-in fade-in zoom-in-90 slide-in-from-bottom-6 duration-500 delay-150 ease-out"
-            : "animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out",
+          "relative fixed z-50 flex items-center justify-center gap-2 rounded-full bg-primary text-on-primary shadow-[0_0_20px_rgba(112,0,14,0.15)] transition-all duration-300 hover:scale-110 active:scale-95",
+          // When overlay is open, FAB morphs into a close button (slightly smaller)
+          aiOverlayOpen && "scale-[0.85] hover:scale-100",
+          // Entrance animation
+          !aiOverlayOpen && (
+            isSmallScreen
+              ? "animate-in fade-in zoom-in-90 slide-in-from-bottom-6 duration-500 delay-150 ease-out"
+              : "animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out"
+          ),
+          // Size: mobile = icon-only circle, desktop = pill with label
           isSmallScreen ? "right-4 h-12 w-12" : "bottom-6 right-6 h-12 px-5",
-          isSmallScreen && (hasBottomNav ? "bottom-20" : "bottom-4")
+          isSmallScreen && (hasBottomNav ? "bottom-20" : "bottom-4"),
+          // Desktop positioning when overlay is open — stays visible as close button
+          !isSmallScreen && aiOverlayOpen && "bottom-6 right-6"
         )}
-        title="Ask AI Tutor"
-        aria-label="Ask AI Tutor"
+        title={aiOverlayOpen ? "Close AI Tutor" : "Ask AI Tutor"}
+        aria-label={aiOverlayOpen ? "Close AI Tutor" : "Ask AI Tutor"}
       >
-        {/* Subtle pulsing glow ring — only on mobile/tablet, starts after entrance */}
-        {isSmallScreen && (
+        {/* Subtle pulsing glow ring — only on mobile/tablet, only when overlay is closed */}
+        {isSmallScreen && !aiOverlayOpen && (
           <span className="absolute inset-0 rounded-full animate-glow-pulse pointer-events-none" aria-hidden="true" />
         )}
+
+        {/* Icon: psychology when closed, close when open */}
         <span
-          className="material-symbols-outlined text-2xl"
+          className={cn(
+            "material-symbols-outlined text-2xl transition-all duration-200",
+            aiOverlayOpen && "rotate-90"
+          )}
           style={{ fontVariationSettings: '"FILL" 1' }}
         >
-          psychology
+          {aiOverlayOpen ? "close" : "psychology"}
         </span>
-        {!isSmallScreen && (
+
+        {/* Label: desktop only, shown when overlay is closed */}
+        {!isSmallScreen && !aiOverlayOpen && (
           <span className="text-sm font-semibold whitespace-nowrap">
             Ask AI Tutor
           </span>
