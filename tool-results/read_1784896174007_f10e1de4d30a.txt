@@ -1,0 +1,710 @@
+     1→"use client";
+     2→
+     3→import { useAppStore } from "@/lib/store";
+     4→import { Icon } from "@/components/shared/icon";
+     5→import { useState, useRef, useEffect, useCallback } from "react";
+     6→import { cn } from "@/lib/utils";
+     7→
+     8→// ─── Types ──────────────────────────────────────────────────────────────
+     9→type Message = { id: string; role: "ai" | "user"; content: string };
+    10→type Conversation = {
+    11→  id: string;
+    12→  title: string;
+    13→  messages: Message[];
+    14→  createdAt: number;
+    15→};
+    16→
+    17→// ─── Constants ──────────────────────────────────────────────────────────
+    18→const STORAGE_KEY = "zedskillz_ai_conversations";
+    19→const ACTIVE_CONV_KEY = "zedskillz_ai_active_conv";
+    20→const EXPANDED_KEY = "zedskillz_ai_expanded";
+    21→const SMOKE_FADE_DURATION_MS = 260; // matches CSS smoke-fade duration + buffer
+    22→
+    23→const GREETING: Message = {
+    24→  id: "m1",
+    25→  role: "ai",
+    26→  content:
+    27→    "Hello! I'm your Zedskillz AI Tutor. How can I help you today? I can summarize lessons, explain concepts in Bemba/Nyanja/Tonga, generate quizzes, or recommend next lessons.",
+    28→};
+    29→
+    30→// ─── Storage helpers ────────────────────────────────────────────────────
+    31→function loadConversations(): Conversation[] {
+    32→  if (typeof window === "undefined") return [];
+    33→  try {
+    34→    const raw = localStorage.getItem(STORAGE_KEY);
+    35→    if (!raw) return [];
+    36→    const parsed = JSON.parse(raw);
+    37→    if (!Array.isArray(parsed)) return [];
+    38→    return parsed.filter(
+    39→      (c: Conversation) =>
+    40→        c.id && c.title && Array.isArray(c.messages) && typeof c.createdAt === "number"
+    41→    );
+    42→  } catch {
+    43→    return [];
+    44→  }
+    45→}
+    46→
+    47→function saveConversations(convs: Conversation[]) {
+    48→  if (typeof window === "undefined") return;
+    49→  try {
+    50→    localStorage.setItem(STORAGE_KEY, JSON.stringify(convs));
+    51→  } catch { /* quota exceeded */ }
+    52→}
+    53→
+    54→function loadActiveConvId(): string | null {
+    55→  if (typeof window === "undefined") return null;
+    56→  try {
+    57→    return localStorage.getItem(ACTIVE_CONV_KEY);
+    58→  } catch {
+    59→    return null;
+    60→  }
+    61→}
+    62→
+    63→function saveActiveConvId(id: string | null) {
+    64→  if (typeof window === "undefined") return;
+    65→  try {
+    66→    if (id) localStorage.setItem(ACTIVE_CONV_KEY, id);
+    67→    else localStorage.removeItem(ACTIVE_CONV_KEY);
+    68→  } catch { /* noop */ }
+    69→}
+    70→
+    71→/** Derive a short title from the first user message in a conversation. */
+    72→function deriveTitle(messages: Message[]): string {
+    73→  const firstUserMsg = messages.find((m) => m.role === "user");
+    74→  if (!firstUserMsg) return "New Chat";
+    75→  const text = firstUserMsg.content.trim();
+    76→  return text.length > 30 ? text.slice(0, 30) + "..." : text;
+    77→}
+    78→
+    79→// ─── SSE helpers ────────────────────────────────────────────────────────
+    80→function combineAbortSignals(...signals: AbortSignal[]): AbortSignal {
+    81→  const controller = new AbortController();
+    82→  for (const signal of signals) {
+    83→    if (signal.aborted) {
+    84→      controller.abort(signal.reason);
+    85→      return controller.signal;
+    86→    }
+    87→    signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
+    88→  }
+    89→  return controller.signal;
+    90→}
+    91→
+    92→async function readSSEStream(
+    93→  reader: ReadableStreamDefaultReader<Uint8Array>,
+    94→  onData: (json: Record<string, unknown>) => void,
+    95→  signal: AbortSignal
+    96→): Promise<void> {
+    97→  const decoder = new TextDecoder();
+    98→  let buffer = "";
+    99→
+   100→  while (true) {
+   101→    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+   102→    const { done, value } = await reader.read();
+   103→    if (done) break;
+   104→    buffer += decoder.decode(value, { stream: true });
+   105→    const lines = buffer.split("\n");
+   106→    buffer = lines.pop() || "";
+   107→
+   108→    for (const line of lines) {
+   109→      if (line.startsWith("data: ")) {
+   110→        const payload = line.slice(6).trim();
+   111→        if (payload === "[DONE]") return;
+   112→        try {
+   113→          const json = JSON.parse(payload);
+   114→          onData(json);
+   115→        } catch { /* skip */ }
+   116→      }
+   117→    }
+   118→  }
+   119→}
+   120→
+   121→// ─── Component ──────────────────────────────────────────────────────────
+   122→export function AIOverlay() {
+   123→  const { aiOverlayOpen, setAiOverlayOpen, activePage } = useAppStore();
+   124→
+   125→  // ── Visibility & animation state ──────────────────────────────────
+   126→  // isVisible controls whether the panel DOM element is rendered.
+   127→  // animPhase tracks the animation phase: "open" | "closing" | "closed"
+   128→  // The store's aiOverlayOpen triggers transitions, but we keep the DOM
+   129→  // alive during the closing animation before removing it.
+   130→  const [isVisible, setIsVisible] = useState(false);
+   131→  const [animPhase, setAnimPhase] = useState<"closed" | "open" | "closing">("closed");
+   132→  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   133→
+   134→  // Conversation state
+   135→  const [conversations, setConversations] = useState<Conversation[]>([]);
+   136→  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+   137→  const [showConvList, setShowConvList] = useState(false);
+   138→  const [input, setInput] = useState("");
+   139→  const [isLoading, setIsLoading] = useState(false);
+   140→  const [showSuggestions, setShowSuggestions] = useState(true);
+   141→
+   142→  // ── Expand state (side panel vs full-screen) ────────────────────────
+   143→  const [isExpanded, setIsExpanded] = useState(false);
+   144→  useEffect(() => {
+   145→    if (typeof window === "undefined") return;
+   146→    try {
+   147→      const saved = localStorage.getItem(EXPANDED_KEY);
+   148→      if (saved === "true") setIsExpanded(true);
+   149→    } catch { /* noop */ }
+   150→  }, []);
+   151→  const toggleExpanded = () => {
+   152→    const next = !isExpanded;
+   153→    setIsExpanded(next);
+   154→    if (typeof window !== "undefined") {
+   155→      try { localStorage.setItem(EXPANDED_KEY, next ? "true" : "false"); } catch { /* noop */ }
+   156→    }
+   157→  };
+   158→
+   159→  // Streaming refs
+   160→  const streamingMessageIdRef = useRef<string | null>(null);
+   161→  const streamingContentRef = useRef("");
+   162→  const abortControllerRef = useRef<AbortController | null>(null);
+   163→  const messagesEndRef = useRef<HTMLDivElement>(null);
+   164→  const inputRef = useRef<HTMLInputElement>(null);
+   165→
+   166→  // ── Responsive detection ────────────────────────────────────────────
+   167→  const [isSmallScreen, setIsSmallScreen] = useState(false);
+   168→  useEffect(() => {
+   169→    const mq = window.matchMedia("(max-width: 1023px)");
+   170→    setIsSmallScreen(mq.matches);
+   171→    const handler = (e: MediaQueryListEvent) => setIsSmallScreen(e.matches);
+   172→    mq.addEventListener("change", handler);
+   173→    return () => mq.removeEventListener("change", handler);
+   174→  }, []);
+   175→
+   176→  // Auth pages don't have bottom nav
+   177→  const hasBottomNav = activePage !== "auth" && activePage !== "signup";
+   178→
+   179→  // ── Auto-focus input when panel opens ────────────────────────────────
+   180→  useEffect(() => {
+   181→    if (animPhase === "open" && !isLoading) {
+   182→      // Small delay to let the entrance animation settle
+   183→      const timer = setTimeout(() => {
+   184→        inputRef.current?.focus();
+   185→      }, 450);
+   186→      return () => clearTimeout(timer);
+   187→    }
+   188→  }, [animPhase, isLoading]);
+   189→
+   190→  // ── Animate open/close based on store state ────────────────────────
+   191→  useEffect(() => {
+   192→    // Clear any pending close timer
+   193→    if (closeTimerRef.current) {
+   194→      clearTimeout(closeTimerRef.current);
+   195→      closeTimerRef.current = null;
+   196→    }
+   197→
+   198→    if (aiOverlayOpen && animPhase === "closed") {
+   199→      // OPEN: render panel and animate in (smoke-rise)
+   200→      setIsVisible(true);
+   201→      setAnimPhase("open");
+   202→    } else if (!aiOverlayOpen && animPhase === "open") {
+   203→      // CLOSE: start closing animation (smoke-fade)
+   204→      setAnimPhase("closing");
+   205→      // Abort ongoing stream immediately
+   206→      abortControllerRef.current?.abort();
+   207→      abortControllerRef.current = null;
+   208→      streamingMessageIdRef.current = null;
+   209→      streamingContentRef.current = "";
+   210→      setIsLoading(false);
+   211→      // After animation finishes, remove the DOM element
+   212→      closeTimerRef.current = setTimeout(() => {
+   213→        setIsVisible(false);
+   214→        setAnimPhase("closed");
+   215→        setShowConvList(false);
+   216→        closeTimerRef.current = null;
+   217→      }, SMOKE_FADE_DURATION_MS);
+   218→    }
+   219→    // If aiOverlayOpen is true and animPhase is "closing" (race condition),
+   220→    // cancel the close and reopen
+   221→    else if (aiOverlayOpen && animPhase === "closing") {
+   222→      setAnimPhase("open");
+   223→    }
+   224→  }, [aiOverlayOpen]); // intentionally not including animPhase to avoid loops
+   225→
+   226→  // ── Load conversations from localStorage on mount ──────────────────
+   227→  useEffect(() => {
+   228→    const saved = loadConversations();
+   229→    const savedActiveId = loadActiveConvId();
+   230→    if (saved.length > 0) {
+   231→      setConversations(saved);
+   232→      const targetId = savedActiveId && saved.find((c) => c.id === savedActiveId)
+   233→        ? savedActiveId
+   234→        : saved[saved.length - 1].id;
+   235→      setActiveConvId(targetId);
+   236→      setShowSuggestions(false);
+   237→    }
+   238→  }, []);
+   239→
+   240→  // ── Auto-scroll ────────────────────────────────────────────────────
+   241→  const activeMessages = conversations.find((c) => c.id === activeConvId)?.messages || [];
+   242→  useEffect(() => {
+   243→    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+   244→  }, [activeMessages]);
+   245→
+   246→  // ── Persist conversations ──────────────────────────────────────────
+   247→  useEffect(() => {
+   248→    if (conversations.length > 0) {
+   249→      const cleaned = conversations.map((c) => ({
+   250→        ...c,
+   251→        messages: c.messages.filter(
+   252→          (m) => !m.id.startsWith("loading-") && !m.id.startsWith("stream-")
+   253→        ),
+   254→        title: deriveTitle(c.messages),
+   255→      }));
+   256→      saveConversations(cleaned);
+   257→      saveActiveConvId(activeConvId);
+   258→    }
+   259→  }, [conversations, activeConvId]);
+   260→
+   261→  // ── Helpers ─────────────────────────────────────────────────────────
+   262→  const updateConvMessages = (convId: string, msgs: Message[]) => {
+   263→    setConversations((prev) =>
+   264→      prev.map((c) => c.id === convId ? { ...c, messages: msgs, title: deriveTitle(msgs) } : c)
+   265→    );
+   266→  };
+   267→
+   268→  const newConversation = () => {
+   269→    abortControllerRef.current?.abort();
+   270→    abortControllerRef.current = null;
+   271→    streamingMessageIdRef.current = null;
+   272→    streamingContentRef.current = "";
+   273→    setIsLoading(false);
+   274→
+   275→    const newId = `conv-${Date.now()}`;
+   276→    const newConv: Conversation = {
+   277→      id: newId,
+   278→      title: "New Chat",
+   279→      messages: [{ ...GREETING, id: `m1-${newId}` }],
+   280→      createdAt: Date.now(),
+   281→    };
+   282→    setConversations((prev) => [...prev, newConv]);
+   283→    setActiveConvId(newId);
+   284→    setShowSuggestions(true);
+   285→    setShowConvList(false);
+   286→    setInput("");
+   287→  };
+   288→
+   289→  const switchConversation = (convId: string) => {
+   290→    abortControllerRef.current?.abort();
+   291→    abortControllerRef.current = null;
+   292→    streamingMessageIdRef.current = null;
+   293→    streamingContentRef.current = "";
+   294→    setIsLoading(false);
+   295→    setActiveConvId(convId);
+   296→    setShowConvList(false);
+   297→    setShowSuggestions(false);
+   298→    setInput("");
+   299→  };
+   300→
+   301→  const deleteConversation = (convId: string) => {
+   302→    setConversations((prev) => {
+   303→      const remaining = prev.filter((c) => c.id !== convId);
+   304→      if (convId === activeConvId) {
+   305→        if (remaining.length > 0) {
+   306→          setActiveConvId(remaining[remaining.length - 1].id);
+   307→          setShowSuggestions(false);
+   308→        } else {
+   309→          const newId = `conv-${Date.now()}`;
+   310→          const newConv: Conversation = {
+   311→            id: newId,
+   312→            title: "New Chat",
+   313→            messages: [{ ...GREETING, id: `m1-${newId}` }],
+   314→            createdAt: Date.now(),
+   315→          };
+   316→          remaining.push(newConv);
+   317→          setActiveConvId(newId);
+   318→          setShowSuggestions(true);
+   319→        }
+   320→      }
+   321→      return remaining;
+   322→    });
+   323→  };
+   324→
+   325→  const userMessageCount = activeMessages.filter((m) => m.role === "user").length;
+   326→  const hasMultipleConvs = conversations.length > 1;
+   327→
+   328→  // ── Send message ───────────────────────────────────────────────────
+   329→  const send = async (text?: string) => {
+   330→    const msg = text || input;
+   331→    if (!msg.trim() || isLoading || !activeConvId) return;
+   332→    setShowSuggestions(false);
+   333→
+   334→    const currentConvId = activeConvId;
+   335→    const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: msg };
+   336→    const streamId = `stream-${Date.now()}`;
+   337→    streamingMessageIdRef.current = streamId;
+   338→    streamingContentRef.current = "";
+   339→    const streamMsg: Message = { id: streamId, role: "ai", content: "" };
+   340→
+   341→    abortControllerRef.current?.abort();
+   342→    const abortController = new AbortController();
+   343→    abortControllerRef.current = abortController;
+   344→
+   345→    const currentConv = conversations.find((c) => c.id === currentConvId);
+   346→    const currentMsgs = currentConv?.messages || [];
+   347→    const updatedMsgs = [...currentMsgs, userMsg, streamMsg];
+   348→    updateConvMessages(currentConvId, updatedMsgs);
+   349→    setInput("");
+   350→    setIsLoading(true);
+   351→
+   352→    const timeoutSignal = AbortSignal.timeout(120000); // 120s for long detailed responses
+   353→    const combinedSignal = combineAbortSignals(abortController.signal, timeoutSignal);
+   354→
+   355→    try {
+   356→      const response = await fetch("/api/ai/chat", {
+   357→        signal: combinedSignal,
+   358→        method: "POST",
+   359→        headers: { "Content-Type": "application/json" },
+   360→        body: JSON.stringify({
+   361→          messages: [...currentMsgs, userMsg].map((m) => ({
+   362→            role: m.role,
+   363→            content: m.content,
+   364→          })),
+   365→        }),
+   366→      });
+   367→
+   368→      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+   369→
+   370→      const reader = response.body?.getReader();
+   371→      if (!reader) throw new Error("No response body");
+   372→
+   373→      await readSSEStream(
+   374→        reader,
+   375→        (data) => {
+   376→          if (data.content && typeof data.content === "string") {
+   377→            streamingContentRef.current += data.content;
+   378→            const currentContent = streamingContentRef.current;
+   379→            setConversations((prev) =>
+   380→              prev.map((c) =>
+   381→                c.id === currentConvId
+   382→                  ? {
+   383→                      ...c,
+   384→                      messages: c.messages.map((m) =>
+   385→                        m.id === streamId ? { ...m, content: currentContent } : m
+   386→                      ),
+   387→                    }
+   388→                  : c
+   389→              )
+   390→            );
+   391→          }
+   392→        },
+   393→        abortController.signal
+   394→      );
+   395→
+   396→      const finalContent = streamingContentRef.current;
+   397→      setConversations((prev) =>
+   398→        prev.map((c) =>
+   399→          c.id === currentConvId
+   400→            ? {
+   401→                ...c,
+   402→                title: deriveTitle(c.messages),
+   403→                messages: c.messages.map((m) =>
+   404→                  m.id === streamId
+   405→                    ? {
+   406→                        id: `a-${Date.now()}`,
+   407→                        role: "ai",
+   408→                        content: finalContent || "Sorry, I couldn't process that.",
+   409→                      }
+   410→                    : m
+   411→                ),
+   412→              }
+   413→            : c
+   414→        )
+   415→      );
+   416→    } catch (err: any) {
+   417→      if (err?.name === "AbortError") return;
+   418→
+   419→      const streamingSoFar = streamingContentRef.current;
+   420→
+   421→      if (streamingSoFar.trim().length > 0) {
+   422→        setConversations((prev) =>
+   423→          prev.map((c) =>
+   424→            c.id === currentConvId
+   425→              ? {
+   426→                  ...c,
+   427→                  messages: c.messages.map((m) =>
+   428→                    m.id === streamId
+   429→                      ? { id: `a-${Date.now()}`, role: "ai", content: streamingSoFar }
+   430→                      : m
+   431→                  ),
+   432→                }
+   433→              : c
+   434→          )
+   435→        );
+   436→      } else {
+   437→        const errorMsg =
+   438→          err?.name === "TimeoutError"
+   439→            ? "The response is taking longer than expected. Please try again."
+   440→            : "I'm having trouble connecting right now. Please check your internet and try again.";
+   441→        setConversations((prev) =>
+   442→          prev.map((c) =>
+   443→            c.id === currentConvId
+   444→              ? {
+   445→                  ...c,
+   446→                  messages: c.messages.map((m) =>
+   447→                    m.id === streamId
+   448→                      ? { id: `a-${Date.now()}`, role: "ai", content: errorMsg }
+   449→                      : m
+   450→                  ),
+   451→                }
+   452→              : c
+   453→          )
+   454→        );
+   455→      }
+   456→    } finally {
+   457→      streamingMessageIdRef.current = null;
+   458→      streamingContentRef.current = "";
+   459→      setIsLoading(false);
+   460→    }
+   461→  };
+   462→
+   463→  // ── Don't render if panel is not visible ─────────────────────────────
+   464→  if (!isVisible) return null;
+   465→
+   466→  // ── Render ──────────────────────────────────────────────────────────
+   467→  // The panel has two modes:
+   468→  // 1. Side panel (default): right side, anchored near the FAB, non-blocking
+   469→  // 2. Full-screen (expanded): covers the viewport, still non-blocking
+   470→  // Both modes use smoke-rise/fade for open/close transitions.
+   471→  // The expand/collapse transition uses smooth CSS transition on
+   472→  // positioning/sizing properties (300ms ease).
+   473→  const expandedClasses = "fixed inset-4 z-[60] w-auto h-auto max-w-none max-h-none rounded-2xl";
+   474→  const collapsedClasses = cn(
+   475→    isSmallScreen
+   476→      ? cn("right-3 w-[calc(100vw-24px)]", hasBottomNav ? "bottom-20" : "bottom-4")
+   477→      : cn("right-6 w-[380px]", hasBottomNav ? "bottom-6" : "bottom-4"),
+   478→    isSmallScreen
+   479→      ? cn(hasBottomNav ? "max-h-[calc(100vh-140px)]" : "max-h-[calc(100vh-60px)]")
+   480→      : cn(hasBottomNav ? "max-h-[calc(100vh-80px)]" : "max-h-[calc(100vh-60px)]"),
+   481→    "rounded-t-2xl lg:rounded-2xl",
+   482→  );
+   483→
+   484→  return (
+   485→    <div
+   486→      className={cn(
+   487→        "fixed z-[60] flex flex-col overflow-hidden shadow-2xl ai-glow-lg",
+   488→        // Smooth transition between expanded and collapsed modes
+   489→        "transition-all duration-300 ease-in-out",
+   490→        // Animation class based on open/close phase
+   491→        animPhase === "closing" ? "animate-smoke-fade" : "animate-smoke-rise",
+   492→        // Mode-specific positioning (expanded = full-screen, collapsed = side panel)
+   493→        isExpanded ? expandedClasses : collapsedClasses,
+   494→        // Visual: glassmorphism background (no backdrop-filter to avoid input focus bug)
+   495→        "glass-panel-no-blur border border-outline-variant/50",
+   496→      )}
+   497→    >
+   498→      {/* ─── Header ─────────────────────────────────────────────── */}
+   499→      <div className="bg-primary text-on-primary p-3 flex items-center gap-2 shrink-0 rounded-t-2xl">
+   500→        {/* Conversation list toggle */}
+   501→        {hasMultipleConvs && (
+   502→          <button
+   503→            onClick={() => setShowConvList(!showConvList)}
+   504→            className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
+   505→            title="Chat history"
+   506→          >
+   507→            <Icon name={showConvList ? "chat" : "history"} size={20} />
+   508→          </button>
+   509→        )}
+   510→
+   511→        <div className="w-9 h-9 rounded-full bg-on-primary/20 flex items-center justify-center shrink-0">
+   512→          <Icon name="psychology" filled size={20} />
+   513→        </div>
+   514→        <div className="flex-1 min-w-0">
+   515→          <div className="font-title text-sm font-semibold">
+   516→            {showConvList ? "Chat History" : "ZedAI Assistant"}
+   517→          </div>
+   518→          {!showConvList && (
+   519→            <div className="text-xs opacity-80 flex items-center gap-1.5">
+   520→              <span className={`w-1.5 h-1.5 rounded-full ${isLoading ? "bg-yellow-300 animate-pulse" : "bg-green-300"}`} />
+   521→              {isLoading ? "Thinking..." : `Online \u2022 ${userMessageCount} msg${userMessageCount !== 1 ? "s" : ""}`}
+   522→            </div>
+   523→          )}
+   524→        </div>
+   525→
+   526→        {/* Expand/Collapse button */}
+   527→        <button
+   528→          onClick={toggleExpanded}
+   529→          className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
+   530→          title={isExpanded ? "Collapse to side panel" : "Expand to full screen"}
+   531→        >
+   532→          <Icon name={isExpanded ? "close_fullscreen" : "open_in_full"} size={20} />
+   533→        </button>
+   534→        {/* New Chat button */}
+   535→        <button
+   536→          onClick={newConversation}
+   537→          className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
+   538→          title="New conversation"
+   539→        >
+   540→          <Icon name="add" size={20} />
+   541→        </button>
+   542→        <button
+   543→          onClick={() => setAiOverlayOpen(false)}
+   544→          className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
+   545→          title="Close"
+   546→        >
+   547→          <Icon name="close" size={20} />
+   548→        </button>
+   549→      </div>
+   550→
+   551→      {/* ─── Conversation List Panel ───────────────────────────── */}
+   552→      {showConvList ? (
+   553→        <div className="flex-1 overflow-y-auto bg-surface">
+   554→          <div className="p-3 space-y-2">
+   555→            {conversations
+   556→              .sort((a, b) => b.createdAt - a.createdAt)
+   557→              .map((conv) => {
+   558→                const msgCount = conv.messages.filter((m) => m.role === "user").length;
+   559→                const isActive = conv.id === activeConvId;
+   560→                const preview = conv.messages.find((m) => m.role === "user")?.content || "New Chat";
+   561→                const previewShort = preview.length > 40 ? preview.slice(0, 40) + "..." : preview;
+   562→                const timeStr = new Date(conv.createdAt).toLocaleTimeString([], {
+   563→                  hour: "2-digit",
+   564→                  minute: "2-digit",
+   565→                });
+   566→
+   567→                return (
+   568→                  <div
+   569→                    key={conv.id}
+   570→                    className={`flex items-start gap-2 p-3 rounded-xl cursor-pointer transition-colors ${
+   571→                      isActive
+   572→                        ? "bg-primary/10 border border-primary/30"
+   573→                        : "bg-surface-container hover:bg-surface-container-high"
+   574→                    }`}
+   575→                    onClick={() => switchConversation(conv.id)}
+   576→                  >
+   577→                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+   578→                      isActive ? "bg-primary" : "bg-surface-container-high"
+   579→                    }`}>
+   580→                      <Icon name="chat" filled size={16} className={isActive ? "text-on-primary" : "text-on-surface-variant"} />
+   581→                    </div>
+   582→                    <div className="flex-1 min-w-0">
+   583→                      <div className={`font-body-sm font-semibold truncate ${isActive ? "text-primary" : "text-on-surface"}`}>
+   584→                        {conv.title || previewShort}
+   585→                      </div>
+   586→                      <div className="text-xs text-on-surface-variant flex items-center gap-2">
+   587→                        <span>{timeStr}</span>
+   588→                        <span>{msgCount} msg{msgCount !== 1 ? "s" : ""}</span>
+   589→                      </div>
+   590→                    </div>
+   591→                    <button
+   592→                      onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id); }}
+   593→                      className="p-1.5 hover:bg-error/10 rounded-full transition-colors shrink-0 text-on-surface-variant hover:text-error"
+   594→                      title="Delete conversation"
+   595→                    >
+   596→                      <Icon name="delete" size={16} />
+   597→                    </button>
+   598→                  </div>
+   599→                );
+   600→              })}
+   601→          </div>
+   602→        </div>
+   603→      ) : (
+   604→        <>
+   605→          {/* ─── Messages ──────────────────────────────────────── */}
+   606→          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface">
+   607→            {activeMessages.map((m) => (
+   608→              <div
+   609→                key={m.id}
+   610→                className={`flex gap-2 ${m.role === "user" ? "flex-row-reverse" : ""}`}
+   611→              >
+   612→                {m.role === "ai" && (
+   613→                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
+   614→                    <Icon name="smart_toy" filled size={18} className="text-on-primary" />
+   615→                  </div>
+   616→                )}
+   617→                <div
+   618→                  className={`max-w-[80%] rounded-2xl p-3 text-sm whitespace-pre-wrap ${
+   619→                    m.role === "user"
+   620→                      ? "bg-primary text-on-primary rounded-tr-sm"
+   621→                      : "bg-surface-container-lowest border border-outline-variant rounded-tl-sm"
+   622→                  }`}
+   623→                >
+   624→                  {m.id === streamingMessageIdRef.current ? (
+   625→                    m.content.trim() ? (
+   626→                      <span>
+   627→                        {m.content}
+   628→                        <span className="inline-flex items-center gap-0.5 ml-0.5">
+   629→                          <span className="w-1 h-1 bg-on-surface-variant rounded-full animate-pulse" />
+   630→                        </span>
+   631→                      </span>
+   632→                    ) : (
+   633→                      <span className="flex items-center gap-1.5">
+   634→                        <span className="text-sm font-medium text-on-surface-variant">Thinking</span>
+   635→                        <span className="flex items-center gap-0.5">
+   636→                          <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+   637→                          <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+   638→                          <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+   639→                        </span>
+   640→                      </span>
+   641→                    )
+   642→                  ) : (
+   643→                    m.content
+   644→                  )}
+   645→                </div>
+   646→              </div>
+   647→            ))}
+   648→            <div ref={messagesEndRef} />
+   649→          </div>
+   650→
+   651→          {/* ─── Suggestions ───────────────────────────────────── */}
+   652→          {showSuggestions && !isLoading && activeMessages.length <= 1 && (
+   653→            <div className="px-3 py-2 border-t border-outline-variant flex flex-wrap gap-1.5 shrink-0">
+   654→              {["Explain concept", "Generate quiz", "Translate to Bemba", "Summarize lesson"].map(
+   655→                (s) => (
+   656→                  <button
+   657→                    key={s}
+   658→                    onClick={() => send(s)}
+   659→                    className="text-xs px-2.5 py-1 rounded-full border border-outline-variant hover:bg-surface-container transition-colors"
+   660→                  >
+   661→                    {s}
+   662→                  </button>
+   663→                )
+   664→              )}
+   665→            </div>
+   666→          )}
+   667→
+   668→          {/* ─── Input ─────────────────────────────────────────── */}
+   669→          <div className="p-3 border-t border-outline-variant flex items-center gap-2 shrink-0" style={{ isolation: "isolate" }}>
+   670→            <input
+   671→              ref={inputRef}
+   672→              type="text"
+   673→              value={input}
+   674→              onChange={(e) => setInput(e.target.value)}
+   675→              onKeyDown={(e) => {
+   676→                if (e.key === "Enter" && !e.shiftKey) {
+   677→                  e.preventDefault();
+   678→                  send();
+   679→                }
+   680→              }}
+   681→              onFocus={() => {
+   682→                // On mobile, scroll input into view when keyboard appears
+   683→                if (isSmallScreen && typeof window !== "undefined" && window.visualViewport) {
+   684→                  const vv = window.visualViewport;
+   685→                  if (vv.height < window.innerHeight - 100) {
+   686→                    // Keyboard is visible — ensure input stays in view
+   687→                    setTimeout(() => inputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
+   688→                  }
+   689→                }
+   690→              }}
+   691→              placeholder="Ask anything..."
+   692→              disabled={isLoading}
+   693→              autoComplete="off"
+   694→              className="flex-1 h-10 px-4 text-sm bg-surface-container-high rounded-full outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+   695→              style={{ WebkitTransform: "translateZ(0)" }}
+   696→            />
+   697→            <button
+   698→              onClick={() => send()}
+   699→              disabled={isLoading || !input.trim()}
+   700→              className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+   701→            >
+   702→              <Icon name="send" filled size={18} />
+   703→            </button>
+   704→          </div>
+   705→        </>
+   706→      )}
+   707→    </div>
+   708→  );
+   709→}
+   710→
