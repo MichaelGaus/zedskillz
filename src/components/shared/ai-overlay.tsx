@@ -17,6 +17,7 @@ type Conversation = {
 // ─── Constants ──────────────────────────────────────────────────────────
 const STORAGE_KEY = "zedskillz_ai_conversations";
 const ACTIVE_CONV_KEY = "zedskillz_ai_active_conv";
+const EXPANDED_KEY = "zedskillz_ai_expanded";
 const SMOKE_FADE_DURATION_MS = 260; // matches CSS smoke-fade duration + buffer
 
 const GREETING: Message = {
@@ -137,6 +138,23 @@ export function AIOverlay() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+
+  // ── Expand state (side panel vs full-screen) ────────────────────────
+  const [isExpanded, setIsExpanded] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(EXPANDED_KEY);
+      if (saved === "true") setIsExpanded(true);
+    } catch { /* noop */ }
+  }, []);
+  const toggleExpanded = () => {
+    const next = !isExpanded;
+    setIsExpanded(next);
+    if (typeof window !== "undefined") {
+      try { localStorage.setItem(EXPANDED_KEY, next ? "true" : "false"); } catch { /* noop */ }
+    }
+  };
 
   // Streaming refs
   const streamingMessageIdRef = useRef<string | null>(null);
@@ -434,38 +452,39 @@ export function AIOverlay() {
   if (!isVisible) return null;
 
   // ── Render ──────────────────────────────────────────────────────────
-  // Non-modal panel: positioned on the right side, anchored near the FAB.
-  // Uses smoke-rise animation on open, smoke-fade on close.
-  // No backdrop overlay — user can interact with the page simultaneously.
+  // The panel has two modes:
+  // 1. Side panel (default): right side, anchored near the FAB, non-blocking
+  // 2. Full-screen (expanded): covers the viewport, still non-blocking
+  // Both modes use smoke-rise/fade for open/close transitions.
+  // The expand/collapse transition uses smooth CSS transition on
+  // positioning/sizing properties (300ms ease).
+  const expandedClasses = "fixed inset-4 z-[60] w-auto h-auto max-w-none max-h-none rounded-2xl";
+  const collapsedClasses = cn(
+    isSmallScreen
+      ? cn("right-3 w-[calc(100vw-24px)]", hasBottomNav ? "bottom-20" : "bottom-4")
+      : cn("right-6 w-[380px]", hasBottomNav ? "bottom-6" : "bottom-4"),
+    isSmallScreen
+      ? cn(hasBottomNav ? "max-h-[calc(100vh-140px)]" : "max-h-[calc(100vh-60px)]")
+      : cn(hasBottomNav ? "max-h-[calc(100vh-80px)]" : "max-h-[calc(100vh-60px)]"),
+    "rounded-t-2xl lg:rounded-2xl",
+  );
+
   return (
     <div
       className={cn(
         "fixed z-[60] flex flex-col overflow-hidden shadow-2xl ai-glow-lg",
-        // Animation class based on phase
+        // Smooth transition between expanded and collapsed modes
+        "transition-all duration-300 ease-in-out",
+        // Animation class based on open/close phase
         animPhase === "closing" ? "animate-smoke-fade" : "animate-smoke-rise",
-        // Positioning: right side, bottom near the FAB button
-        // Desktop (≥1024px): wider panel, positioned with FAB at bottom-6 right-6
-        // Mobile (<1024px): nearly full-width, positioned with FAB at bottom-20 right-4
-        isSmallScreen
-          ? cn(
-              "right-3 w-[calc(100vw-24px)]",
-              hasBottomNav ? "bottom-20" : "bottom-4"
-            )
-          : cn(
-              "right-6 w-[380px]",
-              hasBottomNav ? "bottom-6" : "bottom-4"
-            ),
-        // Height: fill upward from the FAB position, capped to leave room at top
-        isSmallScreen
-          ? cn(hasBottomNav ? "max-h-[calc(100vh-140px)]" : "max-h-[calc(100vh-60px)]")
-          : cn(hasBottomNav ? "max-h-[calc(100vh-80px)]" : "max-h-[calc(100vh-60px)]"),
-        // Visual: glassmorphism background with rounded corners
-        "rounded-t-2xl lg:rounded-2xl",
+        // Mode-specific positioning (expanded = full-screen, collapsed = side panel)
+        isExpanded ? expandedClasses : collapsedClasses,
+        // Visual: glassmorphism background
         "glass-panel border border-outline-variant/50",
       )}
     >
       {/* ─── Header ─────────────────────────────────────────────── */}
-      <div className="bg-primary text-on-primary p-3 flex items-center gap-2 shrink-0 rounded-t-2xl lg:rounded-t-2xl">
+      <div className="bg-primary text-on-primary p-3 flex items-center gap-2 shrink-0 rounded-t-2xl">
         {/* Conversation list toggle */}
         {hasMultipleConvs && (
           <button
@@ -492,6 +511,14 @@ export function AIOverlay() {
           )}
         </div>
 
+        {/* Expand/Collapse button */}
+        <button
+          onClick={toggleExpanded}
+          className="p-2 hover:bg-on-primary/10 rounded-full transition-colors"
+          title={isExpanded ? "Collapse to side panel" : "Expand to full screen"}
+        >
+          <Icon name={isExpanded ? "close_fullscreen" : "open_in_full"} size={20} />
+        </button>
         {/* New Chat button */}
         <button
           onClick={newConversation}
