@@ -491,10 +491,30 @@ export function AIOverlay() {
         animPhase === "closing" ? "animate-smoke-fade" : "animate-smoke-rise",
         // Mode-specific positioning (expanded = full-screen, collapsed = side panel)
         isExpanded ? expandedClasses : collapsedClasses,
-        // Visual: glassmorphism background (no backdrop-filter to avoid input focus bug)
-        "glass-panel-no-blur border border-outline-variant/50",
+        // Border only (background is handled by separate glass-bg div below)
+        "border border-outline-variant/50",
       )}
+      ref={(el) => {
+        // After smoke-rise animation ends, clear persisted filter property
+        // so it doesn't block <input> focus (Safari/Chrome bug)
+        if (el) {
+          el.addEventListener("animationend", (e) => {
+            if (e.animationName === "smoke-rise") {
+              el.style.filter = "none";
+              // Remove the inline style after a tick so CSS takes over again
+              requestAnimationFrame(() => { el.style.removeProperty("filter"); });
+            }
+          });
+        }
+      }}
     >
+      {/* ─── Glassmorphism background layer ───
+          backdrop-filter lives on this SEPARATE div, NOT on the content parent.
+          This avoids the Safari/Chrome bug where backdrop-filter blocks <input> focus.
+          The content (header, messages, input) sits above this layer. */}
+      <div className="absolute inset-0 glass-panel rounded-inherit pointer-events-none" aria-hidden="true" />
+      {/* ─── Content layer (sits above glass background) ─── */}
+      <div className="relative z-[1] flex flex-col h-full">
       {/* ─── Header ─────────────────────────────────────────────── */}
       <div className="bg-primary text-on-primary p-3 flex items-center gap-2 shrink-0 rounded-t-2xl">
         {/* Conversation list toggle */}
@@ -548,7 +568,7 @@ export function AIOverlay() {
         </button>
       </div>
 
-      {/* ─── Conversation List Panel ───────────────────────────── */}
+        {/* ─── Conversation List Panel ───────────────────────────── */}
       {showConvList ? (
         <div className="flex-1 overflow-y-auto bg-surface">
           <div className="p-3 space-y-2">
@@ -600,9 +620,9 @@ export function AIOverlay() {
               })}
           </div>
         </div>
-      ) : (
+        ) : (
         <>
-          {/* ─── Messages ──────────────────────────────────────── */}
+            {/* ─── Messages ──────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface">
             {activeMessages.map((m) => (
               <div
@@ -648,7 +668,7 @@ export function AIOverlay() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* ─── Suggestions ───────────────────────────────────── */}
+            {/* ─── Suggestions ───────────────────────────────────── */}
           {showSuggestions && !isLoading && activeMessages.length <= 1 && (
             <div className="px-3 py-2 border-t border-outline-variant flex flex-wrap gap-1.5 shrink-0">
               {["Explain concept", "Generate quiz", "Translate to Bemba", "Summarize lesson"].map(
@@ -665,8 +685,8 @@ export function AIOverlay() {
             </div>
           )}
 
-          {/* ─── Input ─────────────────────────────────────────── */}
-          <div className="p-3 border-t border-outline-variant flex items-center gap-2 shrink-0" style={{ isolation: "isolate" }}>
+            {/* ─── Input ─────────────────────────────────────────── */}
+            <div className="p-3 border-t border-outline-variant flex items-center gap-2 shrink-0">
             <input
               ref={inputRef}
               type="text"
@@ -694,16 +714,17 @@ export function AIOverlay() {
               className="flex-1 h-10 px-4 text-sm bg-surface-container-high rounded-full outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
               style={{ WebkitTransform: "translateZ(0)" }}
             />
-            <button
-              onClick={() => send()}
-              disabled={isLoading || !input.trim()}
-              className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Icon name="send" filled size={18} />
-            </button>
-          </div>
-        </>
-      )}
+              <button
+                onClick={() => send()}
+                disabled={isLoading || !input.trim()}
+                className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Icon name="send" filled size={18} />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
