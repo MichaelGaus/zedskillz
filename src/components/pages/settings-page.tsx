@@ -21,6 +21,8 @@ export function SettingsPage() {
   // Redirect to sign-in if not authenticated
   useEffect(() => {
     if (!user) {
+      // Store the intended page so user is redirected back after login
+      useAppStore.getState().setIntendedPage("settings");
       setActivePage("auth");
     }
   }, [user, setActivePage]);

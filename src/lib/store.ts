@@ -45,6 +45,12 @@ interface AppState {
   aiOverlayOpen: boolean;
   setAiOverlayOpen: (open: boolean) => void;
 
+  // Redirect-after-login: store the page/action the user was trying to reach
+  intendedPage: string | null;
+  setIntendedPage: (page: string | null) => void;
+  intendedAiOverlay: boolean;
+  setIntendedAiOverlay: (open: boolean) => void;
+
   // User menu dropdown (topbar avatar)
   userMenuOpen: boolean;
   setUserMenuOpen: (open: boolean) => void;
@@ -150,13 +156,47 @@ export const useAppStore = create<AppState>((set, get) => ({
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
     };
     const isTutor = role === "tutor";
-    const activePage = isAdmin ? "admin-dashboard" : isTutor ? "tutor-dashboard" : "my-courses";
 
-    set({ isAuthenticated: true, user, activePage });
+    // Check if user was trying to reach a specific page before being redirected to login
+    const { intendedPage, intendedAiOverlay } = get();
+    let activePage: string;
+
+    if (intendedPage) {
+      // Redirect to the page the user originally wanted to visit
+      // But validate role-based restrictions:
+      // - Admin users can only access admin-dashboard and landing
+      // - Tutor users can only access tutor-dashboard and non-admin pages
+      if (isAdmin && intendedPage !== "admin-dashboard" && intendedPage !== "landing") {
+        activePage = "admin-dashboard";
+      } else if (isTutor && intendedPage === "admin-dashboard") {
+        activePage = "tutor-dashboard";
+      } else {
+        activePage = intendedPage;
+      }
+    } else {
+      // No intended destination — use the default page based on role
+      activePage = isAdmin ? "admin-dashboard" : isTutor ? "tutor-dashboard" : "my-courses";
+    }
+
+    set({
+      isAuthenticated: true,
+      user,
+      activePage,
+      intendedPage: null,  // Clear after use
+      intendedAiOverlay: false,  // Will be handled separately below
+    });
 
     // Persist to localStorage
     const { language, theme } = get();
     savePersistedState({ isAuthenticated: true, user, language, theme: theme as string, activePage });
+
+    // If user was trying to open the AI overlay, open it after successful login
+    if (intendedAiOverlay) {
+      // Small delay to let the page render first
+      setTimeout(() => {
+        useAppStore.getState().setAiOverlayOpen(true);
+      }, 300);
+    }
   },
   signOut: () => {
     set({
@@ -191,6 +231,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   aiOverlayOpen: false,
   setAiOverlayOpen: (open) => set({ aiOverlayOpen: open }),
+
+  intendedPage: null,
+  setIntendedPage: (page) => set({ intendedPage: page }),
+  intendedAiOverlay: false,
+  setIntendedAiOverlay: (open) => set({ intendedAiOverlay: open }),
 
   userMenuOpen: false,
   setUserMenuOpen: (open) => set({ userMenuOpen: open }),

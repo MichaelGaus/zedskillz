@@ -51,7 +51,9 @@ export function GlobalUserMenu() {
       e.stopPropagation();
 
       if (!isAuthenticated) {
-        // Not signed in — go to sign-in page
+        // Not signed in — go to sign-in page (no specific intended page)
+        useAppStore.getState().setIntendedPage(null);
+        useAppStore.getState().setIntendedAiOverlay(false);
         setActivePage("auth");
         return;
       }
@@ -76,6 +78,9 @@ export function GlobalUserMenu() {
     const handleTopbarAvatarClick = (e: Event) => {
       const detail = (e as CustomEvent).detail as { top: number; right: number };
       if (!isAuthenticated) {
+        // Not signed in — go to sign-in page (no specific intended page)
+        useAppStore.getState().setIntendedPage(null);
+        useAppStore.getState().setIntendedAiOverlay(false);
         setActivePage("auth");
         return;
       }

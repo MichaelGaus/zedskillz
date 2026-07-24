@@ -359,6 +359,9 @@ export function GlobalTopbar() {
       } else if (loginBtn) {
         e.preventDefault();
         e.stopPropagation();
+        // Explicit login intent — clear any stale intendedPage so user goes to default after login
+        useAppStore.getState().setIntendedPage(null);
+        useAppStore.getState().setIntendedAiOverlay(false);
         setActivePage("auth");
         closeMobileDrawer();
       }

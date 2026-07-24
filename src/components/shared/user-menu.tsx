@@ -27,10 +27,14 @@ export function UserMenu({ children }: { children: React.ReactNode }) {
   }, [userMenuOpen, setUserMenuOpen]);
 
   if (!isAuthenticated) {
-    // Not signed in — clicking the avatar goes to sign-in
+    // Not signed in — clicking the avatar goes to sign-in (no specific intended page)
     return (
       <div
-        onClick={() => setActivePage("auth")}
+        onClick={() => {
+          useAppStore.getState().setIntendedPage(null);
+          useAppStore.getState().setIntendedAiOverlay(false);
+          setActivePage("auth");
+        }}
         className="cursor-pointer"
         title="Sign In"
       >

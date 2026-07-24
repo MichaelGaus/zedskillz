@@ -146,6 +146,9 @@ export function SignupBody() {
                                   Already have an account? 
                                   <a className="text-primary font-bold hover:underline ml-1" href="#" onClick={(event) => {
                                     event.preventDefault();
+                                    // Explicit login intent — clear stale intendedPage
+                                    useAppStore.getState().setIntendedPage(null);
+                                    useAppStore.getState().setIntendedAiOverlay(false);
                                     setActivePage("auth");
                                   }}>Sign In</a>
       </p>

@@ -57,7 +57,7 @@ function stripIconNames(text: string): string {
 }
 
 export function useNavDelegation() {
-  const { setActivePage, setAiOverlayOpen, isAuthenticated, user } = useAppStore();
+  const { setActivePage, setAiOverlayOpen, setIntendedPage, setIntendedAiOverlay, isAuthenticated, user, activePage } = useAppStore();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -194,13 +194,23 @@ export function useNavDelegation() {
           if (route.action === "ai") {
             // AI overlay requires auth
             if (!isAuthenticated) {
+              // Store that user wanted to open AI overlay on their current page
+              setIntendedPage(activePage);
+              setIntendedAiOverlay(true);
               setActivePage("auth");
             } else {
               setAiOverlayOpen(true);
             }
           } else if (route.page) {
-            // Auth-gated pages: if not signed in, go to sign-in instead
-            if (isAuthRequired(route.page) && !isAuthenticated) {
+            // If user explicitly navigates to auth/signup page (not an auth-redirect),
+            // clear any stale intendedPage so they go to the default page after login
+            if (route.page === "auth" || route.page === "signup") {
+              setIntendedPage(null);
+              setIntendedAiOverlay(false);
+              setActivePage(route.page);
+            } else if (isAuthRequired(route.page) && !isAuthenticated) {
+              // Auth-gated pages: store the intended destination so we can redirect back after login
+              setIntendedPage(route.page);
               setActivePage("auth");
             } else if (isRestrictedForAdmin(route.page)) {
               // Admin users can only access Home + Admin — redirect restricted pages to admin-dashboard
@@ -218,5 +228,5 @@ export function useNavDelegation() {
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
-  }, [setActivePage, setAiOverlayOpen, isAuthenticated, user]);
+  }, [setActivePage, setAiOverlayOpen, setIntendedPage, setIntendedAiOverlay, isAuthenticated, user, activePage]);
 }

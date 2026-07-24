@@ -44,12 +44,16 @@ export function ProfileDropdown({ sizeClass = "w-8 h-8" }: ProfileDropdownProps)
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "ZS";
 
-  // Not authenticated — clicking avatar goes to sign-in
+  // Not authenticated — clicking avatar goes to sign-in (no specific intended page)
   if (!isAuthenticated) {
     return (
       <button
         type="button"
-        onClick={() => setActivePage("auth")}
+        onClick={() => {
+          useAppStore.getState().setIntendedPage(null);
+          useAppStore.getState().setIntendedAiOverlay(false);
+          setActivePage("auth");
+        }}
         className={`${sizeClass} rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-sm hover:ring-2 hover:ring-primary transition-all`}
         title="Sign In"
       >

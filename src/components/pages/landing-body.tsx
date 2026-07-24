@@ -148,8 +148,8 @@ export function LandingBody() {
       <h3 className="font-display-lg text-display-lg text-primary max-w-2xl">Ready to continue learning?</h3>
       <p className="text-body-md text-on-surface-variant max-w-xl">Sign in to pick up where you left off, or create a free account to unlock ZedSkillz AI tutoring, course progress tracking, and leaderboards.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
-      <button onClick={() => setActivePage("auth")} className="w-full px-xl py-md bg-primary text-white rounded-2xl font-semibold hover:bg-primary-container transition-all">Sign In</button>
-      <button onClick={() => setActivePage("signup")} className="w-full px-xl py-md border border-outline-variant bg-surface text-on-surface rounded-2xl font-semibold hover:bg-surface-container transition-all">Sign Up</button>
+      <button onClick={() => { useAppStore.getState().setIntendedPage(null); useAppStore.getState().setIntendedAiOverlay(false); setActivePage("auth"); }} className="w-full px-xl py-md bg-primary text-white rounded-2xl font-semibold hover:bg-primary-container transition-all">Sign In</button>
+      <button onClick={() => { useAppStore.getState().setIntendedPage(null); useAppStore.getState().setIntendedAiOverlay(false); setActivePage("signup"); }} className="w-full px-xl py-md border border-outline-variant bg-surface text-on-surface rounded-2xl font-semibold hover:bg-surface-container transition-all">Sign Up</button>
       </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
