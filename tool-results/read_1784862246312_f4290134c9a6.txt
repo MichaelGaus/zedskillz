@@ -1,0 +1,1522 @@
+     1→"use client";
+     2→
+     3→import { AppSidebar } from "@/components/shared/app-sidebar";
+     4→import { useState } from "react";
+     5→import { useAppStore } from "@/lib/store";
+     6→
+     7→// ─── Types ───────────────────────────────────────────────────────────
+     8→interface QuizQuestion {
+     9→  question: string;
+    10→  options: string[];
+    11→  answer: string;
+    12→}
+    13→
+    14→interface Lesson {
+    15→  id: string;
+    16→  title: string;
+    17→  type: "video" | "book" | "quiz";
+    18→  duration?: string;
+    19→  url?: string;
+    20→  status?: "draft" | "published";
+    21→  questions?: QuizQuestion[];
+    22→  // File upload fields
+    23→  fileName?: string;
+    24→  fileSize?: number;
+    25→  fileType?: string;
+    26→  fileDataUrl?: string;
+    27→}
+    28→
+    29→interface CourseSection {
+    30→  id: string;
+    31→  title: string;
+    32→  lessons: Lesson[];
+    33→}
+    34→
+    35→interface TutorCourse {
+    36→  id: string;
+    37→  title: string;
+    38→  description: string;
+    39→  category: string;
+    40→  difficulty: "beginner" | "intermediate" | "advanced";
+    41→  price: number;
+    42→  thumbnail: string;
+    43→  status: "draft" | "published" | "archived";
+    44→  sections: CourseSection[];
+    45→  students: number;
+    46→  rating: number;
+    47→  createdAt: string;
+    48→}
+    49→
+    50→type TutorTab = "dashboard" | "courses" | "ai-quiz";
+    51→
+    52→// ─── Sample Data ─────────────────────────────────────────────────────
+    53→const initialCourses: TutorCourse[] = [
+    54→  {
+    55→    id: "tc1",
+    56→    title: "Introduction to Web Development",
+    57→    description: "Learn HTML, CSS, and JavaScript from scratch. Build your first website.",
+    58→    category: "Technology",
+    59→    difficulty: "beginner",
+    60→    price: 0,
+    61→    thumbnail: "",
+    62→    status: "published",
+    63→    students: 234,
+    64→    rating: 4.7,
+    65→    createdAt: "2024-03-15",
+    66→    sections: [
+    67→      {
+    68→        id: "ts1",
+    69→        title: "HTML Fundamentals",
+    70→        lessons: [
+    71→          { id: "tl1", title: "What is HTML?", type: "video", duration: "12:30", status: "published" },
+    72→          { id: "tl2", title: "HTML Tags & Elements", type: "video", duration: "18:45", status: "published" },
+    73→          { id: "tl3", title: "HTML Basics Quiz", type: "quiz", status: "published", questions: [
+    74→            { question: "What does HTML stand for?", options: ["Hyper Text Markup Language", "High Tech Modern Language", "Hyper Transfer Markup Language", "Home Tool Markup Language"], answer: "Hyper Text Markup Language" },
+    75→            { question: "Which tag is used for the largest heading?", options: ["<h6>", "<heading>", "<h1>", "<head>"], answer: "<h1>" },
+    76→            { question: "What is the correct HTML for creating a hyperlink?", options: ["<a url=\"...\">", "<a href=\"...\">", "<link>\"...\"</link>", "<href>...<href>"], answer: "<a href=\"...\">" },
+    77→          ] },
+    78→        ],
+    79→      },
+    80→      {
+    81→        id: "ts2",
+    82→        title: "CSS Styling",
+    83→        lessons: [
+    84→          { id: "tl4", title: "CSS Selectors Guide", type: "book", status: "published" },
+    85→          { id: "tl5", title: "Flexbox & Grid", type: "video", duration: "25:00", status: "draft" },
+    86→        ],
+    87→      },
+    88→    ],
+    89→  },
+    90→  {
+    91→    id: "tc2",
+    92→    title: "Zambian History & Culture",
+    93→    description: "Explore the rich history and cultural heritage of Zambia.",
+    94→    category: "Humanities",
+    95→    difficulty: "intermediate",
+    96→    price: 150,
+    97→    thumbnail: "",
+    98→    status: "draft",
+    99→    students: 0,
+   100→    rating: 0,
+   101→    createdAt: "2024-06-01",
+   102→    sections: [
+   103→      {
+   104→        id: "ts3",
+   105→        title: "Pre-Colonial Zambia",
+   106→        lessons: [
+   107→          { id: "tl6", title: "Early Kingdoms", type: "video", duration: "22:00", status: "draft" },
+   108→        ],
+   109→      },
+   110→    ],
+   111→  },
+   112→];
+   113→
+   114→const categories = ["Technology", "Mathematics", "Sciences", "Humanities", "Languages", "Business", "Arts", "Other"];
+   115→
+   116→// ─── Helpers ─────────────────────────────────────────────────────────
+   117→function generateId() {
+   118→  return `t-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+   119→}
+   120→
+   121→// ─── Component ───────────────────────────────────────────────────────
+   122→export function TutorBody() {
+   123→  const { setAiOverlayOpen, activePage } = useAppStore();
+   124→  // Default to "courses" tab when navigated from Explore (courses page) so tutors see course management directly
+   125→  const [activeTab, setActiveTab] = useState<TutorTab>(
+   126→    activePage === "courses" || activePage === "course-detail" ? "courses" : "dashboard"
+   127→  );
+   128→  const [courses, setCourses] = useState<TutorCourse[]>(initialCourses);
+   129→  const [editingCourse, setEditingCourse] = useState<TutorCourse | null>(null);
+   130→  const [isCreating, setIsCreating] = useState(false);
+   131→  const [courseSearch, setCourseSearch] = useState("");
+   132→  const [courseFilter, setCourseFilter] = useState<"all" | "draft" | "published" | "archived">("all");
+   133→  const [aiPrompt, setAiPrompt] = useState("");
+   134→  const [aiGeneratedQuiz, setAiGeneratedQuiz] = useState<{ sectionId: string; questions: { question: string; options: string[]; answer: string }[] } | null>(null);
+   135→  const [selectedSectionForQuiz, setSelectedSectionForQuiz] = useState<string>("");
+   136→
+   137→  // ─── Course Management ───────────────────────────────────────────
+   138→  const filteredCourses = courses.filter((c) => {
+   139→    const matchesSearch = c.title.toLowerCase().includes(courseSearch.toLowerCase());
+   140→    const matchesFilter = courseFilter === "all" || c.status === courseFilter;
+   141→    return matchesSearch && matchesFilter;
+   142→  });
+   143→
+   144→  const createNewCourse = () => {
+   145→    const newCourse: TutorCourse = {
+   146→      id: generateId(),
+   147→      title: "",
+   148→      description: "",
+   149→      category: "Technology",
+   150→      difficulty: "beginner",
+   151→      price: 0,
+   152→      thumbnail: "",
+   153→      status: "draft",
+   154→      sections: [{ id: generateId(), title: "Section 1", lessons: [] }],
+   155→      students: 0,
+   156→      rating: 0,
+   157→      createdAt: new Date().toISOString().slice(0, 10),
+   158→    };
+   159→    setEditingCourse(newCourse);
+   160→    setIsCreating(true);
+   161→  };
+   162→
+   163→  const saveCourse = (course: TutorCourse) => {
+   164→    if (isCreating) {
+   165→      setCourses((prev) => [...prev, course]);
+   166→    } else {
+   167→      setCourses((prev) => prev.map((c) => (c.id === course.id ? course : c)));
+   168→    }
+   169→    setEditingCourse(null);
+   170→    setIsCreating(false);
+   171→  };
+   172→
+   173→  const deleteCourse = (id: string) => {
+   174→    if (confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
+   175→      setCourses((prev) => prev.filter((c) => c.id !== id));
+   176→    }
+   177→  };
+   178→
+   179→  const duplicateCourse = (course: TutorCourse) => {
+   180→    const dup: TutorCourse = {
+   181→      ...course,
+   182→      id: generateId(),
+   183→      title: `${course.title} (Copy)`,
+   184→      status: "draft",
+   185→      students: 0,
+   186→      rating: 0,
+   187→      createdAt: new Date().toISOString().slice(0, 10),
+   188→    };
+   189→    setCourses((prev) => [...prev, dup]);
+   190→  };
+   191→
+   192→  // ─── Section & Lesson Management ─────────────────────────────────
+   193→  const addSection = (course: TutorCourse) => {
+   194→    const updated = {
+   195→      ...course,
+   196→      sections: [...course.sections, { id: generateId(), title: `Section ${course.sections.length + 1}`, lessons: [] }],
+   197→    };
+   198→    setEditingCourse(updated);
+   199→  };
+   200→
+   201→  const removeSection = (course: TutorCourse, sectionId: string) => {
+   202→    const updated = {
+   203→      ...course,
+   204→      sections: course.sections.filter((s) => s.id !== sectionId),
+   205→    };
+   206→    setEditingCourse(updated);
+   207→  };
+   208→
+   209→  const updateSectionTitle = (course: TutorCourse, sectionId: string, title: string) => {
+   210→    const updated = {
+   211→      ...course,
+   212→      sections: course.sections.map((s) => (s.id === sectionId ? { ...s, title } : s)),
+   213→    };
+   214→    setEditingCourse(updated);
+   215→  };
+   216→
+   217→  const addLesson = (course: TutorCourse, sectionId: string, type: "video" | "book" | "quiz") => {
+   218→    const lesson: Lesson = {
+   219→      id: generateId(),
+   220→      title: "",
+   221→      type,
+   222→      status: "draft",
+   223→    };
+   224→    const updated = {
+   225→      ...course,
+   226→      sections: course.sections.map((s) =>
+   227→        s.id === sectionId ? { ...s, lessons: [...s.lessons, lesson] } : s
+   228→      ),
+   229→    };
+   230→    setEditingCourse(updated);
+   231→  };
+   232→
+   233→  // ─── File Upload ────────────────────────────────────────────────
+   234→  const [uploadingLessonId, setUploadingLessonId] = useState<string | null>(null);
+   235→
+   236→  const handleFileUpload = (lessonId: string, sectionId: string, file: File) => {
+   237→    const maxSize = 20 * 1024 * 1024; // 20MB limit for data URLs in state
+   238→    if (file.size > maxSize) {
+   239→      alert(`File "${file.name}" is too large. Maximum supported size is 20MB. For larger files, use a hosting service and add the URL manually.`);
+   240→      return;
+   241→    }
+   242→    setUploadingLessonId(lessonId);
+   243→    const reader = new FileReader();
+   244→    reader.onload = (e) => {
+   245→      const dataUrl = e.target?.result as string;
+   246→      // Use functional form to avoid stale closure on editingCourse
+   247→      setEditingCourse((prev) => {
+   248→        if (!prev) return prev;
+   249→        return {
+   250→          ...prev,
+   251→          sections: prev.sections.map((s) =>
+   252→            s.id === sectionId
+   253→              ? {
+   254→                  ...s,
+   255→                  lessons: s.lessons.map((l) =>
+   256→                    l.id === lessonId
+   257→                      ? { ...l, fileName: file.name, fileSize: file.size, fileType: file.type, fileDataUrl: dataUrl }
+   258→                      : l
+   259→                  ),
+   260→                }
+   261→              : s
+   262→          ),
+   263→        };
+   264→      });
+   265→      setUploadingLessonId(null);
+   266→    };
+   267→    reader.onerror = () => {
+   268→      alert("Failed to read file. Please try again.");
+   269→      setUploadingLessonId(null);
+   270→    };
+   271→    reader.readAsDataURL(file);
+   272→  };
+   273→
+   274→  const formatFileSize = (bytes: number) => {
+   275→    if (bytes < 1024) return `${bytes} B`;
+   276→    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+   277→    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+   278→  };
+   279→
+   280→  const removeLesson = (course: TutorCourse, sectionId: string, lessonId: string) => {
+   281→    const updated = {
+   282→      ...course,
+   283→      sections: course.sections.map((s) =>
+   284→        s.id === sectionId ? { ...s, lessons: s.lessons.filter((l) => l.id !== lessonId) } : s
+   285→      ),
+   286→    };
+   287→    setEditingCourse(updated);
+   288→  };
+   289→
+   290→  const updateLesson = (course: TutorCourse, sectionId: string, lessonId: string, updates: Partial<Lesson>) => {
+   291→    const updated = {
+   292→      ...course,
+   293→      sections: course.sections.map((s) =>
+   294→        s.id === sectionId
+   295→          ? { ...s, lessons: s.lessons.map((l) => (l.id === lessonId ? { ...l, ...updates } : l)) }
+   296→          : s
+   297→      ),
+   298→    };
+   299→    setEditingCourse(updated);
+   300→  };
+   301→
+   302→  // ─── AI Quiz Generation ──────────────────────────────────────────
+   303→  const handleAIGenerateQuiz = () => {
+   304→    if (!aiPrompt.trim() || !selectedSectionForQuiz) return;
+   305→
+   306→    // Simulate AI-generated quiz questions
+   307→    const mockQuestions = [
+   308→      { question: `What is the main concept of "${aiPrompt.slice(0, 40)}..."?`, options: ["Option A", "Option B", "Option C", "Option D"], answer: "Option A" },
+   309→      { question: "Which of the following best describes this topic?", options: ["Definition 1", "Definition 2", "Definition 3", "Definition 4"], answer: "Definition 2" },
+   310→      { question: "What is a practical application of this concept?", options: ["Application X", "Application Y", "Application Z", "All of the above"], answer: "All of the above" },
+   311→      { question: "Which statement is TRUE about this topic?", options: ["Statement 1", "Statement 2", "Statement 3", "Statement 4"], answer: "Statement 3" },
+   312→      { question: "What should you remember most from this section?", options: ["Key point A", "Key point B", "Key point C", "Key point D"], answer: "Key point A" },
+   313→    ];
+   314→
+   315→    setAiGeneratedQuiz({
+   316→      sectionId: selectedSectionForQuiz,
+   317→      questions: mockQuestions,
+   318→    });
+   319→  };
+   320→
+   321→  const addGeneratedQuizToSection = () => {
+   322→    if (!aiGeneratedQuiz || !editingCourse) return;
+   323→    const quizLesson: Lesson = {
+   324→      id: generateId(),
+   325→      title: `AI Quiz: ${aiPrompt.slice(0, 50)}`,
+   326→      type: "quiz",
+   327→      status: "draft",
+   328→      questions: aiGeneratedQuiz.questions,
+   329→    };
+   330→    const updatedCourse: TutorCourse = {
+   331→      ...editingCourse,
+   332→      sections: editingCourse.sections.map((s) =>
+   333→        s.id === aiGeneratedQuiz.sectionId
+   334→          ? { ...s, lessons: [...s.lessons, quizLesson] }
+   335→          : s
+   336→      ),
+   337→    };
+   338→    setEditingCourse(updatedCourse);
+   339→    // Also immediately persist to courses list so the quiz survives navigation
+   340→    setCourses((prev) => {
+   341→      const exists = prev.some((c) => c.id === updatedCourse.id);
+   342→      return exists
+   343→        ? prev.map((c) => (c.id === updatedCourse.id ? updatedCourse : c))
+   344→        : prev;
+   345→    });
+   346→    setAiGeneratedQuiz(null);
+   347→    setAiPrompt("");
+   348→  };
+   349→
+   350→  const openAIAssistant = () => {
+   351→    setAiOverlayOpen(true);
+   352→  };
+   353→
+   354→  // ─── Tab Config ──────────────────────────────────────────────────
+   355→  const tabs: { id: TutorTab; label: string; icon: string }[] = [
+   356→    { id: "dashboard", label: "Dashboard", icon: "dashboard" },
+   357→    { id: "courses", label: "Courses", icon: "library_books" },
+   358→    { id: "ai-quiz", label: "AI Quiz", icon: "auto_awesome" },
+   359→  ];
+   360→
+   361→  const getStatusBadge = (status: string) => {
+   362→    const styles: Record<string, string> = {
+   363→      published: "bg-green-100 text-green-700 border-green-200",
+   364→      draft: "bg-yellow-100 text-yellow-700 border-yellow-200",
+   365→      archived: "bg-gray-100 text-gray-600 border-gray-200",
+   366→    };
+   367→    return styles[status] || "bg-surface-variant text-on-surface-variant";
+   368→  };
+   369→
+   370→  const getDifficultyColor = (difficulty: string) => {
+   371→    const colors: Record<string, string> = {
+   372→      beginner: "text-green-600 bg-green-50",
+   373→      intermediate: "text-amber-600 bg-amber-50",
+   374→      advanced: "text-red-600 bg-red-50",
+   375→    };
+   376→    return colors[difficulty] || "text-on-surface-variant bg-surface-variant";
+   377→  };
+   378→
+   379→  const getLessonIcon = (type: string) => {
+   380→    const icons: Record<string, string> = {
+   381→      video: "play_circle",
+   382→      book: "menu_book",
+   383→      quiz: "quiz",
+   384→    };
+   385→    return icons[type] || "description";
+   386→  };
+   387→
+   388→  const getLessonColor = (type: string) => {
+   389→    const colors: Record<string, string> = {
+   390→      video: "text-blue-600 bg-blue-50",
+   391→      book: "text-purple-600 bg-purple-50",
+   392→      quiz: "text-amber-600 bg-amber-50",
+   393→    };
+   394→    return colors[type] || "text-surface-variant bg-surface-variant";
+   395→  };
+   396→
+   397→  // ─── Stats ───────────────────────────────────────────────────────
+   398→  const totalStudents = courses.reduce((sum, c) => sum + c.students, 0);
+   399→  const totalVideos = courses.reduce((sum, c) =>
+   400→    sum + c.sections.reduce((sSum, s) => sSum + s.lessons.filter((l) => l.type === "video").length, 0), 0);
+   401→  const totalQuizzes = courses.reduce((sum, c) =>
+   402→    sum + c.sections.reduce((sSum, s) => sSum + s.lessons.filter((l) => l.type === "quiz").length, 0), 0);
+   403→  const publishedCourses = courses.filter((c) => c.status === "published").length;
+   404→
+   405→  // ─── Render ──────────────────────────────────────────────────────
+   406→  return (
+   407→    <>
+   408→      <div className="flex h-screen overflow-hidden">
+   409→        <AppSidebar activePage="tutor-dashboard" />
+   410→
+   411→        <main data-page-main className="flex-1 flex flex-col min-w-0 bg-surface h-full overflow-hidden">
+   412→          {/* ── Merged header: toolbar + tab navigation ── */}
+   413→          <div className="w-full bg-surface/80 backdrop-blur-md shadow-sm border-b border-outline-variant">
+   414→            {/* Row 1: Title + actions */}
+   415→            <div className="h-16 flex items-center justify-between px-4 md:px-6">
+   416→              <div className="flex items-center gap-4">
+   417→                <button className="md:hidden material-symbols-outlined p-2 hover:bg-surface-variant/50 rounded-full transition-colors active:scale-95">menu</button>
+   418→                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+   419→                  <span className="material-symbols-outlined text-on-primary text-sm" style={{fontVariationSettings: '"FILL" 1'}}>auto_stories</span>
+   420→                </div>
+   421→                <h2 className="font-headline-md text-headline-md text-primary tracking-tight">Tutor Panel</h2>
+   422→              </div>
+   423→              <div className="flex items-center gap-3">
+   424→                <button
+   425→                  onClick={openAIAssistant}
+   426→                  className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95 shadow-sm"
+   427→                >
+   428→                  <span className="material-symbols-outlined text-sm">auto_awesome</span>
+   429→                  <span>AI Assistant</span>
+   430→                </button>
+   431→                <button className="relative p-2 hover:bg-surface-variant/50 rounded-full transition-colors" title="Notifications">
+   432→                  <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
+   433→                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full ring-2 ring-surface"></span>
+   434→                </button>
+   435→                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-on-primary text-xs font-bold shrink-0">
+   436→                  T
+   437→                </div>
+   438→              </div>
+   439→            </div>
+   440→            {/* Row 2: Tab navigation */}
+   441→            <div className="flex items-center gap-1 px-4 md:px-6 pb-2">
+   442→            {tabs.map((tab) => (
+   443→              <button
+   444→                key={tab.id}
+   445→                onClick={() => setActiveTab(tab.id)}
+   446→                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-t-lg transition-all ${
+   447→                  activeTab === tab.id
+   448→                    ? "bg-primary-container text-primary border-b-2 border-primary"
+   449→                    : "text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface"
+   450→                }`}
+   451→              >
+   452→                <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+   453→                <span className="hidden sm:inline">{tab.label}</span>
+   454→              </button>
+   455→            ))}
+   456→            <div className="flex-1" />
+   457→          </div>
+   458→          </div>
+   459→
+   460→          {/* ── Scrollable Content ── */}
+   461→          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 space-y-6">
+   462→
+   463→            {/* ══════════════════════════════════════════════════════════
+   464→                DASHBOARD TAB
+   465→            ══════════════════════════════════════════════════════════ */}
+   466→            {activeTab === "dashboard" && (
+   467→              <>
+   468→                {/* Stat Cards */}
+   469→                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   470→                  <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 hover:shadow-md transition-all group">
+   471→                    <div className="flex items-start justify-between mb-4">
+   472→                      <div className="w-11 h-11 rounded-xl bg-primary-container/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+   473→                        <span className="material-symbols-outlined text-primary" style={{fontVariationSettings: '"FILL" 1'}}>library_books</span>
+   474→                      </div>
+   475→                    </div>
+   476→                    <p className="text-on-surface-variant text-label-caps font-label-caps opacity-70 mb-1">TOTAL COURSES</p>
+   477→                    <p className="text-display-md font-display-md text-on-surface">{courses.length}</p>
+   478→                    <div className="mt-3 flex items-center gap-2">
+   479→                      <span className="text-xs text-green-600 font-semibold">{publishedCourses} published</span>
+   480→                      <span className="text-xs text-on-surface-variant/50">• {courses.length - publishedCourses} drafts</span>
+   481→                    </div>
+   482→                  </div>
+   483→
+   484→                  <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 hover:shadow-md transition-all group">
+   485→                    <div className="flex items-start justify-between mb-4">
+   486→                      <div className="w-11 h-11 rounded-xl bg-secondary-container/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+   487→                        <span className="material-symbols-outlined text-primary" style={{fontVariationSettings: '"FILL" 1'}}>group</span>
+   488→                      </div>
+   489→                    </div>
+   490→                    <p className="text-on-surface-variant text-label-caps font-label-caps opacity-70 mb-1">ENROLLED STUDENTS</p>
+   491→                    <p className="text-display-md font-display-md text-on-surface">{totalStudents.toLocaleString()}</p>
+   492→                    <div className="mt-3 flex items-center gap-2">
+   493→                      <span className="text-xs text-green-600 font-semibold">+12 this week</span>
+   494→                    </div>
+   495→                  </div>
+   496→
+   497→                  <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 hover:shadow-md transition-all group">
+   498→                    <div className="flex items-start justify-between mb-4">
+   499→                      <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+   500→                        <span className="material-symbols-outlined text-blue-600" style={{fontVariationSettings: '"FILL" 1'}}>play_circle</span>
+   501→                      </div>
+   502→                    </div>
+   503→                    <p className="text-on-surface-variant text-label-caps font-label-caps opacity-70 mb-1">VIDEO LESSONS</p>
+   504→                    <p className="text-display-md font-display-md text-on-surface">{totalVideos}</p>
+   505→                    <div className="mt-3 flex items-center gap-2">
+   506→                      <span className="text-xs text-on-surface-variant/50">Across all courses</span>
+   507→                    </div>
+   508→                  </div>
+   509→
+   510→                  <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 hover:shadow-md transition-all group">
+   511→                    <div className="flex items-start justify-between mb-4">
+   512→                      <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+   513→                        <span className="material-symbols-outlined text-amber-600" style={{fontVariationSettings: '"FILL" 1'}}>quiz</span>
+   514→                      </div>
+   515→                    </div>
+   516→                    <p className="text-on-surface-variant text-label-caps font-label-caps opacity-70 mb-1">QUIZZES</p>
+   517→                    <p className="text-display-md font-display-md text-on-surface">{totalQuizzes}</p>
+   518→                    <div className="mt-3 flex items-center gap-2">
+   519→                      <button className="text-xs font-semibold text-primary hover:underline" onClick={() => setActiveTab("ai-quiz")}>Generate with AI</button>
+   520→                    </div>
+   521→                  </div>
+   522→                </div>
+   523→
+   524→                {/* Quick Actions */}
+   525→                <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-5 text-white">
+   526→                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+   527→                    <div>
+   528→                      <h3 className="font-headline-md text-headline-md font-bold">Tutor Quick Actions</h3>
+   529→                      <p className="text-body-sm text-white/80 mt-1">Create and manage your course content</p>
+   530→                    </div>
+   531→                    <div className="flex flex-wrap gap-3">
+   532→                      <button
+   533→                        onClick={createNewCourse}
+   534→                        className="flex items-center gap-2 px-5 py-2.5 bg-white text-primary rounded-xl text-sm font-bold hover:shadow-lg transition-all active:scale-95"
+   535→                      >
+   536→                        <span className="material-symbols-outlined text-sm">add_circle</span>
+   537→                        Create Course
+   538→                      </button>
+   539→                      <button
+   540→                        onClick={() => setActiveTab("ai-quiz")}
+   541→                        className="flex items-center gap-2 px-5 py-2.5 bg-white/15 text-white rounded-xl text-sm font-bold hover:bg-white/25 transition-all active:scale-95 border border-white/20"
+   542→                      >
+   543→                        <span className="material-symbols-outlined text-sm">auto_awesome</span>
+   544→                        Generate Quiz
+   545→                      </button>
+   546→                      <button
+   547→                        onClick={openAIAssistant}
+   548→                        className="flex items-center gap-2 px-5 py-2.5 bg-white/15 text-white rounded-xl text-sm font-bold hover:bg-white/25 transition-all active:scale-95 border border-white/20"
+   549→                      >
+   550→                        <span className="material-symbols-outlined text-sm">psychology</span>
+   551→                        AI Tutor Help
+   552→                      </button>
+   553→                    </div>
+   554→                  </div>
+   555→                </div>
+   556→
+   557→                {/* Recent Courses */}
+   558→                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
+   559→                  <div className="flex items-center justify-between mb-4">
+   560→                    <h3 className="font-title-md text-title-md text-on-surface">Your Courses</h3>
+   561→                    <button
+   562→                      onClick={() => setActiveTab("courses")}
+   563→                      className="text-xs font-semibold text-primary hover:underline"
+   564→                    >
+   565→                      View All
+   566→                    </button>
+   567→                  </div>
+   568→                  <div className="space-y-3">
+   569→                    {courses.slice(0, 3).map((course) => (
+   570→                      <div key={course.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container/50 transition-colors border border-outline-variant/50">
+   571→                        <div className="flex items-center gap-3">
+   572→                          <div className="w-10 h-10 rounded-lg bg-primary-container/20 flex items-center justify-center shrink-0">
+   573→                            <span className="material-symbols-outlined text-primary text-sm">menu_book</span>
+   574→                          </div>
+   575→                          <div>
+   576→                            <p className="text-body-sm font-semibold text-on-surface">{course.title}</p>
+   577→                            <div className="flex items-center gap-2 mt-0.5">
+   578→                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(course.status)}`}>
+   579→                                {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
+   580→                              </span>
+   581→                              <span className="text-xs text-on-surface-variant">{course.sections.length} sections</span>
+   582→                            </div>
+   583→                          </div>
+   584→                        </div>
+   585→                        <button
+   586→                          onClick={() => { setEditingCourse(course); setIsCreating(false); }}
+   587→                          className="p-2 hover:bg-surface-variant rounded-lg transition-colors"
+   588→                          title="Edit course"
+   589→                        >
+   590→                          <span className="material-symbols-outlined text-sm text-on-surface-variant">edit</span>
+   591→                        </button>
+   592→                      </div>
+   593→                    ))}
+   594→                  </div>
+   595→                </div>
+   596→              </>
+   597→            )}
+   598→
+   599→            {/* ══════════════════════════════════════════════════════════
+   600→                COURSES TAB (with Course Builder)
+   601→            ══════════════════════════════════════════════════════════ */}
+   602→            {activeTab === "courses" && (
+   603→              editingCourse ? (
+   604→                /* ── Course Builder / Editor ── */
+   605→                <div className="space-y-6">
+   606→                  {/* Header */}
+   607→                  <div className="flex items-center justify-between">
+   608→                    <div className="flex items-center gap-3">
+   609→                      <button
+   610→                        onClick={() => { setEditingCourse(null); setIsCreating(false); }}
+   611→                        className="p-2 hover:bg-surface-variant rounded-lg transition-colors"
+   612→                      >
+   613→                        <span className="material-symbols-outlined text-on-surface-variant">arrow_back</span>
+   614→                      </button>
+   615→                      <div>
+   616→                        <h3 className="font-headline-md text-headline-md text-on-surface">
+   617→                          {isCreating ? "Create New Course" : "Edit Course"}
+   618→                        </h3>
+   619→                        <p className="text-body-sm text-on-surface-variant mt-0.5">
+   620→                          {isCreating ? "Set up your course details, sections, and content" : `Editing: ${editingCourse.title}`}
+   621→                        </p>
+   622→                      </div>
+   623→                    </div>
+   624→                    <div className="flex items-center gap-3">
+   625→                      <button
+   626→                        onClick={() => {
+   627→                          if (!editingCourse) return;
+   628→                          const course: TutorCourse = { ...editingCourse, status: "published" };
+   629→                          saveCourse(course);
+   630→                        }}
+   631→                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95 shadow-sm"
+   632→                      >
+   633→                        <span className="material-symbols-outlined text-sm">check_circle</span>
+   634→                        {isCreating ? "Create Course" : "Save Changes"}
+   635→                      </button>
+   636→                      <button
+   637→                        onClick={() => saveCourse(editingCourse)}
+   638→                        className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-variant/50 transition-all"
+   639→                      >
+   640→                        <span className="material-symbols-outlined text-sm">save</span>
+   641→                        Save as Draft
+   642→                      </button>
+   643→                    </div>
+   644→                  </div>
+   645→
+   646→                  {/* Course Details Form */}
+   647→                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   648→                    {/* Left: Main Details */}
+   649→                    <div className="lg:col-span-2 space-y-4">
+   650→                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-4">
+   651→                        <h4 className="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+   652→                          <span className="material-symbols-outlined text-primary text-sm">info</span>
+   653→                          Course Details
+   654→                        </h4>
+   655→                        <div>
+   656→                          <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1.5">Course Title *</label>
+   657→                          <input
+   658→                            type="text"
+   659→                            value={editingCourse.title}
+   660→                            onChange={(e) => setEditingCourse({ ...editingCourse, title: e.target.value })}
+   661→                            placeholder="e.g., Introduction to Web Development"
+   662→                            className="w-full h-11 px-4 bg-surface-container-high rounded-xl border-none text-body-sm focus:ring-2 focus:ring-primary/20 transition-all"
+   663→                          />
+   664→                        </div>
+   665→                        <div>
+   666→                          <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1.5">Description *</label>
+   667→                          <textarea
+   668→                            value={editingCourse.description}
+   669→                            onChange={(e) => setEditingCourse({ ...editingCourse, description: e.target.value })}
+   670→                            placeholder="Describe what students will learn in this course..."
+   671→                            rows={4}
+   672→                            className="w-full px-4 py-3 bg-surface-container-high rounded-xl border-none text-body-sm focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+   673→                          />
+   674→                        </div>
+   675→                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+   676→                          <div>
+   677→                            <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1.5">Category</label>
+   678→                            <select
+   679→                              value={editingCourse.category}
+   680→                              onChange={(e) => setEditingCourse({ ...editingCourse, category: e.target.value })}
+   681→                              className="w-full h-11 px-4 bg-surface-container-high rounded-xl border-none text-body-sm focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+   682→                            >
+   683→                              {categories.map((cat) => (
+   684→                                <option key={cat} value={cat}>{cat}</option>
+   685→                              ))}
+   686→                            </select>
+   687→                          </div>
+   688→                          <div>
+   689→                            <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1.5">Difficulty</label>
+   690→                            <select
+   691→                              value={editingCourse.difficulty}
+   692→                              onChange={(e) => setEditingCourse({ ...editingCourse, difficulty: e.target.value as any })}
+   693→                              className="w-full h-11 px-4 bg-surface-container-high rounded-xl border-none text-body-sm focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+   694→                            >
+   695→                              <option value="beginner">Beginner</option>
+   696→                              <option value="intermediate">Intermediate</option>
+   697→                              <option value="advanced">Advanced</option>
+   698→                            </select>
+   699→                          </div>
+   700→                          <div>
+   701→                            <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1.5">Price (ZMK)</label>
+   702→                            <input
+   703→                              type="number"
+   704→                              value={editingCourse.price}
+   705→                              onChange={(e) => setEditingCourse({ ...editingCourse, price: Number(e.target.value) })}
+   706→                              placeholder="0 = Free"
+   707→                              className="w-full h-11 px-4 bg-surface-container-high rounded-xl border-none text-body-sm focus:ring-2 focus:ring-primary/20 transition-all"
+   708→                            />
+   709→                          </div>
+   710→                        </div>
+   711→                      </div>
+   712→
+   713→                      {/* Sections & Lessons */}
+   714→                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-4">
+   715→                        <div className="flex items-center justify-between">
+   716→                          <h4 className="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+   717→                            <span className="material-symbols-outlined text-primary text-sm">layers</span>
+   718→                            Course Content
+   719→                          </h4>
+   720→                          <button
+   721→                            onClick={() => addSection(editingCourse)}
+   722→                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-all"
+   723→                          >
+   724→                            <span className="material-symbols-outlined text-sm">add</span>
+   725→                            Add Section
+   726→                          </button>
+   727→                        </div>
+   728→
+   729→                        {editingCourse.sections.length === 0 && (
+   730→                          <div className="text-center py-8 text-on-surface-variant text-body-sm">
+   731→                            No sections yet. Click "Add Section" to start building your course.
+   732→                          </div>
+   733→                        )}
+   734→
+   735→                        {editingCourse.sections.map((section, si) => (
+   736→                          <div key={section.id} className="border border-outline-variant rounded-xl overflow-hidden">
+   737→                            {/* Section Header */}
+   738→                            <div className="flex items-center justify-between p-4 bg-surface-container-high/50 border-b border-outline-variant">
+   739→                              <div className="flex items-center gap-3 flex-1">
+   740→                                <span className="material-symbols-outlined text-on-surface-variant text-sm">drag_indicator</span>
+   741→                                <input
+   742→                                  type="text"
+   743→                                  value={section.title}
+   744→                                  onChange={(e) => updateSectionTitle(editingCourse, section.id, e.target.value)}
+   745→                                  className="font-title-sm font-semibold text-on-surface bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-2 py-1 flex-1"
+   746→                                  placeholder="Section title..."
+   747→                                />
+   748→                                <span className="text-xs text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">
+   749→                                  {section.lessons.length} {section.lessons.length === 1 ? "item" : "items"}
+   750→                                </span>
+   751→                              </div>
+   752→                              <div className="flex items-center gap-1">
+   753→                                <div className="flex items-center gap-1">
+   754→                                  <button
+   755→                                    onClick={() => addLesson(editingCourse, section.id, "video")}
+   756→                                    className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors group"
+   757→                                    title="Add video lesson"
+   758→                                  >
+   759→                                    <span className="material-symbols-outlined text-sm text-on-surface-variant group-hover:text-blue-600">play_circle</span>
+   760→                                  </button>
+   761→                                  <button
+   762→                                    onClick={() => addLesson(editingCourse, section.id, "book")}
+   763→                                    className="p-1.5 hover:bg-purple-50 rounded-lg transition-colors group"
+   764→                                    title="Add book/document"
+   765→                                  >
+   766→                                    <span className="material-symbols-outlined text-sm text-on-surface-variant group-hover:text-purple-600">menu_book</span>
+   767→                                  </button>
+   768→                                  <button
+   769→                                    onClick={() => addLesson(editingCourse, section.id, "quiz")}
+   770→                                    className="p-1.5 hover:bg-amber-50 rounded-lg transition-colors group"
+   771→                                    title="Add quiz"
+   772→                                  >
+   773→                                    <span className="material-symbols-outlined text-sm text-on-surface-variant group-hover:text-amber-600">quiz</span>
+   774→                                  </button>
+   775→                                </div>
+   776→                                {editingCourse.sections.length > 1 && (
+   777→                                  <button
+   778→                                    onClick={() => removeSection(editingCourse, section.id)}
+   779→                                    className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+   780→                                    title="Remove section"
+   781→                                  >
+   782→                                    <span className="material-symbols-outlined text-sm text-on-surface-variant hover:text-red-500">delete</span>
+   783→                                  </button>
+   784→                                )}
+   785→                              </div>
+   786→                            </div>
+   787→
+   788→                            {/* Lessons List */}
+   789→                            <div className="divide-y divide-outline-variant">
+   790→                              {section.lessons.map((lesson) => (
+   791→                                <div key={lesson.id}>
+   792→                                  <div className="flex items-center gap-3 p-3 hover:bg-surface-container/50 transition-colors">
+   793→                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${getLessonColor(lesson.type)}`}>
+   794→                                      <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: '"FILL" 1'}}>
+   795→                                        {getLessonIcon(lesson.type)}
+   796→                                      </span>
+   797→                                    </div>
+   798→                                    <div className="flex-1 min-w-0">
+   799→                                      <input
+   800→                                        type="text"
+   801→                                        value={lesson.title}
+   802→                                        onChange={(e) => updateLesson(editingCourse, section.id, lesson.id, { title: e.target.value })}
+   803→                                        className="text-body-sm text-on-surface bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-2 py-1 w-full"
+   804→                                        placeholder={`${lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1)} title...`}
+   805→                                      />
+   806→                                      <div className="flex items-center gap-2 mt-0.5">
+   807→                                        <span className="text-[11px] font-medium text-on-surface-variant uppercase tracking-wider">
+   808→                                          {lesson.type}
+   809→                                        </span>
+   810→                                        {lesson.type === "video" && (
+   811→                                          <>
+   812→                                            {/* Duration input */}
+   813→                                            <input
+   814→                                              type="text"
+   815→                                              value={lesson.duration || ""}
+   816→                                              onChange={(e) => updateLesson(editingCourse, section.id, lesson.id, { duration: e.target.value })}
+   817→                                              className="text-[11px] text-on-surface-variant bg-surface-container-high max-w-[80px] px-1.5 py-0.5 rounded border-none focus:ring-1 focus:ring-primary/30"
+   818→                                              placeholder="00:00"
+   819→                                            />
+   820→                                            {/* File upload / file info */}
+   821→                                            {uploadingLessonId === lesson.id ? (
+   822→                                              <span className="text-[11px] text-primary font-medium flex items-center gap-1">
+   823→                                                <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+   824→                                                Uploading...
+   825→                                              </span>
+   826→                                            ) : lesson.fileName ? (
+   827→                                              <span className="text-[11px] text-blue-600 font-medium flex items-center gap-1">
+   828→                                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
+   829→                                                {lesson.fileName}
+   830→                                              </span>
+   831→                                            ) : (
+   832→                                              <label className="text-[11px] text-primary font-medium cursor-pointer hover:underline flex items-center gap-1">
+   833→                                                <span className="material-symbols-outlined text-[14px]">upload_file</span>
+   834→                                                Upload Video
+   835→                                                <input
+   836→                                                  type="file"
+   837→                                                  accept="video/*"
+   838→                                                  className="hidden"
+   839→                                                  onChange={(e) => {
+   840→                                                    const file = e.target.files?.[0];
+   841→                                                    if (file) handleFileUpload(lesson.id, section.id, file);
+   842→                                                    e.target.value = "";
+   843→                                                  }}
+   844→                                                />
+   845→                                              </label>
+   846→                                            )}
+   847→                                          </>
+   848→                                        )}
+   849→                                        {lesson.type === "book" && (
+   850→                                          <>
+   851→                                            {uploadingLessonId === lesson.id ? (
+   852→                                              <span className="text-[11px] text-primary font-medium flex items-center gap-1">
+   853→                                                <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+   854→                                                Uploading...
+   855→                                              </span>
+   856→                                            ) : lesson.fileName ? (
+   857→                                              <span className="text-[11px] text-purple-600 font-medium flex items-center gap-1">
+   858→                                                <span className="material-symbols-outlined text-[14px]">description</span>
+   859→                                                {lesson.fileName}
+   860→                                                {lesson.fileSize && (
+   861→                                                  <span className="text-on-surface-variant font-normal">({formatFileSize(lesson.fileSize)})</span>
+   862→                                                )}
+   863→                                              </span>
+   864→                                            ) : (
+   865→                                              <label className="text-[11px] text-primary font-medium cursor-pointer hover:underline flex items-center gap-1">
+   866→                                                <span className="material-symbols-outlined text-[14px]">upload_file</span>
+   867→                                                Upload Document
+   868→                                                <input
+   869→                                                  type="file"
+   870→                                                  accept=".pdf,.doc,.docx,.txt,.epub,.md"
+   871→                                                  className="hidden"
+   872→                                                  onChange={(e) => {
+   873→                                                    const file = e.target.files?.[0];
+   874→                                                    if (file) handleFileUpload(lesson.id, section.id, file);
+   875→                                                    e.target.value = "";
+   876→                                                  }}
+   877→                                                />
+   878→                                              </label>
+   879→                                            )}
+   880→                                          </>
+   881→                                        )}
+   882→                                        {lesson.type === "quiz" && (
+   883→                                          <>
+   884→                                            <span className="text-[11px] text-on-surface-variant">Auto-graded</span>
+   885→                                            <span className="text-[11px] font-medium text-primary">
+   886→                                              {(lesson.questions?.length || 0)} {(lesson.questions?.length || 0) === 1 ? "question" : "questions"}
+   887→                                            </span>
+   888→                                          </>
+   889→                                        )}
+   890→                                      </div>
+   891→                                    </div>
+   892→                                    <button
+   893→                                      onClick={() => removeLesson(editingCourse, section.id, lesson.id)}
+   894→                                      className="p-1.5 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+   895→                                      title="Remove item"
+   896→                                    >
+   897→                                      <span className="material-symbols-outlined text-sm text-on-surface-variant hover:text-red-500">close</span>
+   898→                                    </button>
+   899→                                  </div>
+   900→                                  {/* Inline video preview */}
+   901→                                  {lesson.type === "video" && lesson.fileDataUrl && (
+   902→                                    <div className="px-3 pb-3">
+   903→                                      <div className="ml-11 rounded-lg overflow-hidden border border-outline-variant bg-black">
+   904→                                        <video
+   905→                                          src={lesson.fileDataUrl}
+   906→                                          controls
+   907→                                          className="w-full max-h-48 object-contain"
+   908→                                          preload="metadata"
+   909→                                        >
+   910→                                          Your browser does not support the video tag.
+   911→                                        </video>
+   912→                                      </div>
+   913→                                      <div className="ml-11 mt-1.5 flex items-center gap-2 text-[11px] text-on-surface-variant">
+   914→                                        <span className="material-symbols-outlined text-[14px]">videocam</span>
+   915→                                        <span>{lesson.fileName}</span>
+   916→                                        {lesson.fileSize && <span>• {formatFileSize(lesson.fileSize)}</span>}
+   917→                                        <label className="ml-auto text-primary font-medium cursor-pointer hover:underline">
+   918→                                          Change file
+   919→                                          <input
+   920→                                            type="file"
+   921→                                            accept="video/*"
+   922→                                            className="hidden"
+   923→                                            onChange={(e) => {
+   924→                                              const file = e.target.files?.[0];
+   925→                                              if (file) handleFileUpload(lesson.id, section.id, file);
+   926→                                              e.target.value = "";
+   927→                                            }}
+   928→                                          />
+   929→                                        </label>
+   930→                                        <button
+   931→                                          onClick={() => updateLesson(editingCourse, section.id, lesson.id, { fileName: undefined, fileSize: undefined, fileType: undefined, fileDataUrl: undefined })}
+   932→                                          className="text-red-500 hover:underline cursor-pointer"
+   933→                                        >
+   934→                                          Remove
+   935→                                        </button>
+   936→                                      </div>
+   937→                                    </div>
+   938→                                  )}
+   939→                                  {/* Inline book preview */}
+   940→                                  {lesson.type === "book" && lesson.fileDataUrl && (
+   941→                                    <div className="px-3 pb-3">
+   942→                                      <div className="ml-11 rounded-lg overflow-hidden border border-outline-variant bg-surface-container-high">
+   943→                                        {lesson.fileType === "application/pdf" ? (
+   944→                                          <object
+   945→                                            data={lesson.fileDataUrl}
+   946→                                            type="application/pdf"
+   947→                                            className="w-full h-48"
+   948→                                          >
+   949→                                            <div className="flex items-center gap-4 p-4">
+   950→                                              <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
+   951→                                                <span className="material-symbols-outlined text-3xl text-purple-600">picture_as_pdf</span>
+   952→                                              </div>
+   953→                                              <div className="flex-1 min-w-0">
+   954→                                                <p className="text-body-sm font-semibold text-on-surface truncate">{lesson.fileName}</p>
+   955→                                                <p className="text-xs text-on-surface-variant mt-0.5">PDF preview not available in your browser.</p>
+   956→                                              </div>
+   957→                                              <a
+   958→                                                href={lesson.fileDataUrl}
+   959→                                                download={lesson.fileName}
+   960→                                                className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-all"
+   961→                                              >
+   962→                                                <span className="material-symbols-outlined text-[14px]">download</span>
+   963→                                                Download
+   964→                                              </a>
+   965→                                            </div>
+   966→                                          </object>
+   967→                                        ) : (
+   968→                                          <div className="flex items-center gap-4 p-4">
+   969→                                            <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
+   970→                                              <span className="material-symbols-outlined text-3xl text-purple-600">description</span>
+   971→                                            </div>
+   972→                                            <div className="flex-1 min-w-0">
+   973→                                              <p className="text-body-sm font-semibold text-on-surface truncate">{lesson.fileName}</p>
+   974→                                              <div className="flex items-center gap-2 text-xs text-on-surface-variant mt-0.5">
+   975→                                                <span>{lesson.fileType}</span>
+   976→                                                {lesson.fileSize && <span>• {formatFileSize(lesson.fileSize)}</span>}
+   977→                                              </div>
+   978→                                            </div>
+   979→                                            <a
+   980→                                              href={lesson.fileDataUrl}
+   981→                                              download={lesson.fileName}
+   982→                                              className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-all"
+   983→                                            >
+   984→                                              <span className="material-symbols-outlined text-[14px]">download</span>
+   985→                                              Download
+   986→                                            </a>
+   987→                                          </div>
+   988→                                        )}
+   989→                                      </div>
+   990→                                      <div className="ml-11 mt-1.5 flex items-center gap-2 text-[11px] text-on-surface-variant">
+   991→                                        <label className="text-primary font-medium cursor-pointer hover:underline flex items-center gap-1">
+   992→                                          <span className="material-symbols-outlined text-[14px]">upload_file</span>
+   993→                                          Change file
+   994→                                          <input
+   995→                                            type="file"
+   996→                                            accept=".pdf,.doc,.docx,.txt,.epub,.md"
+   997→                                            className="hidden"
+   998→                                            onChange={(e) => {
+   999→                                              const file = e.target.files?.[0];
+  1000→                                              if (file) handleFileUpload(lesson.id, section.id, file);
+  1001→                                              e.target.value = "";
+  1002→                                            }}
+  1003→                                          />
+  1004→                                        </label>
+  1005→                                        <button
+  1006→                                          onClick={() => updateLesson(editingCourse, section.id, lesson.id, { fileName: undefined, fileSize: undefined, fileType: undefined, fileDataUrl: undefined })}
+  1007→                                          className="text-red-500 hover:underline cursor-pointer"
+  1008→                                        >
+  1009→                                          Remove
+  1010→                                        </button>
+  1011→                                      </div>
+  1012→                                    </div>
+  1013→                                  )}
+  1014→                                  {/* Inline quiz questions display for quiz lessons */}
+  1015→                                  {lesson.type === "quiz" && lesson.questions && lesson.questions.length > 0 && (
+  1016→                                    <div className="px-3 pb-3 space-y-2">
+  1017→                                      <div className="ml-11 pl-2 border-l-2 border-primary/20 space-y-2">
+  1018→                                        {lesson.questions.map((q, qi) => (
+  1019→                                          <div key={qi} className="bg-surface-container/50 rounded-lg p-3 border border-outline-variant/50">
+  1020→                                            <div className="flex items-start gap-2">
+  1021→                                              <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 mt-0.5">
+  1022→                                                {qi + 1}
+  1023→                                              </span>
+  1024→                                              <div className="flex-1 min-w-0">
+  1025→                                                <input
+  1026→                                                  type="text"
+  1027→                                                  value={q.question}
+  1028→                                                  onChange={(e) => {
+  1029→                                                    const updatedQuestions = [...(lesson.questions || [])];
+  1030→                                                    updatedQuestions[qi] = { ...updatedQuestions[qi], question: e.target.value };
+  1031→                                                    updateLesson(editingCourse, section.id, lesson.id, { questions: updatedQuestions });
+  1032→                                                  }}
+  1033→                                                  className="text-body-sm font-semibold text-on-surface bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-1.5 py-0.5 w-full"
+  1034→                                                />
+  1035→                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 mt-2">
+  1036→                                                  {q.options.map((opt, oi) => (
+  1037→                                                    <div key={oi} className="flex items-center gap-2">
+  1038→                                                      <input
+  1039→                                                        type="radio"
+  1040→                                                        name={`q-${lesson.id}-${qi}`}
+  1041→                                                        checked={opt === q.answer}
+  1042→                                                        onChange={() => {
+  1043→                                                          const updatedQuestions = [...(lesson.questions || [])];
+  1044→                                                          updatedQuestions[qi] = { ...updatedQuestions[qi], answer: opt };
+  1045→                                                          updateLesson(editingCourse, section.id, lesson.id, { questions: updatedQuestions });
+  1046→                                                        }}
+  1047→                                                        className="text-primary focus:ring-primary h-3.5 w-3.5"
+  1048→                                                      />
+  1049→                                                      <input
+  1050→                                                        type="text"
+  1051→                                                        value={opt}
+  1052→                                                        onChange={(e) => {
+  1053→                                                          const updatedQuestions = [...(lesson.questions || [])];
+  1054→                                                          const newOptions = [...updatedQuestions[qi].options];
+  1055→                                                          newOptions[oi] = e.target.value;
+  1056→                                                          updatedQuestions[qi] = { ...updatedQuestions[qi], options: newOptions };
+  1057→                                                          updateLesson(editingCourse, section.id, lesson.id, { questions: updatedQuestions });
+  1058→                                                        }}
+  1059→                                                        className={`text-xs flex-1 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-1.5 py-0.5 ${
+  1060→                                                          opt === q.answer ? "text-green-700 font-semibold" : "text-on-surface-variant"
+  1061→                                                        }`}
+  1062→                                                      />
+  1063→                                                    </div>
+  1064→                                                  ))}
+  1065→                                                </div>
+  1066→                                              </div>
+  1067→                                            </div>
+  1068→                                          </div>
+  1069→                                        ))}
+  1070→                                      </div>
+  1071→                                    </div>
+  1072→                                  )}
+  1073→                                </div>
+  1074→                              ))}
+  1075→                              {section.lessons.length === 0 && (
+  1076→                                <div className="p-4 text-center text-body-sm text-on-surface-variant/60">
+  1077→                                  No content yet. Click the icons above to add a video, book, or quiz.
+  1078→                                </div>
+  1079→                              )}
+  1080→                            </div>
+  1081→                          </div>
+  1082→                        ))}
+  1083→                      </div>
+  1084→                    </div>
+  1085→
+  1086→                    {/* Right: Settings Panel */}
+  1087→                    <div className="space-y-4">
+  1088→                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-4">
+  1089→                        <h4 className="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+  1090→                          <span className="material-symbols-outlined text-primary text-sm">settings</span>
+  1091→                          Course Settings
+  1092→                        </h4>
+  1093→                        <div>
+  1094→                          <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1.5">Status</label>
+  1095→                          <div className="flex gap-2">
+  1096→                            {(["draft", "published", "archived"] as const).map((s) => (
+  1097→                              <button
+  1098→                                key={s}
+  1099→                                onClick={() => setEditingCourse({ ...editingCourse, status: s })}
+  1100→                                className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all ${
+  1101→                                  editingCourse.status === s
+  1102→                                    ? "bg-primary text-on-primary shadow-sm"
+  1103→                                    : "bg-surface-container-high text-on-surface-variant hover:bg-surface-variant"
+  1104→                                }`}
+  1105→                              >
+  1106→                                {s}
+  1107→                              </button>
+  1108→                            ))}
+  1109→                          </div>
+  1110→                        </div>
+  1111→                        <div>
+  1112→                          <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1.5">Thumbnail URL</label>
+  1113→                          <input
+  1114→                            type="text"
+  1115→                            value={editingCourse.thumbnail}
+  1116→                            onChange={(e) => setEditingCourse({ ...editingCourse, thumbnail: e.target.value })}
+  1117→                            placeholder="https://..."
+  1118→                            className="w-full h-11 px-4 bg-surface-container-high rounded-xl border-none text-body-sm focus:ring-2 focus:ring-primary/20 transition-all"
+  1119→                          />
+  1120→                        </div>
+  1121→                        <div className="pt-2 border-t border-outline-variant">
+  1122→                          <p className="text-xs text-on-surface-variant mb-2">Quick Stats</p>
+  1123→                          <div className="grid grid-cols-2 gap-2 text-xs">
+  1124→                            <div className="bg-surface-container-high rounded-lg p-2">
+  1125→                              <span className="text-on-surface-variant">Sections</span>
+  1126→                              <p className="font-bold text-on-surface">{editingCourse.sections.length}</p>
+  1127→                            </div>
+  1128→                            <div className="bg-surface-container-high rounded-lg p-2">
+  1129→                              <span className="text-on-surface-variant">Lessons</span>
+  1130→                              <p className="font-bold text-on-surface">
+  1131→                                {editingCourse.sections.reduce((sum, s) => sum + s.lessons.length, 0)}
+  1132→                              </p>
+  1133→                            </div>
+  1134→                          </div>
+  1135→                        </div>
+  1136→                      </div>
+  1137→
+  1138→                      {/* AI Generate Content */}
+  1139→                      <div className="bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20 rounded-xl p-5 space-y-3">
+  1140→                        <div className="flex items-center gap-2">
+  1141→                          <span className="material-symbols-outlined text-primary text-sm">auto_awesome</span>
+  1142→                          <h4 className="font-title-sm text-title-sm text-on-surface">AI Content Assistant</h4>
+  1143→                        </div>
+  1144→                        <p className="text-body-sm text-on-surface-variant">
+  1145→                          Use AI to help generate quiz questions, lesson summaries, or course descriptions.
+  1146→                        </p>
+  1147→                        <button
+  1148→                          onClick={openAIAssistant}
+  1149→                          className="w-full py-2.5 bg-primary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95"
+  1150→                        >
+  1151→                          Open AI Assistant
+  1152→                        </button>
+  1153→                      </div>
+  1154→                    </div>
+  1155→                  </div>
+  1156→                </div>
+  1157→              ) : (
+  1158→                /* ── Course List ── */
+  1159→                <>
+  1160→                  {/* Toolbar */}
+  1161→                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+  1162→                    <div>
+  1163→                      <h3 className="font-headline-md text-headline-md text-on-surface">My Courses</h3>
+  1164→                      <p className="text-body-sm text-on-surface-variant mt-0.5">Create, manage, and publish your course content</p>
+  1165→                    </div>
+  1166→                    <div className="flex items-center gap-3">
+  1167→                      <button
+  1168→                        onClick={createNewCourse}
+  1169→                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95 shadow-sm"
+  1170→                      >
+  1171→                        <span className="material-symbols-outlined text-sm">add_circle</span>
+  1172→                        Create Course
+  1173→                      </button>
+  1174→                      <button className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-variant/50 transition-all">
+  1175→                        <span className="material-symbols-outlined text-sm">download</span>
+  1176→                        Export
+  1177→                      </button>
+  1178→                    </div>
+  1179→                  </div>
+  1180→
+  1181→                  {/* Search & Filter */}
+  1182→                  <div className="flex flex-col sm:flex-row gap-3">
+  1183→                    <div className="relative flex-1">
+  1184→                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+  1185→                      <input
+  1186→                        type="text"
+  1187→                        placeholder="Search courses..."
+  1188→                        value={courseSearch}
+  1189→                        onChange={(e) => setCourseSearch(e.target.value)}
+  1190→                        className="w-full h-11 pl-9 pr-4 bg-surface-container-high rounded-xl border-none text-body-sm focus:ring-2 focus:ring-primary/20 transition-all"
+  1191→                      />
+  1192→                    </div>
+  1193→                    <div className="flex gap-2">
+  1194→                      {(["all", "draft", "published", "archived"] as const).map((f) => (
+  1195→                        <button
+  1196→                          key={f}
+  1197→                          onClick={() => setCourseFilter(f)}
+  1198→                          className={`px-4 py-2 rounded-xl text-xs font-bold capitalize transition-all ${
+  1199→                            courseFilter === f
+  1200→                              ? "bg-primary text-on-primary shadow-sm"
+  1201→                              : "bg-surface-container-high text-on-surface-variant hover:bg-surface-variant"
+  1202→                          }`}
+  1203→                        >
+  1204→                          {f}
+  1205→                        </button>
+  1206→                      ))}
+  1207→                    </div>
+  1208→                  </div>
+  1209→
+  1210→                  {/* Course Cards */}
+  1211→                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+  1212→                    {filteredCourses.length === 0 && (
+  1213→                      <div className="col-span-full text-center py-16">
+  1214→                        <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4 block">library_books</span>
+  1215→                        <p className="text-title-md text-on-surface-variant">No courses found</p>
+  1216→                        <p className="text-body-sm text-on-surface-variant/60 mt-1">
+  1217→                          {courseSearch ? "Try a different search term" : "Create your first course to get started"}
+  1218→                        </p>
+  1219→                        {!courseSearch && (
+  1220→                          <button
+  1221→                            onClick={createNewCourse}
+  1222→                            className="mt-4 px-6 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95"
+  1223→                          >
+  1224→                            Create Your First Course
+  1225→                          </button>
+  1226→                        )}
+  1227→                      </div>
+  1228→                    )}
+  1229→                    {filteredCourses.map((course) => (
+  1230→                      <div
+  1231→                        key={course.id}
+  1232→                        className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:shadow-md transition-all group"
+  1233→                      >
+  1234→                        {/* Thumbnail */}
+  1235→                        <div className="h-36 bg-gradient-to-br from-primary-container/30 to-secondary-container/30 flex items-center justify-center relative overflow-hidden">
+  1236→                          {course.thumbnail ? (
+  1237→                            <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+  1238→                          ) : (
+  1239→                            <span className="material-symbols-outlined text-4xl text-primary/30">auto_stories</span>
+  1240→                          )}
+  1241→                          <div className="absolute top-2 right-2">
+  1242→                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border shadow-sm bg-white/80 backdrop-blur-sm ${getStatusBadge(course.status)}`}>
+  1243→                              <span className={`w-1.5 h-1.5 rounded-full ${
+  1244→                                course.status === "published" ? "bg-green-500" :
+  1245→                                course.status === "draft" ? "bg-yellow-500" : "bg-gray-500"
+  1246→                              }`}></span>
+  1247→                              {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
+  1248→                            </span>
+  1249→                          </div>
+  1250→                          <div className="absolute top-2 left-2">
+  1251→                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${getDifficultyColor(course.difficulty)}`}>
+  1252→                              {course.difficulty}
+  1253→                            </span>
+  1254→                          </div>
+  1255→                        </div>
+  1256→
+  1257→                        {/* Content */}
+  1258→                        <div className="p-4 space-y-3">
+  1259→                          <div>
+  1260→                            <h4 className="font-title-sm text-title-sm text-on-surface line-clamp-1">{course.title || "Untitled Course"}</h4>
+  1261→                            <p className="text-body-sm text-on-surface-variant line-clamp-2 mt-1">{course.description || "No description yet"}</p>
+  1262→                          </div>
+  1263→                          <div className="flex items-center gap-3 text-xs text-on-surface-variant">
+  1264→                            <span className="flex items-center gap-1">
+  1265→                              <span className="material-symbols-outlined text-[14px]">layers</span>
+  1266→                              {course.sections.length} sections
+  1267→                            </span>
+  1268→                            <span className="flex items-center gap-1">
+  1269→                              <span className="material-symbols-outlined text-[14px]">group</span>
+  1270→                              {course.students} students
+  1271→                            </span>
+  1272→                          </div>
+  1273→
+  1274→                          {/* Price & Rating */}
+  1275→                          <div className="flex items-center justify-between">
+  1276→                            <span className="font-title-sm font-bold text-primary">
+  1277→                              {course.price === 0 ? "Free" : `K ${course.price}`}
+  1278→                            </span>
+  1279→                            {course.rating > 0 && (
+  1280→                              <span className="flex items-center gap-1 text-xs text-on-surface-variant">
+  1281→                                <span className="material-symbols-outlined text-amber-500 text-[14px]" style={{fontVariationSettings: '"FILL" 1'}}>star</span>
+  1282→                                {course.rating}
+  1283→                              </span>
+  1284→                            )}
+  1285→                          </div>
+  1286→
+  1287→                          {/* Actions */}
+  1288→                          <div className="flex items-center gap-2 pt-2 border-t border-outline-variant">
+  1289→                            <button
+  1290→                              onClick={() => { setEditingCourse(course); setIsCreating(false); }}
+  1291→                              className="flex-1 py-2 bg-primary text-on-primary rounded-lg text-xs font-bold hover:opacity-90 transition-all active:scale-95"
+  1292→                            >
+  1293→                              <span className="material-symbols-outlined text-[14px] align-middle mr-1">edit</span>
+  1294→                              Edit
+  1295→                            </button>
+  1296→                            <button
+  1297→                              onClick={() => duplicateCourse(course)}
+  1298→                              className="py-2 px-3 border border-outline-variant rounded-lg text-xs font-bold text-on-surface-variant hover:bg-surface-variant/50 transition-all"
+  1299→                              title="Duplicate course"
+  1300→                            >
+  1301→                              <span className="material-symbols-outlined text-[14px]">content_copy</span>
+  1302→                            </button>
+  1303→                            <button
+  1304→                              onClick={() => deleteCourse(course.id)}
+  1305→                              className="py-2 px-3 border border-outline-variant rounded-lg text-xs font-bold text-on-surface-variant hover:bg-red-50 hover:text-red-600 transition-all"
+  1306→                              title="Delete course"
+  1307→                            >
+  1308→                              <span className="material-symbols-outlined text-[14px]">delete</span>
+  1309→                            </button>
+  1310→                          </div>
+  1311→                        </div>
+  1312→                      </div>
+  1313→                    ))}
+  1314→                  </div>
+  1315→                </>
+  1316→              )
+  1317→            )}
+  1318→
+  1319→            {/* ══════════════════════════════════════════════════════════
+  1320→                AI QUIZ TAB
+  1321→            ══════════════════════════════════════════════════════════ */}
+  1322→            {activeTab === "ai-quiz" && (
+  1323→              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  1324→                {/* Left: Input */}
+  1325→                <div className="lg:col-span-2 space-y-4">
+  1326→                  <div>
+  1327→                    <h3 className="font-headline-md text-headline-md text-on-surface">AI Quiz Generator</h3>
+  1328→                    <p className="text-body-sm text-on-surface-variant mt-0.5">
+  1329→                      Generate quiz questions automatically based on your course content using AI.
+  1330→                    </p>
+  1331→                  </div>
+  1332→
+  1333→                  <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-4">
+  1334→                    <h4 className="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+  1335→                      <span className="material-symbols-outlined text-primary text-sm">auto_awesome</span>
+  1336→                      Generate Quiz
+  1337→                    </h4>
+  1338→
+  1339→                    {/* Select Course Section */}
+  1340→                    <div>
+  1341→                      <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1.5">Target Course Section</label>
+  1342→                      <select
+  1343→                        value={selectedSectionForQuiz}
+  1344→                        onChange={(e) => setSelectedSectionForQuiz(e.target.value)}
+  1345→                        className="w-full h-11 px-4 bg-surface-container-high rounded-xl border-none text-body-sm focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+  1346→                      >
+  1347→                        <option value="">Select a section...</option>
+  1348→                        {editingCourse
+  1349→                          ? editingCourse.sections.map((s) => (
+  1350→                              <option key={s.id} value={s.id}>{s.title}</option>
+  1351→                            ))
+  1352→                          : courses.flatMap((c) =>
+  1353→                              c.sections.map((s) => (
+  1354→                                <option key={s.id} value={s.id}>{c.title} → {s.title}</option>
+  1355→                              ))
+  1356→                            )}
+  1357→                      </select>
+  1358→                    </div>
+  1359→
+  1360→                    {/* AI Prompt */}
+  1361→                    <div>
+  1362→                      <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1.5">Describe the Quiz Topic</label>
+  1363→                      <textarea
+  1364→                        value={aiPrompt}
+  1365→                        onChange={(e) => setAiPrompt(e.target.value)}
+  1366→                        placeholder="e.g., 'Create a quiz about HTML tags and elements for beginners' or 'Generate questions on CSS Flexbox layout properties'..."
+  1367→                        rows={4}
+  1368→                        className="w-full px-4 py-3 bg-surface-container-high rounded-xl border-none text-body-sm focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+  1369→                      />
+  1370→                    </div>
+  1371→
+  1372→                    <div className="flex items-center gap-3">
+  1373→                      <button
+  1374→                        onClick={handleAIGenerateQuiz}
+  1375→                        disabled={!aiPrompt.trim() || !selectedSectionForQuiz}
+  1376→                        className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary to-secondary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+  1377→                      >
+  1378→                        <span className="material-symbols-outlined text-sm">auto_awesome</span>
+  1379→                        Generate Quiz
+  1380→                      </button>
+  1381→                      <button
+  1382→                        onClick={openAIAssistant}
+  1383→                        className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-variant/50 transition-all"
+  1384→                      >
+  1385→                        <span className="material-symbols-outlined text-sm">psychology</span>
+  1386→                        Ask AI Tutor
+  1387→                      </button>
+  1388→                    </div>
+  1389→                  </div>
+  1390→
+  1391→                  {/* Generated Quiz Preview */}
+  1392→                  {aiGeneratedQuiz && (
+  1393→                    <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-5 space-y-4">
+  1394→                      <div className="flex items-center justify-between">
+  1395→                        <h4 className="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+  1396→                          <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+  1397→                          Generated Quiz
+  1398→                        </h4>
+  1399→                        <button
+  1400→                          onClick={addGeneratedQuizToSection}
+  1401→                          disabled={!editingCourse}
+  1402→                          className="flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-lg text-xs font-bold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+  1403→                        >
+  1404→                          <span className="material-symbols-outlined text-sm">add</span>
+  1405→                          Add to Course
+  1406→                        </button>
+  1407→                      </div>
+  1408→                      <p className="text-body-sm text-on-surface-variant">
+  1409→                        {aiGeneratedQuiz.questions.length} questions generated. Review and edit below before adding to your course.
+  1410→                      </p>
+  1411→                      <div className="space-y-3">
+  1412→                        {aiGeneratedQuiz.questions.map((q, qi) => (
+  1413→                          <div key={qi} className="border border-outline-variant rounded-xl p-4 hover:border-primary/30 transition-colors">
+  1414→                            <div className="flex items-start gap-3">
+  1415→                              <span className="w-6 h-6 rounded-full bg-primary-container/30 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+  1416→                                {qi + 1}
+  1417→                              </span>
+  1418→                              <div className="flex-1">
+  1419→                                <p className="text-body-sm font-semibold text-on-surface mb-2">{q.question}</p>
+  1420→                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+  1421→                                  {q.options.map((opt, oi) => (
+  1422→                                    <div
+  1423→                                      key={oi}
+  1424→                                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${
+  1425→                                        opt === q.answer
+  1426→                                          ? "bg-green-50 text-green-700 border border-green-200"
+  1427→                                          : "bg-surface-container-high text-on-surface-variant"
+  1428→                                      }`}
+  1429→                                    >
+  1430→                                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+  1431→                                        opt === q.answer ? "bg-green-500 text-white" : "bg-outline-variant"
+  1432→                                      }`}>
+  1433→                                        {String.fromCharCode(65 + oi)}
+  1434→                                      </span>
+  1435→                                      {opt}
+  1436→                                      {opt === q.answer && (
+  1437→                                        <span className="material-symbols-outlined text-[14px] text-green-600 ml-auto">check</span>
+  1438→                                      )}
+  1439→                                    </div>
+  1440→                                  ))}
+  1441→                                </div>
+  1442→                              </div>
+  1443→                            </div>
+  1444→                          </div>
+  1445→                        ))}
+  1446→                      </div>
+  1447→                      <div className="flex justify-end gap-2 pt-2">
+  1448→                        <button
+  1449→                          onClick={handleAIGenerateQuiz}
+  1450→                          className="px-4 py-2 border border-outline-variant rounded-lg text-xs font-bold text-on-surface-variant hover:bg-surface-variant/50 transition-all"
+  1451→                        >
+  1452→                          Regenerate
+  1453→                        </button>
+  1454→                        <button
+  1455→                          onClick={addGeneratedQuizToSection}
+  1456→                          disabled={!editingCourse}
+  1457→                          className="px-4 py-2 bg-primary text-on-primary rounded-lg text-xs font-bold hover:opacity-90 transition-all disabled:opacity-50"
+  1458→                        >
+  1459→                          {editingCourse ? "Add Quiz to Course" : "Open a course to add this quiz"}
+  1460→                        </button>
+  1461→                      </div>
+  1462→                    </div>
+  1463→                  )}
+  1464→                </div>
+  1465→
+  1466→                {/* Right: Tips */}
+  1467→                <div className="space-y-4">
+  1468→                  <div className="bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20 rounded-xl p-5 space-y-3">
+  1469→                    <div className="flex items-center gap-2">
+  1470→                      <span className="material-symbols-outlined text-primary text-sm">lightbulb</span>
+  1471→                      <h4 className="font-title-sm text-title-sm text-on-surface">Tips for Great Quizzes</h4>
+  1472→                    </div>
+  1473→                    <ul className="space-y-2 text-body-sm text-on-surface-variant">
+  1474→                      <li className="flex items-start gap-2">
+  1475→                        <span className="material-symbols-outlined text-xs text-primary mt-0.5">check_circle</span>
+  1476→                        Be specific about the topic and difficulty level
+  1477→                      </li>
+  1478→                      <li className="flex items-start gap-2">
+  1479→                        <span className="material-symbols-outlined text-xs text-primary mt-0.5">check_circle</span>
+  1480→                        Mention the target grade or education level
+  1481→                      </li>
+  1482→                      <li className="flex items-start gap-2">
+  1483→                        <span className="material-symbols-outlined text-xs text-primary mt-0.5">check_circle</span>
+  1484→                        Specify the number of questions you need
+  1485→                      </li>
+  1486→                      <li className="flex items-start gap-2">
+  1487→                        <span className="material-symbols-outlined text-xs text-primary mt-0.5">check_circle</span>
+  1488→                        Request question types: multiple choice, true/false, fill-in
+  1489→                      </li>
+  1490→                      <li className="flex items-start gap-2">
+  1491→                        <span className="material-symbols-outlined text-xs text-primary mt-0.5">check_circle</span>
+  1492→                        Include Zambian context for better relevance
+  1493→                      </li>
+  1494→                    </ul>
+  1495→                  </div>
+  1496→
+  1497→                  <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-3">
+  1498→                    <div className="flex items-center gap-2">
+  1499→                      <span className="material-symbols-outlined text-primary text-sm">history</span>
+  1500→                      <h4 className="font-title-sm text-title-sm text-on-surface">Recent Generations</h4>
+  1501→                    </div>
+  1502→                    <p className="text-body-sm text-on-surface-variant">
+  1503→                      Your AI-generated quizzes will appear here once you generate them.
+  1504→                    </p>
+  1505→                    {!aiGeneratedQuiz && (
+  1506→                      <div className="text-center py-6 text-on-surface-variant/50">
+  1507→                        <span className="material-symbols-outlined text-3xl block mb-2">auto_awesome</span>
+  1508→                        <span className="text-xs">No quizzes generated yet</span>
+  1509→                      </div>
+  1510→                    )}
+  1511→                  </div>
+  1512→                </div>
+  1513→              </div>
+  1514→            )}
+  1515→
+  1516→          </div>
+  1517→        </main>
+  1518→      </div>
+  1519→    </>
+  1520→  );
+  1521→}
+  1522→

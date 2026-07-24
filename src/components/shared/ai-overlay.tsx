@@ -337,7 +337,7 @@ export function AIOverlay() {
     setInput("");
     setIsLoading(true);
 
-    const timeoutSignal = AbortSignal.timeout(30000);
+    const timeoutSignal = AbortSignal.timeout(120000); // 120s for long detailed responses
     const combinedSignal = combineAbortSignals(abortController.signal, timeoutSignal);
 
     try {

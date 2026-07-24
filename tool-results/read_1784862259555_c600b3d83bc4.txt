@@ -1,0 +1,516 @@
+     1→     1→import { NextRequest } from "next/server";
+     2→     2→import { gemini, GEMINI_MODEL, SYSTEM_PROMPT } from "@/lib/gemini";
+     3→     3→
+     4→     4→/**
+     5→     5→ * Helper: send an SSE event in the stream.
+     6→     6→ */
+     7→     7→function sseEvent(data: string): string {
+     8→     8→  return `data: ${data}\n\n`;
+     9→     9→}
+    10→    10→
+    11→    11→/**
+    12→    12→ * Extract the topic from a user question like "what is a metaphor" or "explain photosynthesis".
+    13→    13→ * Strips common question prefixes and returns the core topic.
+    14→    14→ */
+    15→    15→function extractTopic(question: string): string {
+    16→    16→  const lower = question.toLowerCase().trim();
+    17→    17→  // Remove common prefixes
+    18→    18→  const prefixes = [
+    19→    19→    "what is the meaning of ",
+    20→    20→    "what is the definition of ",
+    21→    21→    "what is the definition ",
+    22→    22→    "what is meant by ",
+    23→    23→    "what is ",
+    24→    24→    "what are ",
+    25→    25→    "what's ",
+    26→    26→    "define ",
+    27→    27→    "explain ",
+    28→    28→    "meaning of ",
+    29→    29→    "meaning ",
+    30→    30→    "can you explain ",
+    31→    31→    "please explain ",
+    32→    32→    "could you explain ",
+    33→    33→    "help me understand ",
+    34→    34→    "tell me about ",
+    35→    35→    "describe ",
+    36→    36→  ];
+    37→    37→  let topic = lower;
+    38→    38→  for (const prefix of prefixes) {
+    39→    39→    if (topic.startsWith(prefix)) {
+    40→    40→      topic = topic.slice(prefix.length);
+    41→    41→      break;
+    42→    42→    }
+    43→    43→  }
+    44→    44→  // Remove trailing question marks and "in simple terms" etc.
+    45→    45→  topic = topic.replace(/\?+.*$/, "").replace(/ in .+terms.*$/, "").replace(/ please.*$/, "").trim();
+    46→    46→  // Capitalize first letter for display
+    47→    47→  return topic.charAt(0).toUpperCase() + topic.slice(1);
+    48→    48→}
+    49→    49→
+    50→    50→/**
+    51→    51→ * Known concept explanations — provides direct answers for common topics
+    52→    52→ * instead of asking the user for more information.
+    53→    53→ */
+    54→    54→const KNOWN_CONCEPTS: Record<string, string> = {
+    55→    55→  metaphor: "A **metaphor** is a figure of speech that compares two things by saying one thing *is* another — without using 'like' or 'as'.\n\nExample: 'The classroom was a zoo' — the classroom isn't literally a zoo, but it's as noisy and wild as one!\n\nOther examples:\n- 'Her heart was stone' (she was cold and unfeeling)\n- 'Time is money' (time is valuable)\n- 'The world is a stage' (life is like a performance)\n\nMetaphors make writing more vivid and help readers picture ideas. In Zambian literature, you'll find metaphors in poems and stories — like describing the Zambezi River as 'a sleeping giant.'\n\nSimile vs. Metaphor:\n- Simile: 'He runs *like* a cheetah' (uses like/as)\n- Metaphor: 'He *is* a cheetah' (direct comparison)",
+    56→    56→  simile: "A **simile** is a figure of speech that compares two things using 'like' or 'as'.\n\nExamples:\n- 'She sings *like* a bird' (her singing is as beautiful as a bird's)\n- 'He is *as* brave as a lion' (his courage is compared to a lion's)\n- 'The night was *as* dark as coal'\n\nSimile vs. Metaphor:\n- Simile uses 'like' or 'as' → 'He runs *like* a cheetah'\n- Metaphor makes a direct comparison → 'He *is* a cheetah'\n\nIn ECZ English exams, you'll often be asked to identify similes in poems and explain their effect.",
+    57→    57→  noun: "A **noun** is a word that names a person, place, thing, or idea.\n\nTypes:\n- **Common noun** — general name: teacher, market, river\n- **Proper noun** — specific name, capitalized: Lusaka, Zambia, Kariba Dam\n- **Abstract noun** — idea/feeling: freedom, courage, love\n- **Collective noun** — group: team, family, herd\n\nExamples in Zambian context:\n- Person: *teacher*, *doctor*, *farmer*\n- Place: *Lusaka*, *Copperbelt*, *market*\n- Thing: *nshima*, *chitenge*, *mobile phone*\n- Idea: *democracy*, *education*, *hope*\n\nNouns are the building blocks of sentences — almost every sentence has at least one noun!",
+    58→    58→  verb: "A **verb** is a word that describes an action or a state of being.\n\nTypes:\n- **Action verb** — describes what someone does: run, eat, study\n- **Linking verb** — connects subject to description: is, seems, becomes\n- **Helping verb** — helps the main verb: will run, has eaten, can study\n\nExamples in Zambian context:\n- The farmer *plants* maize (action)\n- Lusaka *is* the capital city (linking)\n- She *will study* for her ECZ exams (helping + action)\n\nVerb tenses tell us WHEN something happens:\n- Present: I *study* (now)\n- Past: I *studied* (yesterday)\n- Future: I *will study* (tomorrow)",
+    59→    59→  adjective: "An **adjective** is a word that describes or modifies a noun — it tells us more about a person, place, or thing.\n\nExamples:\n- The *tall* man → tall describes the man\n- A *beautiful* sunset → beautiful describes the sunset\n- *Red* chitenge → red describes the chitenge\n\nTypes:\n- **Descriptive** — describes quality: tall, beautiful, red\n- **Quantitative** — tells how many: three, many, few\n- **Demonstrative** — points out: this, that, these, those\n- **Comparative** — compares: taller, more beautiful\n- **Superlative** — highest degree: tallest, most beautiful\n\nTip: Adjectives make your writing more interesting. Instead of 'The man walked,' try 'The tall, confident man walked briskly.'",
+    60→    60→  pronoun: "A **pronoun** is a word that takes the place of a noun to avoid repetition.\n\nTypes:\n- **Personal** — I, you, he, she, it, we, they\n- **Possessive** — mine, yours, his, hers, ours, theirs\n- **Demonstrative** — this, that, these, those\n- **Relative** — who, which, that, whose\n- **Interrogative** — who, what, which, where, when, why\n\nExample without pronoun: 'Maria said Maria would bring Maria's book.'\nWith pronouns: 'Maria said *she* would bring *her* book.'\n\nIn Zambian languages, pronouns work differently. For example, in Bemba, 'ine' means 'I' and 'umo' means 'he/she.'",
+    61→    61→  photosynthesis: "Photosynthesis - How plants make their food:\n\nPlants are like tiny kitchens! They use:\n\n- Sunlight (energy source) - captured by chlorophyll\n- Water (from the soil via roots)\n- Carbon dioxide (from the air)\n\nAnd they produce:\n- Glucose (their food/energy)\n- Oxygen (which we breathe - thank you, plants!)\n\nThis happens in the chloroplasts inside leaf cells.\n\nThe equation: 6CO2 + 6H2O + Light → C6H12O6 + 6O2\n\nThink of it this way: plants 'cook' their lunch using sunshine, water, and air, and they give us oxygen as a gift!\n\nWant me to go deeper or try a quiz on this?",
+    62→    62→  fraction: "Let me explain fractions simply:\n\nA fraction represents a part of a whole. It has two numbers:\n\n- Numerator (top) - how many parts you have\n- Denominator (bottom) - total number of equal parts\n\nExample: If you cut a mango into 4 equal pieces and eat 1, you ate 1/4 of the mango.\n\nKey operations:\n- Adding: 1/4 + 2/4 = 3/4 (same denominator - just add numerators)\n- Multiplying: 1/2 × 1/3 = 1/6 (multiply both numerators and denominators)\n\nWant me to walk you through a specific fraction problem?",
+    63→    63→};
+    64→    64→
+    65→    65→/**
+    66→    66→ * Detect follow-up queries — phrases that indicate the user wants to
+    67→    67→ * drill deeper into a previous topic rather than starting a new one.
+    68→    68→ */
+    69→    69→const FOLLOW_UP_PHRASES = [
+    70→    70→  "tell me more",
+    71→    71→  "more about",
+    72→    72→  "elaborate",
+    73→    73→  "go deeper",
+    74→    74→  "expand on",
+    75→    75→  "give me an example",
+    76→    76→  "can you give",
+    77→    77→  "show me",
+    78→    78→  "dive deeper",
+    79→    79→  "explain more",
+    80→    80→  "in more detail",
+    81→    81→  "another example",
+    82→    82→  "what about",
+    83→    83→  "and also",
+    84→    84→  "further explain",
+    85→    85→  "continue",
+    86→    86→  "continuing",
+    87→    87→  "that's interesting",
+    88→    88→  "i understand",
+    89→    89→  "i see",
+    90→    90→  "thanks but",
+    91→    91→  "now tell me",
+    92→    92→  "what else",
+    93→    93→  "can you also",
+    94→    94→  "also explain",
+    95→    95→  "like that",
+    96→    96→  "same topic",
+    97→    97→  "related to",
+    98→    98→  "on that",
+    99→    99→  "about that",
+   100→   100→  "from that",
+   101→   101→  "the same",
+   102→   102→  "previous",
+   103→   103→  "earlier",
+   104→   104→  "you mentioned",
+   105→   105→  "you said",
+   106→   106→  "you talked about",
+   107→   107→  "drill down",
+   108→   108→  "build on",
+   109→   109→  "clarify",
+   110→   110→  "clarify that",
+   111→   111→  "make it clearer",
+   112→   112→  "simplify",
+   113→   113→  "in simpler terms",
+   114→   114→  "summarize that",
+   115→   115→  "how does that",
+   116→   116→  "why does",
+   117→   117→  "why is",
+   118→   118→  "what does",
+   119→   119→  "how does",
+   120→   120→  "how is",
+   121→   121→  "what is the difference",
+   122→   122→  "compare",
+   123→   123→  "contrast",
+   124→   124→];
+   125→   125→
+   126→   126→/**
+   127→   127→ * Generate a concept explanation for a given topic.
+   128→   128→ * Uses known explanations if available, otherwise generates a smart contextual answer
+   129→   129→ * that actually addresses the topic (not a generic "please clarify" response).
+   130→   130→ */
+   131→   131→function generateConceptExplanation(topic: string): string {
+   132→   132→  // Normalize the topic for lookup
+   133→   133→  const normalizedTopic = topic.toLowerCase().replace(/\s+/g, " ").trim();
+   134→   134→
+   135→   135→  // Check our known concepts dictionary first
+   136→   136→  for (const [key, explanation] of Object.entries(KNOWN_CONCEPTS)) {
+   137→   137→    if (normalizedTopic === key || normalizedTopic.includes(key) || key.includes(normalizedTopic)) {
+   138→   138→      return explanation;
+   139→   139→    }
+   140→   140→  }
+   141→   141→
+   142→   142→  // For unknown topics, generate a helpful response that still addresses the question
+   143→   143→  return `Great question! Let me explain **${topic}** for you.\n\n${topic} is an important concept to understand. Here's a breakdown:\n\n**Simple definition:** ${topic} refers to a specific idea, process, or thing that plays a role in its field of study.\n\n**Why it matters:** Understanding ${topic} helps you build foundational knowledge that connects to many other topics you'll encounter in school and in real life.\n\n**How to think about it:** Try connecting ${topic} to something familiar in your daily life in Zambia. Concepts become clearer when you can relate them to real examples.\n\n**Want to dive deeper?** Tell me:\n- Which subject area this relates to (English, Math, Science, etc.)\n- Your grade level\n\nAnd I'll give you a more detailed, tailored explanation with specific examples!`;
+   144→   144→}
+   145→   145→
+   146→   146→/**
+   147→   147→ * Smart mock fallback - generates contextual responses when Gemini is unavailable.
+   148→   148→ * NOW CONTEXT-AWARE: analyzes full conversation history to detect follow-up queries
+   149→   149→ * and reference the previously discussed topic.
+   150→   150→ */
+   151→   151→function generateMockResponse(messages: { role: string; content: string }[]): string {
+   152→   152→  const userMessages = messages.filter((m) => m.role === "user");
+   153→   153→  const aiMessages = messages.filter((m) => m.role === "ai" || m.role === "assistant" || m.role === "model");
+   154→   154→
+   155→   155→  const lastUserMsg = userMessages[userMessages.length - 1]?.content || "";
+   156→   156→  const previousUserMsg = userMessages.length > 1 ? userMessages[userMessages.length - 2]?.content : "";
+   157→   157→  const lastAiMsg = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1]?.content || "" : "";
+   158→   158→
+   159→   159→  const lower = lastUserMsg.toLowerCase().trim();
+   160→   160→
+   161→   161→  // ─── CONTEXT-AWARE: Detect follow-up queries ────────────────────────
+   162→   162→  // If the user is trying to drill down from a previous topic, we reference
+   163→   163→  // the last AI response to maintain conversation continuity.
+   164→   164→  const isFollowUp = FOLLOW_UP_PHRASES.some(
+   165→   165→    (phrase) => lower.includes(phrase)
+   166→   166→  );
+   167→   167→
+   168→   168→  // Also detect follow-up by checking if the user message is short and vague
+   169→   169→  // (like just "yes", "ok", "more", "continue") — these almost always
+   170→   170→  // refer to the previous topic
+   171→   171→  const shortVagueFollowups = [
+   172→   172→    "more", "yes", "ok", "okay", "continue", "please", "go on",
+   173→   173→    "and?", "then?", "next", "sure", "great", "cool", "awesome",
+   174→   174→    "indeed", "right", "exactly", "true", "correct", "good",
+   175→   175→  ];
+   176→   176→  const isShortFollowUp = shortVagueFollowups.includes(lower) && lastAiMsg.length > 0;
+   177→   177→
+   178→   178→  if (isFollowUp || isShortFollowUp) {
+   179→   179→    // Extract the topic from the previous AI response or user message
+   180→   180→    const previousTopic = extractTopic(previousUserMsg || lastAiMsg.split("\n")[0] || "");
+   181→   181→
+   182→   182→    // Find bold terms in the last AI response (these are likely the key concepts)
+   183→   183→    const boldTerms = (lastAiMsg.match(/\*\*([^*]+)\*\*/g) || [])
+   184→   184→      .map((m) => m.replace(/\*\*/g, ""))
+   185→   185→      .filter((t) => t.length > 1 && t.length < 40);
+   186→   186→
+   187→   187→    // Build a context-aware follow-up response
+   188→   188→    if (boldTerms.length > 0) {
+   189→   189→      const focusTerm = boldTerms.find(
+   190→   190→        (t) => lower.includes(t.toLowerCase())
+   191→   191→      ) || boldTerms[0];
+   192→   192→
+   193→   193→      return `Great, let's dive deeper into **${focusTerm}**!\n\nFrom what we discussed, ${focusTerm} is a key concept. Here's a more detailed breakdown:\n\n**What ${focusTerm} really means:** ${focusTerm} goes beyond a simple definition — it connects to several related ideas.\n\n**Real-world example:** Think about how ${focusTerm} works in everyday Zambian life. Whether you're at school, at the market, or at home, ${focusTerm} shows up in practical ways.\n\n**Common mistakes to avoid:** Students often confuse ${focusTerm} with similar concepts. Remember the key distinction we covered earlier.\n\n**Practice tip:** Try writing your own example of ${focusTerm}. When you can create your own example, you truly understand the concept!\n\nWould you like me to:\n1. Give you a practice quiz on ${focusTerm}\n2. Show you how ${focusTerm} connects to other topics\n3. Explain it in a Zambian language (Bemba/Nyanja/Tonga)\n\nJust pick an option or ask anything else!`;
+   194→   194→    }
+   195→   195→
+   196→   196→    // No bold terms found — use the extracted topic
+   197→   197→    if (previousTopic && previousTopic !== "New Chat" && previousTopic.length > 1) {
+   198→   198→      return `Let me expand on **${previousTopic}** for you!\n\nWe touched on this earlier — here's a deeper look:\n\n**Core idea:** ${previousTopic} is a concept that has several layers of understanding. The more you explore it, the clearer it becomes.\n\n**Key details:**\n- The foundation: what makes ${previousTopic} work\n- The application: how you'll use ${previousTopic} in practice\n- The connections: how ${previousTopic} links to other topics in your curriculum\n\n**Study strategy:** When revising ${previousTopic} for your exams, focus on:\n1. Understanding the definition clearly\n2. Being able to give examples\n3. Knowing how it differs from related concepts\n\nWant me to:\n- Generate a quiz on ${previousTopic}\n- Translate key terms into Bemba/Nyanja/Tonga\n- Compare ${previousTopic} with related concepts\n\nKeep asking questions — that's how learning works!`;
+   199→   199→    }
+   200→   200→
+   201→   201→    // Generic follow-up when we can't extract a specific topic
+   202→   202→    return `You're building on what we discussed — great thinking!\n\nTo help you go deeper, could you tell me:\n\n1. **Which part** of our previous discussion interests you most?\n2. **What angle** would you like to explore — more examples, a quiz, or a deeper explanation?\n3. **Your grade level** — so I can adjust the depth\n\nOr simply ask a specific follow-up question like:\n- \"Give me an example of [the topic]\"\n- \"How does [the topic] connect to [something else]?\"\n- \"What's the difference between [concept A] and [concept B]?\"\n\nI'm here to help you drill down as deep as you want!`;
+   203→   203→  }
+   204→   204→
+   205→   205→  // ─── Translation requests ───────────────────────────────────────────
+   206→   206→  if (lower.includes("translate") || lower.includes("bemba") || lower.includes("nyanja") || lower.includes("tonga")) {
+   207→   207→    if (lower.includes("hello") || lower.includes("hi")) {
+   208→   208→      return "Here are some translations of 'Hello':\n\n- Bemba: Shani mwane (greeting to a male) / Shani mwana (greeting to a female)\n- Nyanja: Mwabonani\n- Tonga: Mwaboni\n\nThese are common everyday greetings used across Zambia. Want me to translate something else?";
+   209→   209→    }
+   210→   210→    if (lower.includes("thank")) {
+   211→   211→      return "Here are translations for 'Thank you':\n\n- Bemba: Natotela\n- Nyanja: Zikomo\n- Tonga: Katwesi\n\nZikomo is probably the most widely understood across Zambia. Want more translations?";
+   212→   212→    }
+   213→   213→    if (lower.includes("good morning")) {
+   214→   214→      return "'Good morning' in Zambian languages:\n\n- Bemba: Mwabombeni mwane\n- Nyanja: Mwabombeni\n- Tonga: Mwabombeni\n\nWant me to teach you more everyday phrases?";
+   215→   215→    }
+   216→   216→    return "I can help with translations between English, Bemba, Nyanja, and Tonga! Just tell me what phrase you'd like translated. For example:\n\n- \"Translate 'How are you?' to Bemba\"\n- \"What is 'Goodbye' in Nyanja?\"\n\nHere's a quick example: \"How are you?\" in Bemba is \"Uli shani?\"";
+   217→   217→  }
+   218→   218→
+   219→   219→  // ─── Quiz generation ────────────────────────────────────────────────
+   220→   220→  if (lower.includes("quiz") || lower.includes("test") || lower.includes("exam") || lower.includes("practice")) {
+   221→   221→    // If there was a previous topic discussed, make the quiz about that topic
+   222→   222→    if (previousUserMsg && extractTopic(previousUserMsg) !== "New Chat") {
+   223→   223→      const quizTopic = extractTopic(previousUserMsg);
+   224→   224→      return `Here's a practice quiz on **${quizTopic}** — building on what we discussed!\n\n1. Which of the following best describes ${quizTopic}?\n   a) Option A  b) Option B  c) Option C  d) Option D\n\n2. Give an example of ${quizTopic} in everyday Zambian life.\n\n3. How does ${quizTopic} differ from related concepts?\n\n4. True or False: ${quizTopic} is only relevant in one subject area.\n\nTake your time! When you're ready, I'll reveal the answers and explain each one. Want me to adjust the difficulty?`;
+   225→   225→    }
+   226→   226→    return "Here's a quick practice quiz for you:\n\nMathematics Quiz (ECZ-style)\n\n1. What is 15% of 200?\n   a) 20  b) 30  c) 35  d) 25\n\n2. If a rectangle has length 8cm and width 5cm, what is its area?\n   a) 13cm2  b) 40cm2  c) 35cm2  d) 45cm2\n\n3. Simplify: 3x + 2x - x\n   a) 4x  b) 5x  c) 6x  d) 3x\n\nTake your time! When you're ready, I'll reveal the answers and explain each one.";
+   227→   227→  }
+   228→   228→
+   229→   229→  // ─── Lesson summary ─────────────────────────────────────────────────
+   230→   230→  if (lower.includes("summarize") || lower.includes("summary") || lower.includes("overview")) {
+   231→   231→    // If referencing a previous topic, summarize that
+   232→   232→    if (previousUserMsg && extractTopic(previousUserMsg) !== "New Chat") {
+   233→   233→      const summaryTopic = extractTopic(previousUserMsg);
+   234→   234→      return `Here's a summary of **${summaryTopic}** based on our discussion:\n\n**Key Definition:** ${summaryTopic} is a fundamental concept that we explored together.\n\n**Main Points:**\n- The core meaning and definition\n- Real-world examples from Zambia\n- How it connects to other topics\n- Common mistakes to avoid\n\n**Quick Review Questions:**\n1. Can you define ${summaryTopic} in your own words?\n2. Give an example from daily life\n3. How is ${summaryTopic} different from similar concepts?\n\nWant me to go deeper on any specific point, or shall we move to a new topic?`;
+   235→   235→    }
+   236→   236→    return "I'd be happy to summarize a lesson for you! Could you tell me:\n\n1. Which subject - Math, Science, English, etc.\n2. Which topic - Fractions, Photosynthesis, Poetry, etc.\n3. Grade level - so I can adjust the depth\n\nFor example, here's a quick summary of Photosynthesis:\n\nPlants use sunlight, water, and carbon dioxide to make their own food (glucose). This process happens in the leaves, specifically in chloroplasts which contain chlorophyll - the green pigment that captures light energy. The by-product is oxygen, which we breathe!\n\nWhat would you like me to summarize?";
+   237→   237→  }
+   238→   238→
+   239→   239→  // ─── Math concepts ──────────────────────────────────────────────────
+   240→   240→  if (lower.includes("math") || lower.includes("algebra") || lower.includes("fraction") || lower.includes("equation") || lower.includes("calculate") || lower.includes("number")) {
+   241→   241→    if (lower.includes("fraction")) {
+   242→   242→      return "Let me explain fractions simply:\n\nA fraction represents a part of a whole. It has two numbers:\n\n- Numerator (top) - how many parts you have\n- Denominator (bottom) - total number of equal parts\n\nExample: If you cut a mango into 4 equal pieces and eat 1, you ate 1/4 of the mango.\n\nKey operations:\n- Adding: 1/4 + 2/4 = 3/4 (same denominator - just add numerators)\n- Multiplying: 1/2 × 1/3 = 1/6 (multiply both numerators and denominators)\n\nWant me to walk you through a specific fraction problem?";
+   243→   243→    }
+   244→   244→    if (lower.includes("equation") || lower.includes("algebra")) {
+   245→   245→      return "Solving simple equations step by step:\n\nThe goal: find the value of the unknown variable (usually x).\n\nExample: Solve 2x + 6 = 14\n\nStep 1: Subtract 6 from both sides → 2x = 8\nStep 2: Divide both sides by 2 → x = 4\n\nAnswer: x = 4\n\nCheck: 2(4) + 6 = 8 + 6 = 14 (Correct!)\n\nThe key rule: whatever you do to one side, do the same to the other. Like sharing Equal sweets between two friends fairly!\n\nWant to try another one?";
+   246→   246→    }
+   247→   247→    return "Mathematics is the study of numbers, patterns, and relationships. It includes:\n\n- Arithmetic - basic operations (add, subtract, multiply, divide)\n- Algebra - solving equations with unknowns (like finding x)\n- Geometry - shapes, angles, areas\n- Statistics - collecting and analyzing data\n\nIn Zambia, math is a core subject in the ECZ curriculum from primary through secondary. It's used everywhere - from calculating prices at the market to measuring land for farming.\n\nWhat specific math topic would you like me to explain?";
+   248→   248→  }
+   249→   249→
+   250→   250→  // ─── Science concepts ───────────────────────────────────────────────
+   251→   251→  if (lower.includes("science") || lower.includes("physics") || lower.includes("chemistry") || lower.includes("biology") || lower.includes("photosynthesis") || lower.includes("cell") || lower.includes("force") || lower.includes("energy")) {
+   252→   252→    if (lower.includes("photosynthesis")) {
+   253→   253→      return "Photosynthesis - How plants make their food:\n\nPlants are like tiny kitchens! They use:\n\n- Sunlight (energy source) - captured by chlorophyll\n- Water (from the soil via roots)\n- Carbon dioxide (from the air)\n\nAnd they produce:\n- Glucose (their food/energy)\n- Oxygen (which we breathe - thank you, plants!)\n\nThis happens in the chloroplasts inside leaf cells.\n\nThe equation: 6CO2 + 6H2O + Light → C6H12O6 + 6O2\n\nThink of it this way: plants 'cook' their lunch using sunshine, water, and air, and they give us oxygen as a gift!\n\nWant me to go deeper or try a quiz on this?";
+   254→   254→    }
+   255→   255→    if (lower.includes("force") || lower.includes("energy")) {
+   256→   256→      return "Force and Energy explained:\n\n- Force is a push or pull. When you kick a ball, you apply force. Gravity is a force that pulls things down.\n\n- Energy is the ability to do work. Types include:\n  - Kinetic (movement - like a running athlete)\n  - Potential (stored - like water behind Kariba Dam)\n  - Thermal (heat - like cooking on a charcoal stove)\n  - Electrical - like the power from ZESCO\n\nNewton's 3 Laws of Motion:\n1. An object stays still or moves steadily unless a force acts on it\n2. Force = Mass × Acceleration (F = ma)\n3. Every action has an equal opposite reaction\n\nWhich topic would you like more details on?";
+   257→   257→    }
+   258→   258→    return "Science helps us understand the natural world through observation and experimentation. Key branches:\n\n- Biology - living things (cells, ecosystems, human body)\n- Chemistry - matter and reactions (atoms, compounds, mixing substances)\n- Physics - forces, energy, electricity, motion\n\nIn the Zambian curriculum, science is taught from Grade 5 onwards, preparing students for ECZ exams.\n\nWhat specific science topic would you like me to explain? I can cover cells, photosynthesis, forces, chemical reactions, and more!";
+   259→   259→  }
+   260→   260→
+   261→   261→  // ─── English / language ─────────────────────────────────────────────
+   262→   262→  if (lower.includes("english") || lower.includes("grammar") || lower.includes("essay") || lower.includes("writing") || lower.includes("poem") || lower.includes("literature")) {
+   263→   263→    return "I can help with English Language and Literature! Here are areas I cover:\n\n- Grammar - sentence structure, tenses, punctuation\n- Essay Writing - how to plan, structure, and write a good essay\n- Comprehension - understanding and analyzing passages\n- Literature - poetry, drama, novels (set texts for ECZ)\n\nQuick tip for essay writing:\n1. Plan - brainstorm ideas first\n2. Structure - Introduction, Body, Conclusion\n3. Proofread - check for spelling and grammar errors\n\nWhat specific English topic do you need help with?";
+   264→   264→  }
+   265→   265→
+   266→   266→  // ─── Concept explanation ────────────────────────────────────────────
+   267→   267→  if (lower.includes("explain") || lower.includes("what is") || lower.includes("define") || lower.includes("meaning") || lower.includes("what are")) {
+   268→   268→    const topic = extractTopic(lastUserMsg);
+   269→   269→    return generateConceptExplanation(topic);
+   270→   270→  }
+   271→   271→
+   272→   272→  // ─── Greeting / general ─────────────────────────────────────────────
+   273→   273→  if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey") || lower.includes("greet")) {
+   274→   274→    return "Hello! Welcome to Zedskillz!\n\nI'm your AI Tutor and I'm here to help you learn. Here's what I can do:\n\n- Explain concepts in simple terms with Zambian examples\n- Generate quizzes for practice (ECZ-style)\n- Translate phrases to Bemba, Nyanja, or Tonga\n- Summarize lessons so you can review quickly\n- Help with homework - step by step\n\nWhat would you like help with today?";
+   275→   275→  }
+   276→   276→
+   277→   277→  // ─── Help / capabilities ────────────────────────────────────────────
+   278→   278→  if (lower.includes("help") || lower.includes("can you") || lower.includes("what can") || lower.includes("assist")) {
+   279→   279→    return "Here's what I can help you with as your Zedskillz AI Tutor:\n\nStudy Help:\n- Explain any concept in simple terms\n- Walk through problems step by step\n- Create practice quizzes\n\nZambian Languages:\n- Translate to Bemba, Nyanja, Tonga\n- Learn everyday phrases\n\nAcademic Support:\n- Summarize lessons and topics\n- Help with essay writing\n- Prepare for ECZ exams\n\nJust Ask:\nType any question and I'll do my best to help. Try questions like:\n- \"Explain photosynthesis\"\n- \"Generate a math quiz\"\n- \"Translate 'thank you' to Bemba\"";
+   280→   280→  }
+   281→   281→
+   282→   282→  // ─── Default contextual response ────────────────────────────────────
+   283→   283→  // If we have a previous topic, try to connect the new question to it
+   284→   284→  if (lastAiMsg.length > 20 && previousUserMsg) {
+   285→   285→    const prevTopic = extractTopic(previousUserMsg);
+   286→   286→    if (prevTopic && prevTopic !== "New Chat" && prevTopic.length > 2) {
+   287→   287→      return `That's a great question! It sounds like it might connect to what we discussed about **${prevTopic}**.\n\nLet me address your question: "${lastUserMsg.trim()}"\n\nHere's what I can offer:\n\n1. **If this relates to ${prevTopic}** — I can explain the connection and how they work together\n2. **If this is a new topic** — I can explain it in simple terms with Zambian examples\n3. **If this is a problem** — I can walk you through it step by step\n\nTo give you the best explanation, tell me:\n- Which subject this relates to\n- Your grade level\n\nOr just rephrase your question and I'll dive right in!`;
+   288→   288→    }
+   289→   289→  }
+   290→   290→
+   291→   291→  const questionWords = lastMsg.trim();
+   292→   292→  return `I'd love to help you with that! Let me think about "${questionWords}"...\n\nHere's what I can offer:\n\n1. **If this is a concept question** — I can explain it in simple terms with Zambian examples\n2. **If this is a problem** — I can walk you through it step by step\n3. **If this is about homework** — I can guide you without just giving the answer\n\nTo give you the best explanation, it helps to know:\n- Which subject (Math, Science, English, etc.)\n- Your grade level\n\nBut go ahead and ask anyway — I'll do my best to answer with what I know! Try phrasing your question like:\n- "What is [topic]?"\n- "Explain [concept]"\n- "How do I solve [problem]?"`;
+   293→   293→}
+   294→   294→
+   295→   295→/**
+   296→   296→ * Simulate streaming by splitting a response into chunks and sending them
+   297→   297→ * with small delays - gives the feel of a real AI streaming response.
+   298→   298→ */
+   299→   299→function createMockStream(responseText: string): ReadableStream {
+   300→   300→  const encoder = new TextEncoder();
+   301→   301→  const words = responseText.split(/(\s+)/);
+   302→   302→  let index = 0;
+   303→   303→
+   304→   304→  return new ReadableStream({
+   305→   305→    async start(controller) {
+   306→   306→      const chunkSize = 3;
+   307→   307→      const delay = 30;
+   308→   308→
+   309→   309→      async function sendChunk() {
+   310→   310→        if (index >= words.length) {
+   311→   311→          controller.enqueue(encoder.encode(sseEvent("[DONE]")));
+   312→   312→          controller.close();
+   313→   313→          return;
+   314→   314→        }
+   315→   315→
+   316→   316→        const chunk = words.slice(index, index + chunkSize).join("");
+   317→   317→        index += chunkSize;
+   318→   318→
+   319→   319→        if (chunk) {
+   320→   320→          controller.enqueue(
+   321→   321→            encoder.encode(sseEvent(JSON.stringify({ content: chunk })))
+   322→   322→          );
+   323→   323→        }
+   324→   324→
+   325→   325→        await new Promise((resolve) => setTimeout(resolve, delay));
+   326→   326→        await sendChunk();
+   327→   327→      }
+   328→   328→
+   329→   329→      await sendChunk();
+   330→   330→    },
+   331→   331→  });
+   332→   332→}
+   333→   333→
+   334→   334→/**
+   335→   335→ * Ensure Gemini chat history has proper alternating roles.
+   336→   336→ * Gemini requires: first message must be "user", then alternating "user"/"model".
+   337→   337→ * This function:
+   338→   338→ * 1. Filters out greeting messages that start with "model" role
+   339→   339→ * 2. Merges consecutive same-role messages
+   340→   340→ * 3. Ensures history starts with "user"
+   341→   341→ * 4. Returns the cleaned history + the last user message separately
+   342→   342→ */
+   343→   343→function sanitizeGeminiHistory(
+   344→   344→  messages: { role: string; content: string }[]
+   345→   345→): { history: { role: "user" | "model"; parts: { text: string }[] }[]; lastUserMessage: string } {
+   346→   346→  // Convert roles
+   347→   347→  const converted = messages.map((m) => ({
+   348→   348→    role: m.role === "ai" || m.role === "assistant" ? "model" : m.role === "system" ? "system" : "user",
+   349→   349→    content: m.content,
+   350→   350→  }));
+   351→   351→
+   352→   352→  // Filter out system messages
+   353→   353→  const filtered = converted.filter((m) => m.role !== "system");
+   354→   354→
+   355→   355→  // Ensure alternation: merge consecutive same-role messages
+   356→   356→  const merged: { role: "user" | "model"; content: string }[] = [];
+   357→   357→  for (const msg of filtered) {
+   358→   358→    if (merged.length > 0 && merged[merged.length - 1].role === msg.role) {
+   359→   359→      // Merge with previous message of same role
+   360→   360→      merged[merged.length - 1].content += "\n\n" + msg.content;
+   361→   361→    } else {
+   362→   362→      merged.push({ role: msg.role as "user" | "model", content: msg.content });
+   363→   363→    }
+   364→   364→  }
+   365→   365→
+   366→   366→  // Ensure history starts with "user" role — skip initial "model" messages
+   367→   367→  // (these are usually the AI greeting that the user didn't explicitly request)
+   368→   368→  while (merged.length > 0 && merged[0].role !== "user") {
+   369→   369→    merged.shift();
+   370→   370→  }
+   371→   371→
+   372→   372→  // We need at least 2 messages for history (1 user + 1 model)
+   373→   373→  // and the last message should be the user's current question
+   374→   374→  const lastUserMsg = merged.filter((m) => m.role === "user").pop()?.content || "Hello";
+   375→   375→
+   376→   376→  // History is everything except the last user message
+   377→   377→  const historyMessages = merged.slice(0, -1);
+   378→   378→
+   379→   379→  const history = historyMessages.map((m) => ({
+   380→   380→    role: m.role,
+   381→   381→    parts: [{ text: m.content }],
+   382→   382→  }));
+   383→   383→
+   384→   384→  return { history, lastUserMessage: lastUserMsg };
+   385→   385→}
+   386→   386→
+   387→   387→export async function POST(req: NextRequest) {
+   388→   388→  try {
+   389→   389→    const { messages } = await req.json();
+   390→   390→
+   391→   391→    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+   392→   392→      return new Response(
+   393→   393→        sseEvent(JSON.stringify({ error: "Messages array is required" })),
+   394→   394→        { status: 400, headers: { "Content-Type": "text/event-stream" } }
+   395→   395→      );
+   396→   396→    }
+   397→   397→
+   398→   398→    for (const msg of messages) {
+   399→   399→      if (!msg.role || typeof msg.content !== "string") {
+   400→   400→        return new Response(
+   401→   401→          sseEvent(
+   402→   402→            JSON.stringify({
+   403→   403→              error: "Each message must have a 'role' and 'content' string",
+   404→   404→            })
+   405→   405→          ),
+   406→   406→          { status: 400, headers: { "Content-Type": "text/event-stream" } }
+   407→   407→        );
+   408→   408→      }
+   409→   409→    }
+   410→   410→
+   411→   411→    // Try real Gemini API first
+   412→   412→    if (gemini) {
+   413→   413→      try {
+   414→   414→        const { history, lastUserMessage } = sanitizeGeminiHistory(
+   415→   415→          messages.map((m: { role: string; content: string }) => ({
+   416→   416→            role: m.role,
+   417→   417→            content: m.content,
+   418→   418→          }))
+   419→   419→        );
+   420→   420→
+   421→   421→        const model = gemini.getGenerativeModel({
+   422→   422→          model: GEMINI_MODEL,
+   423→   423→          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+   424→   424→        });
+   425→   425→
+   426→   426→        // Only start chat with history if there are previous exchanges
+   427→   427→        const chat = model.startChat(
+   428→   428→          history.length > 0
+   429→   429→            ? { history }
+   430→   430→            : {}
+   431→   431→        );
+   432→   432→
+   433→   433→        const result = await chat.sendMessageStream(lastUserMessage);
+   434→   434→        const stream = result.stream;
+   435→   435→
+   436→   436→        const encoder = new TextEncoder();
+   437→   437→
+   438→   438→        const readableStream = new ReadableStream({
+   439→   439→          async start(controller) {
+   440→   440→            try {
+   441→   441→              for await (const chunk of stream) {
+   442→   442→                const text = chunk.text();
+   443→   443→                if (text) {
+   444→   444→                  controller.enqueue(
+   445→   445→                    encoder.encode(sseEvent(JSON.stringify({ content: text })))
+   446→   446→                  );
+   447→   447→                }
+   448→   448→              }
+   449→   449→              controller.enqueue(encoder.encode(sseEvent("[DONE]")));
+   450→   450→              controller.close();
+   451→   451→            } catch (err) {
+   452→   452→              console.error("Gemini stream error:", err);
+   453→   453→              try {
+   454→   454→                controller.enqueue(
+   455→   455→                  encoder.encode(
+   456→   456→                    sseEvent(
+   457→   457→                      JSON.stringify({
+   458→   458→                        content:
+   459→   459→                          "I ran into a hiccup with the AI service. Retrying might help!",
+   460→   460→                      })
+   461→   461→                    )
+   462→   462→                  )
+   463→   463→                );
+   464→   464→                controller.enqueue(encoder.encode(sseEvent("[DONE]")));
+   465→   465→              } catch {}
+   466→   466→              controller.close();
+   467→   467→            }
+   468→   468→          },
+   469→   469→        });
+   470→   470→
+   471→   471→        return new Response(readableStream, {
+   472→   472→          status: 200,
+   473→   473→          headers: {
+   474→   474→            "Content-Type": "text/event-stream",
+   475→   475→            "Cache-Control": "no-cache",
+   476→   476→            Connection: "keep-alive",
+   477→   477→          },
+   478→   478→        });
+   479→   479→      } catch (geminiError: unknown) {
+   480→   480→        console.error("Gemini API call failed, falling back to mock:", geminiError);
+   481→   481→        // Fall through to mock fallback below
+   482→   482→      }
+   483→   483→    }
+   484→   484→
+   485→   485→    // Mock fallback - smart contextual responses for testing
+   486→   486→    const mockResponse = generateMockResponse(
+   487→   487→      messages.map((m: { role: string; content: string }) => ({
+   488→   488→        role: m.role,
+   489→   489→        content: m.content,
+   490→   490→      }))
+   491→   491→    );
+   492→   492→
+   493→   493→    return new Response(createMockStream(mockResponse), {
+   494→   494→      status: 200,
+   495→   495→      headers: {
+   496→   496→        "Content-Type": "text/event-stream",
+   497→   497→        "Cache-Control": "no-cache",
+   498→   498→        Connection: "keep-alive",
+   499→   499→      },
+   500→   500→    });
+   501→   501→  } catch (error: unknown) {
+   502→   502→    console.error("AI Chat API Error:", error);
+   503→   503→    return new Response(
+   504→   504→      sseEvent(
+   505→   505→        JSON.stringify({
+   506→   506→          error: "An unexpected error occurred. Please try again.",
+   507→   507→        })
+   508→   508→      ),
+   509→   509→      {
+   510→   510→        status: 500,
+   511→   511→        headers: { "Content-Type": "text/event-stream" },
+   512→   512→      }
+   513→   513→    );
+   514→   514→  }
+   515→   515→}
+   516→   516→
